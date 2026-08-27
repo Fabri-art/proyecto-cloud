@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Sequence
 
 from fastapi import HTTPException, status
@@ -156,10 +156,11 @@ async def schedule_match(
     if not match:
         raise HTTPException(status_code=404, detail=f"Match {match_id} not found.")
 
-    match.scheduled_at = data.scheduled_at
+    if data.scheduled_at:
+        match.scheduled_at = data.scheduled_at.replace(tzinfo=None) if data.scheduled_at.tzinfo else data.scheduled_at
     if data.venue is not None:
         match.venue = data.venue
-    match.updated_at = datetime.utcnow()
+    match.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     session.add(match)
     await session.flush()

@@ -3,7 +3,7 @@ app/services/match_service.py
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +26,7 @@ async def register_match_result(match_id: int, data: MatchResultUpdate, session:
     
     # Mark as finished
     match.status = MatchStatus.FINISHED
-    match.finished_at = datetime.utcnow()
+    match.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     session.add(match)
     await session.flush()
