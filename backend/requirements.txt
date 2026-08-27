@@ -1,0 +1,22 @@
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# ORM & Database
+sqlmodel==0.0.22
+sqlalchemy[asyncio]==2.0.36
+# asyncpg requires Python <=3.12 for pre-built wheels.
+# When running locally on Python 3.13+, use psycopg2 or run via Docker (python:3.12-slim).
+asyncpg==0.30.0
+alembic==1.14.0
+
+# Settings & environment
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+
+# Dev / Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.28.0
+aiosqlite==0.20.0
+anyio[trio]==4.6.2

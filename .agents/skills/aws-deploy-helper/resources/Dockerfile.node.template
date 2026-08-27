@@ -1,0 +1,60 @@
+# ==========================================
+# Etapa 1: Dependencias y Build (Builder)
+# ==========================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependencias necesarias para compilar módulos nativos si se requieren
+RUN apk add --no-cache libc6-compat
+
+# Copiar archivos de definición de dependencias
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+
+# Instalar todas las dependencias (incluyendo devDependencies para el build)
+RUN npm ci
+
+# Copiar código fuente
+COPY . .
+
+# Ejecutar proceso de build si existe (TypeScript, Next.js, Vite, NestJS, etc.)
+RUN if npm run | grep -q "build"; then npm run build; fi
+
+# Prunear dependencias de desarrollo para dejar solo las de producción
+RUN npm prune --production
+
+# ==========================================
+# Etapa 2: Imagen Final para Producción (Runner)
+# ==========================================
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Configurar entorno de producción
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Crear usuario y grupo no-root por seguridad
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
+
+# Copiar dependencias de producción y artefactos compilados desde el builder
+COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=appuser:nodejs /app/dist ./dist 2>/dev/null || true
+COPY --from=builder --chown=appuser:nodejs /app/build ./build 2>/dev/null || true
+COPY --from=builder --chown=appuser:nodejs /app/src ./src 2>/dev/null || true
+COPY --from=builder --chown=appuser:nodejs /app/public ./public 2>/dev/null || true
+
+# Cambiar al usuario sin privilegios
+USER appuser
+
+# Exponer el puerto
+EXPOSE 3000
+
+# Health check para orquestadores (ECS / App Runner)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Comando de inicio
+CMD ["node", "dist/index.js"]
