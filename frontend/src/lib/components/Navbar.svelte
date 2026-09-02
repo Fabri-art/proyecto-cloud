@@ -6,8 +6,10 @@
 	 * Links:
 	 *  /             → Inicio
 	 *  /equipos      → Equipos registrados
-	 *  /fixture      → Calendario de partidos
-	 *  /posiciones   → Tabla de posiciones
+	 *  /fixture      → Calendario de partidos (administración)
+	 *  /posiciones   → Tabla de posiciones (administración)
+	 *  /publico      → Vista pública con fixture + posiciones en tiempo real
+	 *  /mesa-control → Panel de arbitraje y mesa de control
 	 */
 	import { page } from '$app/stores';
 
@@ -15,8 +17,7 @@
 	const navLinks = [
 		{ href: '/',             label: 'Inicio',          icon: '🏠' },
 		{ href: '/equipos',      label: 'Equipos',         icon: '👕' },
-		{ href: '/fixture',      label: 'Fixture',         icon: '📅' },
-		{ href: '/posiciones',   label: 'Posiciones',      icon: '📊' },
+		{ href: '/publico',      label: 'Vista Pública',   icon: '🌐' },
 		{ href: '/mesa-control', label: 'Mesa de Control', icon: '🎮' }
 	];
 
