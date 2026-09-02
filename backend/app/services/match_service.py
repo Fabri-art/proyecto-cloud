@@ -36,12 +36,61 @@ async def list_matches(
     return result.scalars().all()
 
 
+async def _check_no_team_already_live(
+    match_id: int,
+    home_team_id: int,
+    away_team_id: int,
+    session: AsyncSession,
+) -> None:
+    """Raises 409 if either team is already LIVE in a different match."""
+    stmt = (
+        select(Match)
+        .where(Match.status == MatchStatus.LIVE)
+        .where(Match.id != match_id)
+        .where(
+            (Match.home_team_id == home_team_id)
+            | (Match.away_team_id == home_team_id)
+            | (Match.home_team_id == away_team_id)
+            | (Match.away_team_id == away_team_id)
+        )
+    )
+    result = await session.execute(stmt)
+    conflict = result.scalars().first()
+    if conflict:
+        # Determinar qué equipo está en conflicto para el mensaje
+        conflicting_team_id = None
+        if conflict.home_team_id == home_team_id or conflict.away_team_id == home_team_id:
+            conflicting_team_id = home_team_id
+        else:
+            conflicting_team_id = away_team_id
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"El equipo con ID {conflicting_team_id} ya está jugando otro partido "
+                f"en VIVO (Partido #{conflict.id}, Jornada {conflict.matchday}). "
+                f"Un equipo no puede disputar dos partidos al mismo tiempo. "
+                f"Finaliza o pausa ese partido antes de iniciar este."
+            ),
+        )
+
+
 async def update_match_status(
     match_id: int,
     new_status: MatchStatus,
     session: AsyncSession,
 ) -> Match:
     match = await get_match(match_id, session)
+
+    # ── Restricción de integridad: un equipo no puede estar en dos partidos LIVE ──
+    if new_status == MatchStatus.LIVE and match.status != MatchStatus.LIVE:
+        await _check_no_team_already_live(
+            match_id=match_id,
+            home_team_id=match.home_team_id,
+            away_team_id=match.away_team_id,
+            session=session,
+        )
+
     match.status = new_status
     if new_status == MatchStatus.LIVE and not match.started_at:
         match.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
