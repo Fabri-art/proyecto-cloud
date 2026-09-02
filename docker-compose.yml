@@ -41,5 +41,26 @@ services:
       # Mount source for live-reload in dev (comment out for production)
       - ./backend:/app
 
+  # ── SvelteKit Frontend ───────────────────────────────────────────────────────
+  frontend:
+    image: node:20-alpine
+    container_name: nombre_creativo_frontend
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      # URL pública del backend (accesible desde el navegador)
+      PUBLIC_API_BASE_URL: http://localhost:8001/api/v1
+    ports:
+      - "5173:5173"
+    volumes:
+      # Monta el código fuente para hot-reload
+      - ./frontend:/app
+      # Evita sobrescribir node_modules del contenedor con los del host
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
+
