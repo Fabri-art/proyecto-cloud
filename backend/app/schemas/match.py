@@ -66,6 +66,11 @@ class FixtureRead(BaseModel):
     rounds: List[MatchdayRead]
 
 
+class MatchStatusUpdate(BaseModel):
+    """Payload to update only the match status."""
+    status: MatchStatus
+
+
 class MatchResultUpdate(BaseModel):
     """Payload to update match result and finish it."""
     home_score: int

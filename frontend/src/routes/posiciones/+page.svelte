@@ -23,18 +23,29 @@
 	 *   PTS = Puntos totales (Victoria=3, Empate=1, Derrota=0)
 	 */
 	import { onMount } from 'svelte';
-	import { standingsApi } from '$lib/api/client';
+	import { standingsApi, teamsApi } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
 
 	let standings = $state([]);
+	let teamsMap = $state({});
 	let loading = $state(true);
 	let error = $state(null);
 
 	onMount(async () => {
 		try {
-			standings = await standingsApi.get(TOURNAMENT_ID);
+			const [standingsData, teamsList] = await Promise.all([
+				standingsApi.get(TOURNAMENT_ID).catch(() => []),
+				teamsApi.list(TOURNAMENT_ID).catch(() => [])
+			]);
+
+			const map = {};
+			for (const t of teamsList) {
+				map[t.id] = t;
+			}
+			teamsMap = map;
+			standings = standingsData;
 		} catch (e) {
 			error = e.message;
 			toast.error('No se pudo cargar la tabla de posiciones.');
@@ -150,9 +161,9 @@
 								<div class="flex items-center gap-3">
 									<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
 										style="background: linear-gradient(135deg, var(--accent-green), #16a34a);">
-										{s.team?.name?.[0]?.toUpperCase() ?? '?'}
+										{teamsMap[s.team_id]?.name?.[0]?.toUpperCase() ?? '?'}
 									</div>
-									<span class="font-semibold text-white">{s.team?.name ?? `Equipo ${s.team_id}`}</span>
+									<span class="font-semibold text-white">{teamsMap[s.team_id]?.name ?? `Equipo #${s.team_id}`}</span>
 								</div>
 							</td>
 

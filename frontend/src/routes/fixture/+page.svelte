@@ -6,67 +6,63 @@
 	 * - Selector de jornadas (Jornada 1, Jornada 2, etc.)
 	 * - Tarjetas de partidos de la jornada seleccionada
 	 * - Estado de cada partido (Programado / En Juego / Finalizado / Cancelado)
-	 *
-	 * ¿Qué llama al backend?
-	 * - GET /api/v1/tournaments/1/fixture
-	 *   Devuelve: { rounds: [ { round: 1, matches: [...] }, ... ] }
-	 *   Cada partido: { id, home_team, away_team, status, home_score, away_score, scheduled_at }
-	 *
-	 * NOTA: Por ahora el tournament_id está fijo en 1.
-	 * Cuando haya múltiples torneos se puede agregar un selector.
 	 */
 	import { onMount } from 'svelte';
-	import { fixtureApi } from '$lib/api/client';
+	import { fixtureApi, teamsApi } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
 
 	let rounds = $state([]);
+	let teamsMap = $state({});
 	let selectedRound = $state(1);
 	let loading = $state(true);
 	let error = $state(null);
 
-	// Partidos de la jornada seleccionada
+	// Partidos de la jornada seleccionada (soporta tanto matchday como round)
 	let currentMatches = $derived(
-		rounds.find((r) => r.round === selectedRound)?.matches ?? []
+		rounds.find((r) => (r.matchday ?? r.round) === selectedRound)?.matches ?? []
 	);
 
 	onMount(async () => {
 		try {
-			const data = await fixtureApi.get(TOURNAMENT_ID);
-			rounds = data.rounds ?? [];
-			if (rounds.length > 0) selectedRound = rounds[0].round;
+			const [fixtureData, teamsList] = await Promise.all([
+				fixtureApi.get(TOURNAMENT_ID).catch(() => ({ rounds: [] })),
+				teamsApi.list(TOURNAMENT_ID).catch(() => [])
+			]);
+
+			const map = {};
+			for (const t of teamsList) {
+				map[t.id] = t;
+			}
+			teamsMap = map;
+
+			rounds = fixtureData.rounds ?? [];
+			if (rounds.length > 0) {
+				selectedRound = rounds[0].matchday ?? rounds[0].round ?? 1;
+			}
 		} catch (e) {
 			error = e.message;
-			toast.error('No se pudo cargar el fixture. Verifica que el torneo tenga partidos generados.');
+			toast.error('No se pudo cargar el fixture.');
 		} finally {
 			loading = false;
 		}
 	});
 
-	// Configuración visual por estado de partido
+	// Configuración visual por estado de partido (claves en minúscula para coincidir con la API)
 	const statusConfig = {
-		SCHEDULED: {
-			label: 'Programado',
-			badgeClass: 'badge-scheduled',
-			icon: '🕐'
-		},
-		IN_PROGRESS: {
-			label: 'En Juego',
-			badgeClass: 'badge-in-progress',
-			icon: '⚽'
-		},
-		FINISHED: {
-			label: 'Finalizado',
-			badgeClass: 'badge-finished',
-			icon: '✅'
-		},
-		CANCELLED: {
-			label: 'Cancelado',
-			badgeClass: 'badge-cancelled',
-			icon: '❌'
-		}
+		scheduled:   { label: 'Programado',     badgeClass: 'badge-scheduled',   icon: '🕐' },
+		live:        { label: 'En Juego (LIVE)',badgeClass: 'badge-in-progress', icon: '⚽' },
+		in_progress: { label: 'En Juego',       badgeClass: 'badge-in-progress', icon: '⚽' },
+		finished:    { label: 'Finalizado',     badgeClass: 'badge-finished',    icon: '✅' },
+		cancelled:   { label: 'Cancelado',      badgeClass: 'badge-cancelled',   icon: '❌' },
+		postponed:   { label: 'Pospuesto',      badgeClass: 'badge-scheduled',   icon: '⏸️' }
 	};
+
+	function getStatus(rawStatus) {
+		const key = (rawStatus ?? 'scheduled').toLowerCase();
+		return statusConfig[key] ?? statusConfig.scheduled;
+	}
 
 	function formatDate(dateStr) {
 		if (!dateStr) return 'Fecha por confirmar';
@@ -107,7 +103,7 @@
 		<p class="text-white font-semibold">No se pudo cargar el fixture</p>
 		<p class="text-slate-400 text-sm mt-2">{error}</p>
 		<p class="text-slate-500 text-xs mt-2">
-			El fixture se genera con <code class="bg-slate-800 px-1 rounded">POST /tournaments/1/fixture/generate</code>
+			El fixture se puede generar desde la <a href="/mesa-control" class="text-emerald-400 underline">Mesa de Control</a>.
 		</p>
 	</div>
 
@@ -116,9 +112,16 @@
 	<div class="glass-card p-12 text-center animate-fade-in-up">
 		<div class="text-5xl mb-4">📅</div>
 		<h2 class="text-xl font-bold text-white mb-2">Fixture no generado</h2>
-		<p class="text-slate-400 text-sm">
+		<p class="text-slate-400 text-sm mb-4">
 			El fixture se genera automáticamente una vez que los equipos estén inscritos.
 		</p>
+		<a
+			href="/mesa-control"
+			class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow-lg"
+		>
+			<span>🎮</span>
+			<span>Ir a Mesa de Control para Generar Fixture</span>
+		</a>
 	</div>
 
 <!-- ── Fixture con jornadas ───────────────────────────────────────────────── -->
@@ -126,16 +129,17 @@
 	<!-- Selector de jornadas -->
 	<div class="flex flex-wrap gap-2 mb-6 animate-fade-in-up">
 		{#each rounds as r}
+			{@const mday = r.matchday ?? r.round ?? 1}
 			<button
-				class="px-4 py-2 rounded-lg text-sm font-medium transition-all {selectedRound === r.round
+				class="px-4 py-2 rounded-lg text-sm font-semibold transition-all {selectedRound === mday
 					? 'text-white'
 					: 'text-slate-400 hover:text-white hover:bg-white/5'}"
-				style={selectedRound === r.round
+				style={selectedRound === mday
 					? 'background: var(--accent-green); color: #0f172a;'
 					: 'background: rgba(30,41,59,0.7); border: 1px solid var(--border-color);'}
-				onclick={() => (selectedRound = r.round)}
+				onclick={() => (selectedRound = mday)}
 			>
-				Jornada {r.round}
+				Jornada {mday}
 			</button>
 		{/each}
 	</div>
@@ -143,29 +147,34 @@
 	<!-- Partidos de la jornada seleccionada -->
 	<div class="flex flex-col gap-3">
 		{#each currentMatches as match, i}
-			{@const status = statusConfig[match.status] ?? statusConfig.SCHEDULED}
+			{@const status = getStatus(match.status)}
 			<div
 				class="glass-card p-5 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up"
-				style="animation-delay: {i * 0.06}s"
+				style="animation-delay: {i * 0.05}s"
 			>
 				<!-- Equipo local -->
 				<div class="flex-1 text-center sm:text-right">
 					<p class="font-bold text-white text-lg leading-tight">
-						{match.home_team?.name ?? 'Equipo Local'}
+						{teamsMap[match.home_team_id]?.name ?? `Equipo #${match.home_team_id}`}
 					</p>
-					<p class="text-xs text-slate-500">Local</p>
+					<p class="text-xs text-slate-500 font-mono">
+						{teamsMap[match.home_team_id]?.short_name ?? 'LOC'} • Local
+					</p>
 				</div>
 
 				<!-- Marcador / Estado -->
-				<div class="flex flex-col items-center gap-1 px-4">
-					{#if match.status === 'FINISHED' || match.status === 'IN_PROGRESS'}
-						<div class="text-2xl font-black text-white">
-							{match.home_score ?? 0} – {match.away_score ?? 0}
+				<div class="flex flex-col items-center gap-1.5 px-4 min-w-[130px]">
+					{#if match.home_score !== null && match.away_score !== null}
+						<div class="text-2xl font-black text-white font-mono">
+							{match.home_score} – {match.away_score}
 						</div>
 					{:else}
 						<div class="text-xl font-bold text-slate-500">VS</div>
 					{/if}
-					<span class="text-xs px-2 py-0.5 rounded-full font-medium {status.badgeClass}">
+					<span class="text-xs px-2.5 py-0.5 rounded-full font-bold {status.badgeClass} flex items-center gap-1">
+						{#if (match.status ?? '').toLowerCase() === 'live'}
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+						{/if}
 						{status.icon} {status.label}
 					</span>
 					{#if match.scheduled_at}
@@ -176,9 +185,11 @@
 				<!-- Equipo visitante -->
 				<div class="flex-1 text-center sm:text-left">
 					<p class="font-bold text-white text-lg leading-tight">
-						{match.away_team?.name ?? 'Equipo Visitante'}
+						{teamsMap[match.away_team_id]?.name ?? `Equipo #${match.away_team_id}`}
 					</p>
-					<p class="text-xs text-slate-500">Visitante</p>
+					<p class="text-xs text-slate-500 font-mono">
+						{teamsMap[match.away_team_id]?.short_name ?? 'VIS'} • Visitante
+					</p>
 				</div>
 			</div>
 		{/each}

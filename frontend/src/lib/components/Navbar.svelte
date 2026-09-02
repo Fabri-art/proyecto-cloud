@@ -13,10 +13,11 @@
 
 	// Lista de páginas del sitio
 	const navLinks = [
-		{ href: '/',           label: 'Inicio',      icon: '🏠' },
-		{ href: '/equipos',    label: 'Equipos',     icon: '👕' },
-		{ href: '/fixture',    label: 'Fixture',     icon: '📅' },
-		{ href: '/posiciones', label: 'Posiciones',  icon: '📊' }
+		{ href: '/',             label: 'Inicio',          icon: '🏠' },
+		{ href: '/equipos',      label: 'Equipos',         icon: '👕' },
+		{ href: '/fixture',      label: 'Fixture',         icon: '📅' },
+		{ href: '/posiciones',   label: 'Posiciones',      icon: '📊' },
+		{ href: '/mesa-control', label: 'Mesa de Control', icon: '🎮' }
 	];
 
 	// Estado para el menú mobile (hamburguesa) en Svelte 5

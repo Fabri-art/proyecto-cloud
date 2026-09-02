@@ -95,6 +95,15 @@ export const fixtureApi = {
 
 /** Partidos */
 export const matchesApi = {
+	list: (tournamentId, matchday) => {
+		const params = new URLSearchParams();
+		if (tournamentId) params.append('tournament_id', tournamentId);
+		if (matchday) params.append('matchday', matchday);
+		const qs = params.toString() ? `?${params.toString()}` : '';
+		return api.get(`/matches${qs}`);
+	},
+	get: (matchId) => api.get(`/matches/${matchId}`),
+	updateStatus: (matchId, status) => api.patch(`/matches/${matchId}/status`, { status }),
 	registerResult: (matchId, body) => api.patch(`/matches/${matchId}/result`, body)
 };
 
