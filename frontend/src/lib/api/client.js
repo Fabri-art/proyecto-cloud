@@ -104,6 +104,9 @@ export const matchesApi = {
 	},
 	get: (matchId) => api.get(`/matches/${matchId}`),
 	updateStatus: (matchId, status) => api.patch(`/matches/${matchId}/status`, { status }),
+	/** Update live score without finishing the match */
+	updateScore: (matchId, homeScore, awayScore) =>
+		api.patch(`/matches/${matchId}/score`, { home_score: homeScore, away_score: awayScore }),
 	registerResult: (matchId, body) => api.patch(`/matches/${matchId}/result`, body)
 };
 

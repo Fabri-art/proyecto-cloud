@@ -11,6 +11,17 @@
 	import { goto } from '$app/navigation';
 	import { teamsApi } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
+	import { auth } from '$lib/stores/auth';
+	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
+	import { onDestroy } from 'svelte';
+
+	let isAdmin = $state(false);
+	let showPinModal = $state(false);
+	const unsub = auth.subscribe((val) => {
+		isAdmin = val;
+		if (!val) showPinModal = true;
+	});
+	onDestroy(unsub);
 
 	const TOURNAMENT_ID = 1;
 
@@ -166,7 +177,7 @@
 			}
 
 			toast.success(
-				`¡Club '${createdTeam.name}' registrado exitosamente con ${registeredPlayers} jugador(es)!`
+				`¡Club '${createdTeam.name}' registrado con ${registeredPlayers} jugador(es)! Si el fixture ya fue generado, ve a Mesa de Control y presiona "Regenerar Fixture" para incluir este equipo.`
 			);
 
 			// Redirigir a la lista de equipos
@@ -178,6 +189,14 @@
 		}
 	}
 </script>
+
+<!-- Modal de PIN si no es admin -->
+{#if showPinModal && !isAdmin}
+	<AdminPinModal
+		onSuccess={() => { showPinModal = false; }}
+		onCancel={() => goto('/publico')}
+	/>
+{/if}
 
 <svelte:head>
 	<title>Registrar Club y Plantilla — Nombre-Creativo</title>

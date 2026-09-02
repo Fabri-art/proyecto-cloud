@@ -21,7 +21,8 @@
 	import { fixtureApi, standingsApi, teamsApi } from '$lib/api/client';
 
 	const TOURNAMENT_ID = 1;
-	const REFRESH_INTERVAL_MS = 30_000; // 30 segundos
+	const REFRESH_INTERVAL_MS = 30_000; // 30 segundos en condiciones normales
+	const LIVE_REFRESH_INTERVAL_MS = 10_000; // 10 segundos si hay partido en VIVO
 
 	// ── Estado ─────────────────────────────────────────────────────────────────
 	let activeTab = $state('fixture'); // 'fixture' | 'posiciones'
@@ -124,7 +125,16 @@
 	// ── Ciclo de vida ───────────────────────────────────────────────────────────
 	onMount(() => {
 		fetchAll();
-		refreshTimer = setInterval(fetchAll, REFRESH_INTERVAL_MS);
+
+		// Intervalo dinámico: 10s si hay partido en VIVO, 30s en condiciones normales
+		refreshTimer = setInterval(async () => {
+			await fetchAll();
+			// Reiniciar el intervalo si cambió el estado LIVE
+			const interval = hasLiveMatch ? LIVE_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS;
+			clearInterval(refreshTimer);
+			refreshTimer = setInterval(fetchAll, interval);
+		}, hasLiveMatch ? LIVE_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS);
+
 		clockTimer = setInterval(() => { secondsSince++; }, 1000);
 	});
 

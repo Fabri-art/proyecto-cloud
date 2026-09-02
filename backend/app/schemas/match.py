@@ -27,6 +27,7 @@ class MatchRead(BaseModel):
     away_team_id: int
     matchday: Optional[int]
     scheduled_at: Optional[datetime]
+    started_at: Optional[datetime]  # when the match went LIVE
     status: MatchStatus
     home_score: Optional[int]
     away_score: Optional[int]
@@ -69,6 +70,12 @@ class FixtureRead(BaseModel):
 class MatchStatusUpdate(BaseModel):
     """Payload to update only the match status."""
     status: MatchStatus
+
+
+class MatchScoreUpdate(BaseModel):
+    """Payload to update live scores without finishing the match."""
+    home_score: int
+    away_score: int
 
 
 class MatchResultUpdate(BaseModel):

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.models.match import Match, MatchStatus
-from app.schemas.match import MatchResultUpdate
+from app.schemas.match import MatchResultUpdate, MatchScoreUpdate
 from app.services.standings_service import recalculate_standings
 
 
@@ -55,6 +55,27 @@ async def update_match_status(
     return match
 
 
+async def update_match_score(
+    match_id: int,
+    data: MatchScoreUpdate,
+    session: AsyncSession,
+) -> Match:
+    """Updates home/away score during a live match WITHOUT finishing it."""
+    match = await get_match(match_id, session)
+    if match.status == MatchStatus.FINISHED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot update score of a finished match. Use the result endpoint instead.",
+        )
+    match.home_score = data.home_score
+    match.away_score = data.away_score
+    match.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    session.add(match)
+    await session.flush()
+    await session.refresh(match)
+    return match
+
+
 async def register_match_result(
     match_id: int, data: MatchResultUpdate, session: AsyncSession
 ) -> Match:
@@ -80,3 +101,4 @@ async def register_match_result(
 
     await session.refresh(match)
     return match
+
