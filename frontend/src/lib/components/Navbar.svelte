@@ -25,13 +25,13 @@
 	const toggleMenu = () => (mobileMenuOpen = !mobileMenuOpen);
 </script>
 
-<header class="sticky top-0 z-40 w-full border-b" style="background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); border-color: var(--border-color);">
+<header class="sticky top-0 z-40 w-full border-b" style="background: #0b0f19; border-color: var(--border-color);">
 	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
 
 		<!-- Logo / Nombre del proyecto -->
 		<a href="/" class="flex items-center gap-2 group">
 			<span class="text-2xl">⚽</span>
-			<span class="font-bold text-lg tracking-tight" style="color: var(--accent-green);">
+			<span class="font-bold text-lg tracking-tight text-emerald-400">
 				Nombre<span class="text-white">-Creativo</span>
 			</span>
 		</a>
@@ -41,9 +41,9 @@
 			{#each navLinks as link}
 				<a
 					href={link.href}
-					class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 {$page.url.pathname === link.href
-						? 'text-emerald-400 bg-emerald-500/10'
-						: 'text-slate-300 hover:text-white hover:bg-white/5'}"
+					class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 {$page.url.pathname === link.href
+						? 'text-emerald-400 bg-emerald-500/10 font-semibold'
+						: 'text-slate-300 hover:text-white hover:bg-slate-800/60'}"
 				>
 					<span>{link.icon}</span>
 					<span>{link.label}</span>
@@ -53,7 +53,7 @@
 
 		<!-- Indicador de estado (API live) -->
 		<div class="hidden md:flex items-center gap-2 text-xs text-slate-400">
-			<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+			<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
 			API Live
 		</div>
 

@@ -127,16 +127,13 @@
 <!-- ── Fixture con jornadas ───────────────────────────────────────────────── -->
 {:else}
 	<!-- Selector de jornadas -->
-	<div class="flex flex-wrap gap-2 mb-6 animate-fade-in-up">
+	<div class="flex flex-wrap gap-2 mb-6">
 		{#each rounds as r}
 			{@const mday = r.matchday ?? r.round ?? 1}
 			<button
-				class="px-4 py-2 rounded-lg text-sm font-semibold transition-all {selectedRound === mday
-					? 'text-white'
-					: 'text-slate-400 hover:text-white hover:bg-white/5'}"
-				style={selectedRound === mday
-					? 'background: var(--accent-green); color: #0f172a;'
-					: 'background: rgba(30,41,59,0.7); border: 1px solid var(--border-color);'}
+				class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors {selectedRound === mday
+					? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/50'
+					: 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700/60'}"
 				onclick={() => (selectedRound = mday)}
 			>
 				Jornada {mday}
@@ -146,12 +143,9 @@
 
 	<!-- Partidos de la jornada seleccionada -->
 	<div class="flex flex-col gap-3">
-		{#each currentMatches as match, i}
+		{#each currentMatches as match}
 			{@const status = getStatus(match.status)}
-			<div
-				class="glass-card p-5 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up"
-				style="animation-delay: {i * 0.05}s"
-			>
+			<div class="glass-card p-5 flex flex-col sm:flex-row items-center gap-4">
 				<!-- Equipo local -->
 				<div class="flex-1 text-center sm:text-right">
 					<p class="font-bold text-white text-lg leading-tight">

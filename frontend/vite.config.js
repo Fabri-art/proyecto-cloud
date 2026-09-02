@@ -20,7 +20,9 @@ export default defineConfig({
 	],
 	server: {
 		watch: {
-			usePolling: true
+			usePolling: true,
+			interval: 1000,
+			ignored: ['**/node_modules/**', '**/.git/**', '**/.svelte-kit/**']
 		}
 	}
 });

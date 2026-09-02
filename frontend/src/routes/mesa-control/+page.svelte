@@ -275,13 +275,13 @@
 		{@const awayTeam = teamsMap[activeMatch.away_team_id]}
 		{@const status = getStatus(activeMatch.status)}
 
-		<div class="space-y-6 animate-fade-in-up">
+		<div class="space-y-6">
 			<!-- Barra de Estado y Acciones Rápidas -->
 			<div class="glass-card p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 				<div class="flex items-center gap-3">
 					<span class="text-xs px-3 py-1.5 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 						{#if activeMatch.status === 'live'}
-							<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+							<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
 						{/if}
 						{status.icon} {status.label}
 					</span>
@@ -485,9 +485,9 @@
 					{@const mday = r.matchday ?? r.round ?? 1}
 					<button
 						onclick={() => (selectedRound = mday)}
-						class="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap {selectedRound === mday
-							? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950'
-							: 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'}"
+						class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors whitespace-nowrap {selectedRound === mday
+							? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/50'
+							: 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700/60'}"
 					>
 						Jornada {mday}
 					</button>
@@ -501,12 +501,12 @@
 					{@const awayTeam = teamsMap[match.away_team_id]}
 					{@const status = getStatus(match.status)}
 
-					<div class="glass-card p-5 flex flex-col justify-between gap-4 hover:border-emerald-500/30 transition">
+					<div class="glass-card p-5 flex flex-col justify-between gap-4 transition">
 						<div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
 							<span class="text-xs font-mono font-bold text-slate-400">Partido #{match.id}</span>
-							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1">
+							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
-									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
 								{/if}
 								{status.icon} {status.label}
 							</span>
