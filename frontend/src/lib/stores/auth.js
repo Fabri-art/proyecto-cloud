@@ -13,7 +13,10 @@
  *   auth.logout()
  */
 
-const ADMIN_PIN = '1234';
+const ADMIN_PIN =
+	(typeof import.meta !== 'undefined' &&
+		(import.meta.env?.PUBLIC_ADMIN_PIN || import.meta.env?.VITE_ADMIN_PIN)) ||
+	'1234';
 const SESSION_KEY = 'nc_admin_session';
 const SESSION_HOURS = 8;
 

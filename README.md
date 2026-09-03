@@ -1,4 +1,3 @@
-```markdown
 # 🏆 Nombre-Creativo — Plataforma de Torneos Deportivos
 
 Sistema integral para gestión de torneos deportivos, fixture round-robin, mesa de control en vivo y tablas de posiciones.
@@ -109,6 +108,10 @@ git push origin feat/frontend-vistas
 
 5. Abre un **Pull Request (PR)** hacia `main` en GitHub para revisión e integración.
 
-```
+---
 
-```
+## ☁️ Despliegue en Producción (AWS)
+
+Para desplegar la aplicación en la nube de forma segura (sin claves expuestas, con Amazon RDS, ECR y App Runner / ECS Fargate), consulta la guía detallada:
+
+👉 **[Guía de Despliegue en Producción (DEPLOYMENT.md)](DEPLOYMENT.md)**

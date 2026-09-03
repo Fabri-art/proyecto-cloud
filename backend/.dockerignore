@@ -1,0 +1,32 @@
+# Git & Version Control
+.git/
+.gitignore
+
+# Environment variables & secrets (NEVER copy into image)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python artifacts & virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & System
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
