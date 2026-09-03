@@ -27,7 +27,8 @@ class MatchRead(BaseModel):
     away_team_id: int
     matchday: Optional[int]
     scheduled_at: Optional[datetime]
-    started_at: Optional[datetime]  # when the match went LIVE
+    started_at: Optional[datetime] = None  # when the match went LIVE
+    finished_at: Optional[datetime] = None  # when the match finished
     status: MatchStatus
     home_score: Optional[int]
     away_score: Optional[int]

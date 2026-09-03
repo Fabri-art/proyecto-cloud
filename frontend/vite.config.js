@@ -24,5 +24,6 @@ export default defineConfig({
 			interval: 1000,
 			ignored: ['**/node_modules/**', '**/.git/**', '**/.svelte-kit/**']
 		}
-	}
+	},
+	envPrefix: ['VITE_', 'PUBLIC_']
 });
