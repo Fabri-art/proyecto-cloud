@@ -1,28 +1,31 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 /* ── Fuente global ─────────────────────────────────────────────────────────── */
 @theme {
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ── Variables del tema deportivo (optimizado y menos saturado) ─────────────── */
+/* ── Variables del tema deportivo ────────────────────────────────────────────── */
 :root {
-  --bg-primary: #0b0f19;
-  --bg-surface: #111827;
-  --bg-card: #162032;
-  --bg-card-hover: #1c2a42;
-  --accent-green: #10b981;
-  --accent-yellow: #f59e0b;
-  --accent-red: #ef4444;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(148, 163, 184, 0.12);
+  --bg-primary:      #080c14;
+  --bg-surface:      #0e1420;
+  --bg-card:         #111827;
+  --bg-card-hover:   #172032;
+  --accent-green:    #10b981;
+  --accent-green-glow: rgba(16, 185, 129, 0.25);
+  --accent-gold:     #f59e0b;
+  --accent-gold-glow: rgba(245, 158, 11, 0.2);
+  --accent-red:      #ef4444;
+  --accent-blue:     #3b82f6;
+  --text-primary:    #f1f5f9;
+  --text-secondary:  #94a3b8;
+  --border-color:    rgba(148, 163, 184, 0.10);
+  --border-hover:    rgba(148, 163, 184, 0.22);
 }
 
 /* ── Estilos base ───────────────────────────────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background-color: var(--bg-primary);
@@ -31,45 +34,194 @@ body {
   min-height: 100vh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.06) 0%, transparent 60%);
 }
 
-/* ── Tarjetas optimizadas (Sin backdrop-filter para máximo rendimiento) ──────── */
+/* ── Tarjetas ────────────────────────────────────────────────────────────────── */
 .glass-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 0.875rem;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  border-radius: 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
 }
-
 .glass-card:hover {
   background-color: var(--bg-card-hover);
-  border-color: rgba(148, 163, 184, 0.25);
+  border-color: var(--border-hover);
+}
+
+/* Tarjeta con acento verde al hover */
+.glass-card-green:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1) inset;
 }
 
 /* ── Badges de estado de partido ─────────────────────────────────────────────── */
-.badge-scheduled   { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
-.badge-in-progress { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.badge-finished    { background: rgba(99, 102, 241, 0.15);  color: #a5b4fc; }
-.badge-cancelled   { background: rgba(239, 68, 68, 0.15);   color: #f87171; }
+.badge-scheduled   {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+.badge-in-progress, .badge-live {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.badge-finished {
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+.badge-cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
 /* ── Tabla de posiciones ─────────────────────────────────────────────────────── */
-.standings-row:hover {
-  background: rgba(16, 185, 129, 0.04);
+.standings-row:hover { background: rgba(16, 185, 129, 0.04); }
+.standings-row:nth-child(even) { background: rgba(255,255,255,0.015); }
+
+/* ── Tipografía de marcador (monoespaciada) ──────────────────────────────────── */
+.font-score {
+  font-family: 'Space Mono', monospace;
+  font-feature-settings: 'tnum';
+}
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 /* ── Scrollbar personalizada ────────────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar       { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: #263346; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #334155; }
+::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2d4157; }
+
+/* ── Animaciones de entrada ─────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease both;
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
+}
 
 /* ── Toast notifications ────────────────────────────────────────────────────── */
-.toast-success { background: #064e3b; border-left: 4px solid var(--accent-green); }
-.toast-error   { background: #7f1d1d; border-left: 4px solid var(--accent-red); }
-.toast-info    { background: #1e3a5f; border-left: 4px solid #60a5fa; }
+.toast-success {
+  background: #052e1d;
+  border-left: 3px solid var(--accent-green);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.toast-error {
+  background: #2d0f0f;
+  border-left: 3px solid var(--accent-red);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.toast-info {
+  background: #0d1f38;
+  border-left: 3px solid var(--accent-blue);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
 
 /* ── Skeleton loader ────────────────────────────────────────────────────────── */
 .skeleton {
-  background: #1e293b;
-  border-radius: 0.375rem;
+  background: linear-gradient(90deg, #151f2e 25%, #1a2738 50%, #151f2e 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Inputs y formularios ─────────────────────────────────────────────────── */
+.input-field {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: #0e1420;
+  border: 1px solid rgba(148,163,184,0.15);
+  border-radius: 0.625rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.input-field:focus {
+  border-color: rgba(16,185,129,0.5);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.08);
+}
+.input-field::placeholder { color: #4a5568; }
+
+/* ── Botones base ──────────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--accent-green);
+  color: white;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+}
+.btn-primary:hover {
+  background: #0ea271;
+  box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-radius: 0.625rem;
+  border: 1px solid var(--border-color);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ── Separador de sección ─────────────────────────────────────────────────── */
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+/* ── Punto LIVE pulsante ───────────────────────────────────────────────────── */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  animation: live-blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
 }
