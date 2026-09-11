@@ -19,6 +19,8 @@ export default defineConfig({
 		})
 	],
 	server: {
+		// --- PERMITIR EL BALANCEADOR DE AWS ---
+		allowedHosts: true,
 		watch: {
 			usePolling: true,
 			interval: 1000,
