@@ -1,5 +1,7 @@
 """
 app/schemas/match.py
+
+Schemas para partidos, fixtures y operaciones de reset/regeneración.
 """
 from __future__ import annotations
 
@@ -87,3 +89,27 @@ class MatchResultUpdate(BaseModel):
     away_score_et: Optional[int] = None
     home_score_pen: Optional[int] = None
     away_score_pen: Optional[int] = None
+
+
+class FixtureGenerateRequest(BaseModel):
+    """Payload opcional para POST /tournaments/{id}/fixture/generate.
+
+    Campos:
+        force: Si True, elimina el fixture existente (incluyendo partidos jugados
+               y estadísticas) antes de generar uno nuevo. Por defecto False.
+    """
+    force: bool = False
+
+
+class FixtureDeleteInfo(BaseModel):
+    """Respuesta informativa del DELETE /tournaments/{id}/fixture.
+
+    Campos:
+        deleted_matches: Total de partidos eliminados.
+        had_played_matches: True si alguno de los partidos eliminados tenía resultado
+                            (status FINISHED o LIVE).
+        tournament_id: ID del torneo cuyo fixture fue eliminado.
+    """
+    tournament_id: int
+    deleted_matches: int
+    had_played_matches: bool

@@ -1,7 +1,7 @@
 """
 app/services/fixture_service.py
 
-NOM-8 – Round-Robin fixture generator and scheduling logic.
+NOM-8 – Round-Robin fixture generator, delete, and scheduling logic.
 
 Algorithm details
 ─────────────────
@@ -23,16 +23,18 @@ from __future__ import annotations
 import random
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import delete as sql_delete
 from sqlmodel import select
 
 from app.models.match import Match, MatchStatus
+from app.models.standing import Standing
 from app.models.team import Team
 from app.models.tournament import Tournament
-from app.schemas.match import FixtureRead, MatchdayRead, MatchRead, MatchSchedule
+from app.schemas.match import FixtureDeleteInfo, FixtureRead, MatchdayRead, MatchRead, MatchSchedule
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -81,14 +83,107 @@ async def _get_tournament_or_404(tid: int, session: AsyncSession) -> Tournament:
     return t
 
 
-async def generate_fixture(tournament_id: int, session: AsyncSession) -> List[Match]:
+async def _count_played_matches(tournament_id: int, session: AsyncSession) -> Tuple[int, int]:
+    """
+    Returns (total_matches, played_matches) for the given tournament.
+    'played' means status FINISHED or LIVE (have real score data).
+    """
+    all_result = await session.execute(
+        select(Match).where(Match.tournament_id == tournament_id)
+    )
+    all_matches: Sequence[Match] = all_result.scalars().all()
+    total = len(all_matches)
+    played = sum(
+        1 for m in all_matches
+        if m.status in (MatchStatus.FINISHED, MatchStatus.LIVE)
+    )
+    return total, played
+
+
+async def delete_fixture(
+    tournament_id: int,
+    session: AsyncSession,
+    force: bool = False,
+) -> FixtureDeleteInfo:
+    """
+    Elimina todos los partidos (y standings asociados) del torneo indicado.
+
+    Args:
+        tournament_id: ID del torneo.
+        session:       Sesión de base de datos activa.
+        force:         Si False (default), lanza HTTP 409 cuando existen partidos
+                       FINISHED o LIVE (datos ya jugados).
+                       Si True, elimina todo sin importar el estado.
+
+    Returns:
+        FixtureDeleteInfo con información sobre los partidos eliminados.
+
+    Raises:
+        404 – Torneo no encontrado.
+        409 – Hay partidos jugados y force=False.
+    """
+    await _get_tournament_or_404(tournament_id, session)
+
+    total_matches, played_matches = await _count_played_matches(tournament_id, session)
+
+    if total_matches == 0:
+        # Nothing to delete — return empty info
+        return FixtureDeleteInfo(
+            tournament_id=tournament_id,
+            deleted_matches=0,
+            had_played_matches=False,
+        )
+
+    if played_matches > 0 and not force:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"El fixture tiene {played_matches} partido(s) con resultados registrados "
+                f"(FINALIZADO o EN JUEGO). Usa force=true para eliminar igualmente. "
+                f"⚠️ Se perderán todos los marcadores y estadísticas."
+            ),
+        )
+
+    had_played = played_matches > 0
+
+    # 1. Delete all standings for this tournament (referential integrity)
+    await session.execute(
+        sql_delete(Standing).where(Standing.tournament_id == tournament_id)
+    )
+
+    # 2. Delete all matches for this tournament
+    await session.execute(
+        sql_delete(Match).where(Match.tournament_id == tournament_id)
+    )
+
+    await session.flush()
+
+    return FixtureDeleteInfo(
+        tournament_id=tournament_id,
+        deleted_matches=total_matches,
+        had_played_matches=had_played,
+    )
+
+
+async def generate_fixture(
+    tournament_id: int,
+    session: AsyncSession,
+    force: bool = False,
+) -> List[Match]:
     """
     Generate a full round-robin fixture for the given tournament and persist
     all Match rows to the database.
 
+    Args:
+        tournament_id: ID del torneo.
+        session:       Sesión de base de datos activa.
+        force:         Si True, elimina el fixture existente (incluyendo partidos
+                       jugados y standings) antes de generar uno nuevo.
+                       Si False (default), lanza HTTP 409 si ya existe un fixture.
+
     Raises:
         404 – tournament not found
-        409 – fixture already exists
+        409 – fixture already exists and force=False
         400 – fewer than 2 teams registered
     """
     await _get_tournament_or_404(tournament_id, session)
@@ -98,10 +193,16 @@ async def generate_fixture(tournament_id: int, session: AsyncSession) -> List[Ma
         select(Match).where(Match.tournament_id == tournament_id).limit(1)
     )
     if existing.scalars().first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Fixture already exists for this tournament. Delete it first.",
-        )
+        if not force:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Fixture already exists for this tournament. "
+                    "Delete it first, or use force=true to reset and regenerate."
+                ),
+            )
+        # force=True → delete existing fixture + standings atomically
+        await delete_fixture(tournament_id, session, force=True)
 
     # Fetch all teams
     result = await session.execute(
@@ -195,3 +296,4 @@ async def get_fixture(tournament_id: int, session: AsyncSession) -> FixtureRead:
         total_matchdays=len(rounds),
         rounds=rounds,
     )
+

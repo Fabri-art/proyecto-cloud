@@ -92,8 +92,27 @@ export const teamsApi = {
 
 /** Fixture (calendario de partidos) */
 export const fixtureApi = {
+	/** GET /tournaments/{id}/fixture → FixtureRead agrupado por jornada */
+	get: (tournamentId) => api.get(`/tournaments/${tournamentId}/fixture`),
+
+	/** POST /tournaments/{id}/fixture/generate — Primera generación (falla si ya existe) */
 	generate: (tournamentId) => api.post(`/tournaments/${tournamentId}/fixture/generate`),
-	get: (tournamentId) => api.get(`/tournaments/${tournamentId}/fixture`)
+
+	/**
+	 * POST /tournaments/{id}/fixture/generate con force=true.
+	 * Elimina el fixture existente (incluyendo partidos jugados) y genera uno nuevo
+	 * en una sola transacción atómica.
+	 */
+	generateForce: (tournamentId) =>
+		api.post(`/tournaments/${tournamentId}/fixture/generate`, { force: true }),
+
+	/**
+	 * DELETE /tournaments/{id}/fixture
+	 * @param {boolean} force - Si true, elimina aunque haya partidos jugados/finalizados.
+	 *   Por defecto false (retorna 409 si hay partidos con resultados).
+	 */
+	deleteFixture: (tournamentId, force = false) =>
+		api.delete(`/tournaments/${tournamentId}/fixture?force=${force}`)
 };
 
 /** Partidos */

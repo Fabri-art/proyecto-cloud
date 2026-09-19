@@ -5,8 +5,10 @@
 	 * Características:
 	 * 1. Formulario del Club: Nombre, sigla, delegado, teléfono, ciudad, país.
 	 * 2. Tabla dinámica de jugadores: agregar en vivo con nombre, apellido, DNI, dorsal y posición.
-	 * 3. Validación local: impide duplicados de DNI o dorsales en la lista antes de enviar.
-	 * 4. Envío secuencial: crea el equipo en POST /api/v1/teams y luego registra a los jugadores en POST /api/v1/teams/{id}/players.
+	 * 3. Validación robusta: sigla (2-5 chars, alfanumérico), teléfono (≥7 dígitos), DNI (5-20, alfanumérico).
+	 * 4. Mínimo 5 jugadores requeridos antes de habilitar el botón "Registrar Club".
+	 * 5. Feedback visual inline: bordes rojos + mensajes de error bajo cada campo.
+	 * 6. Envío secuencial: POST /api/v1/teams y luego POST /api/v1/teams/{id}/players.
 	 */
 	import { goto } from '$app/navigation';
 	import { teamsApi } from '$lib/api/client';
@@ -24,6 +26,8 @@
 	onDestroy(unsub);
 
 	const TOURNAMENT_ID = 1;
+	/** Mínimo de jugadores exigidos para poder enviar el formulario */
+	const MIN_PLAYERS = 5;
 
 	// ── Estado del Club ────────────────────────────────────────────────────────
 	let teamData = $state({
@@ -35,6 +39,15 @@
 		country: ''
 	});
 
+	/** Errores de validación por campo (vacío = sin error) */
+	let errors = $state({
+		name: '',
+		short_name: '',
+		delegate_name: '',
+		delegate_phone: '',
+		players_count: ''
+	});
+
 	// ── Estado para nuevo jugador en borrador ──────────────────────────────────
 	let newPlayer = $state({
 		first_name: '',
@@ -42,6 +55,14 @@
 		dni: '',
 		shirt_number: '',
 		position: 'midfielder'
+	});
+
+	/** Errores de validación del formulario de jugador actual */
+	let playerErrors = $state({
+		first_name: '',
+		last_name: '',
+		dni: '',
+		shirt_number: ''
 	});
 
 	// ── Lista dinámica de jugadores en plantilla ──────────────────────────────
@@ -56,6 +77,41 @@
 		{ value: 'forward',    label: 'Delantero',         icon: '⚽' }
 	];
 
+	// ── Helpers de validación ─────────────────────────────────────────────────
+
+	function validatePhone(phone) {
+		if (!phone || !phone.trim()) return ''; // Opcional
+		const digits = phone.replace(/[^\d]/g, '');
+		if (digits.length < 7) return 'El teléfono debe tener al menos 7 dígitos.';
+		if (!/^\+?[\d\s\-(). ]{7,25}$/.test(phone.trim()))
+			return 'Formato inválido. Usa dígitos, espacios, guiones o paréntesis.';
+		return '';
+	}
+
+	function validateShortName(v) {
+		const s = v.trim().toUpperCase();
+		if (!s) return 'La sigla es obligatoria.';
+		if (s.length < 2) return 'La sigla debe tener al menos 2 caracteres.';
+		if (s.length > 5) return 'La sigla no puede superar 5 caracteres.';
+		if (!/^[A-Z0-9]+$/.test(s)) return 'Solo letras mayúsculas y números.';
+		return '';
+	}
+
+	function validateDni(v) {
+		const d = v.trim().toUpperCase();
+		if (!d) return 'El DNI es obligatorio.';
+		if (d.length < 5) return 'Mínimo 5 caracteres.';
+		if (d.length > 20) return 'Máximo 20 caracteres.';
+		if (!/^[A-Z0-9\-]+$/.test(d)) return 'Solo letras, números y guiones.';
+		return '';
+	}
+
+	// ── Auto-uppercase en tiempo real para short_name ─────────────────────────
+	function handleShortNameInput(e) {
+		teamData.short_name = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+		errors.short_name = validateShortName(teamData.short_name);
+	}
+
 	// ── Validación y adición de jugador a la lista local ─────────────────────
 	function handleAddPlayer(e) {
 		e.preventDefault();
@@ -66,47 +122,51 @@
 		const shirt_number = newPlayer.shirt_number ? parseInt(newPlayer.shirt_number, 10) : null;
 		const position = newPlayer.position;
 
-		// Validaciones obligatorias de jugador
-		if (!first_name || !last_name) {
-			toast.error('Nombre y apellido del jugador son requeridos.');
-			return;
+		// Limpiar errores previos
+		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
+		let hasError = false;
+
+		if (!first_name) {
+			playerErrors.first_name = 'El nombre es obligatorio.';
+			hasError = true;
+		}
+		if (!last_name) {
+			playerErrors.last_name = 'El apellido es obligatorio.';
+			hasError = true;
 		}
 
-		if (!dni) {
-			toast.error('El DNI o documento del jugador es obligatorio.');
-			return;
+		const dniError = validateDni(dni);
+		if (dniError) {
+			playerErrors.dni = dniError;
+			hasError = true;
+		} else {
+			// Validar DNI único en la lista en memoria
+			const dniExists = players.some((p) => p.dni.toUpperCase() === dni);
+			if (dniExists) {
+				playerErrors.dni = `El DNI '${dni}' ya está en la plantilla.`;
+				hasError = true;
+			}
 		}
 
-		// Validar DNI único en la lista en memoria
-		const dniExists = players.some((p) => p.dni.toUpperCase() === dni);
-		if (dniExists) {
-			toast.error(`El DNI '${dni}' ya está registrado en la plantilla actual.`);
-			return;
-		}
-
-		// Validar dorsal único en la lista (si se especificó)
 		if (shirt_number !== null) {
-			if (shirt_number < 1 || shirt_number > 99) {
-				toast.error('El número de dorsal debe estar entre 1 y 99.');
-				return;
-			}
-			const numberExists = players.some((p) => p.shirt_number === shirt_number);
-			if (numberExists) {
-				toast.error(`El dorsal #${shirt_number} ya fue asignado a otro jugador.`);
-				return;
+			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 1 || shirt_number > 99) {
+				playerErrors.shirt_number = 'El dorsal debe ser un número entero entre 1 y 99.';
+				hasError = true;
+			} else {
+				const numberExists = players.some((p) => p.shirt_number === shirt_number);
+				if (numberExists) {
+					playerErrors.shirt_number = `El dorsal #${shirt_number} ya está asignado.`;
+					hasError = true;
+				}
 			}
 		}
+
+		if (hasError) return;
 
 		// Agregar a la lista
 		players = [
 			...players,
-			{
-				first_name,
-				last_name,
-				dni,
-				shirt_number,
-				position
-			}
+			{ first_name, last_name, dni, shirt_number, position }
 		];
 
 		// Limpiar campos del jugador
@@ -115,6 +175,9 @@
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
 		newPlayer.position = 'midfielder';
+
+		// Limpiar error de mínimo si ya se alcanzó
+		if (players.length >= MIN_PLAYERS) errors.players_count = '';
 
 		toast.success(`Jugador ${first_name} ${last_name} agregado a la lista.`);
 	}
@@ -130,20 +193,38 @@
 	async function handleSubmit(e) {
 		e.preventDefault();
 
+		// Reiniciar errores
+		errors = { name: '', short_name: '', delegate_name: '', delegate_phone: '', players_count: '' };
+		let hasError = false;
+
 		if (!teamData.name.trim()) {
-			toast.error('El nombre del club es obligatorio.');
-			return;
+			errors.name = 'El nombre del club es obligatorio.';
+			hasError = true;
 		}
 
-		if (!teamData.short_name.trim()) {
-			toast.error('La sigla/abreviatura es obligatoria (ej: BOC, RIV).');
-			return;
+		const snError = validateShortName(teamData.short_name);
+		if (snError) {
+			errors.short_name = snError;
+			hasError = true;
 		}
 
 		if (!teamData.delegate_name.trim()) {
-			toast.error('El nombre del delegado es obligatorio.');
-			return;
+			errors.delegate_name = 'El nombre del delegado es obligatorio.';
+			hasError = true;
 		}
+
+		const phoneError = validatePhone(teamData.delegate_phone);
+		if (phoneError) {
+			errors.delegate_phone = phoneError;
+			hasError = true;
+		}
+
+		if (players.length < MIN_PLAYERS) {
+			errors.players_count = `Debes agregar al menos ${MIN_PLAYERS} jugadores antes de registrar el club.`;
+			hasError = true;
+		}
+
+		if (hasError) return;
 
 		isSubmitting = true;
 
@@ -188,7 +269,11 @@
 			isSubmitting = false;
 		}
 	}
+
+	/** Computed: el botón Registrar se deshabilita si faltan jugadores o está enviando */
+	let canSubmit = $derived(players.length >= MIN_PLAYERS && !isSubmitting);
 </script>
+
 
 <!-- Modal de PIN si no es admin -->
 {#if showPinModal && !isAdmin}
@@ -242,24 +327,34 @@
 						bind:value={teamData.name}
 						placeholder="Ej. Deportivo Los Tigres"
 						required
-						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.name ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
+					{#if errors.name}
+						<p class="mt-1 text-xs text-red-400">{errors.name}</p>
+					{/if}
 				</div>
 
 				<!-- Abreviatura -->
 				<div>
 					<label for="team-short-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Sigla / Abreviatura <span class="text-emerald-400">*</span>
+						<span class="text-xs font-normal text-slate-500">(2-5 caracteres, solo letras/números)</span>
 					</label>
 					<input
 						id="team-short-name"
 						type="text"
 						maxlength="5"
 						bind:value={teamData.short_name}
-						placeholder="Ej. TIG (máx. 5 letras)"
+						oninput={handleShortNameInput}
+						placeholder="Ej. TIG"
 						required
-						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 uppercase focus:outline-none focus:border-emerald-500 transition"
+						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 uppercase font-mono font-bold tracking-widest focus:outline-none transition {errors.short_name ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
+					{#if errors.short_name}
+						<p class="mt-1 text-xs text-red-400">{errors.short_name}</p>
+					{:else}
+						<p class="mt-1 text-xs text-slate-500">{teamData.short_name.length}/5 caracteres</p>
+					{/if}
 				</div>
 
 				<!-- Delegado -->
@@ -273,22 +368,29 @@
 						bind:value={teamData.delegate_name}
 						placeholder="Ej. Juan Pérez"
 						required
-						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.delegate_name ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
+					{#if errors.delegate_name}
+						<p class="mt-1 text-xs text-red-400">{errors.delegate_name}</p>
+					{/if}
 				</div>
 
 				<!-- Teléfono -->
 				<div>
 					<label for="delegate-phone" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Teléfono de Contacto
+						<span class="text-xs font-normal text-slate-500">(mín. 7 dígitos)</span>
 					</label>
 					<input
 						id="delegate-phone"
 						type="tel"
 						bind:value={teamData.delegate_phone}
 						placeholder="Ej. +51 987 654 321"
-						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.delegate_phone ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
+					{#if errors.delegate_phone}
+						<p class="mt-1 text-xs text-red-400">{errors.delegate_phone}</p>
+					{/if}
 				</div>
 
 				<!-- Ciudad -->
@@ -323,14 +425,24 @@
 
 		<!-- ── SECCIÓN 2: CARGA DE PLANTILLA (JUGADORES) ───────────────────────── -->
 		<div class="glass-card p-6 md:p-8 flex flex-col gap-6">
+			<!-- Sección de jugadores con contador y barra de progreso -->
 			<div class="flex items-center justify-between border-b pb-3" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
 					<span class="text-2xl">👥</span>
 					<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
 				</div>
-				<span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">
-					{players.length} {players.length === 1 ? 'jugador' : 'jugadores'} en lista
-				</span>
+				<div class="flex flex-col items-end gap-1">
+					<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= MIN_PLAYERS ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
+						{players.length}/{MIN_PLAYERS} mínimo
+					</span>
+					<!-- Barra de progreso hacia el mínimo -->
+					<div class="w-24 h-1.5 rounded-full bg-slate-700 overflow-hidden">
+						<div
+							class="h-full rounded-full transition-all duration-300 {players.length >= MIN_PLAYERS ? 'bg-emerald-500' : 'bg-amber-500'}"
+							style="width: {Math.min(100, (players.length / MIN_PLAYERS) * 100)}%"
+						></div>
+					</div>
+				</div>
 			</div>
 
 			<!-- Mini formulario para añadir jugador a la lista -->
@@ -340,7 +452,7 @@
 				</h3>
 
 				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-					<!-- Nombre -->
+				<!-- Nombre -->
 					<div>
 						<label for="p-firstname" class="block text-xs text-slate-400 mb-1">Nombre *</label>
 						<input
@@ -348,8 +460,9 @@
 							type="text"
 							bind:value={newPlayer.first_name}
 							placeholder="Carlos"
-							class="w-full px-3 py-2 text-sm rounded bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.first_name ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
+						{#if playerErrors.first_name}<p class="mt-0.5 text-xs text-red-400">{playerErrors.first_name}</p>{/if}
 					</div>
 
 					<!-- Apellido -->
@@ -360,20 +473,22 @@
 							type="text"
 							bind:value={newPlayer.last_name}
 							placeholder="Gómez"
-							class="w-full px-3 py-2 text-sm rounded bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.last_name ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
+						{#if playerErrors.last_name}<p class="mt-0.5 text-xs text-red-400">{playerErrors.last_name}</p>{/if}
 					</div>
 
 					<!-- DNI -->
 					<div>
-						<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI / Doc *</label>
+						<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI / Doc * <span class="text-slate-600">(5-20 chars)</span></label>
 						<input
 							id="p-dni"
 							type="text"
 							bind:value={newPlayer.dni}
 							placeholder="74859612"
-							class="w-full px-3 py-2 text-sm rounded bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500 uppercase"
+							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition uppercase {playerErrors.dni ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
+						{#if playerErrors.dni}<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>{/if}
 					</div>
 
 					<!-- Dorsal -->
@@ -384,10 +499,12 @@
 							type="number"
 							min="1"
 							max="99"
+							step="1"
 							bind:value={newPlayer.shirt_number}
 							placeholder="10"
-							class="w-full px-3 py-2 text-sm rounded bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.shirt_number ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
+						{#if playerErrors.shirt_number}<p class="mt-0.5 text-xs text-red-400">{playerErrors.shirt_number}</p>{/if}
 					</div>
 
 					<!-- Posición -->
@@ -484,28 +601,41 @@
 		</div>
 
 		<!-- ── BOTÓN DE GUARDADO FINAL ─────────────────────────────────────────── -->
-		<div class="flex items-center justify-end gap-4 pt-2">
-			<a
-				href="/equipos"
-				class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition"
-			>
-				Cancelar
-			</a>
+		<div class="flex flex-col gap-3 pt-2">
+			<!-- Error de mínimo de jugadores -->
+			{#if errors.players_count}
+				<div class="flex items-center gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-300">
+					<span>⚠️</span>
+					<span>{errors.players_count}</span>
+				</div>
+			{/if}
+			<div class="flex items-center justify-end gap-4">
+				<a
+					href="/equipos"
+					class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition"
+				>
+					Cancelar
+				</a>
 
-			<button
-				type="submit"
-				disabled={isSubmitting}
-				class="px-6 py-3 rounded-lg font-bold text-white shadow-lg transition flex items-center gap-2 {isSubmitting
-					? 'bg-slate-700 cursor-not-allowed'
-					: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950'}"
-			>
-				{#if isSubmitting}
-					<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-					<span>Guardando club y plantilla...</span>
-				{:else}
-					<span>💾 Registrar Club y Plantilla</span>
-				{/if}
-			</button>
+				<button
+					type="submit"
+					disabled={!canSubmit}
+					title={players.length < MIN_PLAYERS ? `Faltan ${MIN_PLAYERS - players.length} jugador(es) para poder registrar el club` : ''}
+					class="px-6 py-3 rounded-lg font-bold text-white shadow-lg transition flex items-center gap-2 {!canSubmit
+						? 'bg-slate-700 cursor-not-allowed opacity-60'
+						: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950'}"
+				>
+					{#if isSubmitting}
+						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+						<span>Guardando club y plantilla...</span>
+					{:else}
+						<span>💾 Registrar Club y Plantilla</span>
+						{#if players.length < MIN_PLAYERS}
+							<span class="text-xs font-normal opacity-70">({players.length}/{MIN_PLAYERS} jug.)</span>
+						{/if}
+					{/if}
+				</button>
+			</div>
 		</div>
 	</form>
 </div>

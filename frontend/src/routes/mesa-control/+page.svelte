@@ -5,7 +5,8 @@
 	 * ★ Ruta protegida con PIN. Solo delegados y árbitros.
 	 * ★ Cronómetro calculado desde match.started_at (persiste entre recargas).
 	 * ★ Goles se sincronizan al backend en tiempo real con PATCH /matches/{id}/score.
-	 * ★ Botón "Regenerar Fixture" para incluir equipos registrados después de generar.
+	 * ★ Botón "Eliminar Fixture" (destructivo) + Modal interactivo de Reset/Regenerar.
+	 * ★ Flujo automático: si existe fixture, muestra diálogo antes de regenerar.
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -31,6 +32,14 @@
 	let loading = $state(true);
 	let generatingFixture = $state(false);
 	let regeneratingFixture = $state(false);
+
+	// ── Estados para reset/eliminar fixture ────────────────────────────────────
+	let showResetFixtureModal = $state(false);
+	let deletingFixture = $state(false);
+	/** Número de partidos con resultados registrados (FINISHED o LIVE) en el fixture actual */
+	let playedMatchesCount = $state(0);
+	/** Número total de equipos activos en el torneo */
+	let totalTeamsCount = $state(0);
 
 	// Partido actualmente seleccionado para arbitrar
 	let activeMatch = $state(null);
@@ -70,6 +79,7 @@
 			const map = {};
 			for (const t of teamsList) map[t.id] = t;
 			teamsMap = map;
+			totalTeamsCount = teamsList.length;
 			await loadFixture();
 		} catch (err) {
 			toast.error('Error al cargar datos del torneo.');
@@ -82,15 +92,26 @@
 		try {
 			const data = await fixtureApi.get(TOURNAMENT_ID);
 			rounds = data.rounds ?? [];
+
+			// Calcular cuántos partidos tienen resultados (para el modal de advertencia)
+			playedMatchesCount = rounds
+				.flatMap((r) => r.matches ?? [])
+				.filter((m) => {
+					const s = (m.status ?? '').toLowerCase();
+					return s === 'finished' || s === 'live';
+				}).length;
+
 			if (rounds.length > 0) {
 				const hasSelected = rounds.some((r) => (r.matchday ?? r.round) === selectedRound);
 				if (!hasSelected) selectedRound = rounds[0].matchday ?? rounds[0].round ?? 1;
 			}
 		} catch {
 			rounds = [];
+			playedMatchesCount = 0;
 		}
 	}
 
+	// ── Generación inicial del fixture (cuando no existe ninguno) ──────────────
 	async function handleGenerateFixture() {
 		generatingFixture = true;
 		try {
@@ -104,14 +125,54 @@
 		}
 	}
 
+	/**
+	 * Al hacer clic en "Regenerar Fixture":
+	 * - Si ya hay un fixture activo, abre el modal interactivo en lugar de fallar.
+	 * - El modal permite elegir entre "Solo eliminar" o "Eliminar y regenerar".
+	 */
 	async function handleRegenerateFixture() {
-		if (!confirm('⚠️ Esto regenerará el fixture completo con todos los equipos actuales. Los partidos sin resultado se perderán. ¿Continuar?')) return;
+		if (rounds.length === 0) {
+			// No hay fixture — generar directamente
+			await handleGenerateFixture();
+			return;
+		}
+		// Hay fixture activo → mostrar modal de confirmación
+		showResetFixtureModal = true;
+	}
+
+	/**
+	 * Elimina el fixture actual sin regenerar. Retorna al estado "sin fixture".
+	 * Invocado desde el modal de confirmación con el botón "Solo Eliminar".
+	 */
+	async function handleDeleteOnlyFixture() {
+		deletingFixture = true;
+		try {
+			await fixtureApi.deleteFixture(TOURNAMENT_ID, true);
+			rounds = [];
+			playedMatchesCount = 0;
+			activeMatch = null;
+			showResetFixtureModal = false;
+			toast.success('Fixture eliminado. Puedes generar uno nuevo cuando quieras.');
+		} catch (err) {
+			toast.error(err.message || 'No se pudo eliminar el fixture.');
+		} finally {
+			deletingFixture = false;
+		}
+	}
+
+	/**
+	 * Elimina el fixture existente y genera uno nuevo en una sola operación.
+	 * Usa force=true en el backend (transacción atómica).
+	 * Invocado desde el modal de confirmación con el botón "Eliminar y Regenerar".
+	 */
+	async function handleResetAndRegenerate() {
 		regeneratingFixture = true;
 		try {
-			await fixtureApi.generate(TOURNAMENT_ID);
-			toast.success('¡Fixture regenerado! Todos los equipos están incluidos.');
-			await loadFixture();
+			await fixtureApi.generateForce(TOURNAMENT_ID);
+			showResetFixtureModal = false;
 			activeMatch = null;
+			toast.success(`¡Fixture regenerado! ${totalTeamsCount} equipos incluidos.`);
+			await loadFixture();
 		} catch (err) {
 			toast.error(err.message || 'No se pudo regenerar el fixture.');
 		} finally {
@@ -245,6 +306,7 @@
 		unsub();
 	});
 </script>
+
 
 <svelte:head>
 	<title>Mesa de Control — Nombre-Creativo</title>
@@ -421,7 +483,6 @@
 				</button>
 			</div>
 		{:else}
-			<!-- Selector de Jornadas + botón Regenerar -->
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
 				<div class="flex items-center gap-2 overflow-x-auto pb-1">
 					{#each rounds as r}
@@ -434,15 +495,33 @@
 						</button>
 					{/each}
 				</div>
-				<button onclick={handleRegenerateFixture} disabled={regeneratingFixture}
-					class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-amber-400 bg-slate-800/60 border border-slate-700/50 hover:border-amber-500/30 transition flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
-					{#if regeneratingFixture}
-						<span class="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
-					{:else}
-						🔄
-					{/if}
-					Regenerar Fixture
-				</button>
+				<!-- Botones de gestión de fixture -->
+				<div class="flex items-center gap-2">
+					<!-- Eliminar fixture (destructivo, rojo/outline) -->
+					<button
+						onclick={handleDeleteOnlyFixture}
+						disabled={deletingFixture || regeneratingFixture}
+						title="Eliminar fixture actual. Se perderán todos los partidos."
+						class="px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 bg-slate-800/60 border border-red-500/30 hover:border-red-400/60 hover:bg-red-500/10 transition flex items-center gap-1.5 whitespace-nowrap disabled:opacity-40"
+					>
+						{#if deletingFixture}
+							<span class="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
+						{:else}
+							🗑️
+						{/if}
+						Eliminar Fixture
+					</button>
+					<!-- Regenerar fixture -->
+					<button onclick={handleRegenerateFixture} disabled={regeneratingFixture || deletingFixture}
+						class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-amber-400 bg-slate-800/60 border border-slate-700/50 hover:border-amber-500/30 transition flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
+						{#if regeneratingFixture}
+							<span class="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
+						{:else}
+							🔄
+						{/if}
+						Regenerar Fixture
+					</button>
+				</div>
 			</div>
 
 			<!-- Lista de Partidos -->
@@ -526,6 +605,98 @@
 						Cerrando...
 					{:else}
 						Confirmar Cierre
+					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- ── MODAL INTERACTIVO: RESET / REGENERAR FIXTURE ──────────────────────────── -->
+{#if showResetFixtureModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85" role="dialog" aria-modal="true" aria-labelledby="reset-fixture-title">
+		<div class="glass-card w-full max-w-lg p-6 flex flex-col gap-5 border border-slate-700 shadow-2xl">
+			<!-- Encabezado del modal -->
+			<div class="text-center">
+				<div class="text-5xl mb-3">🔄</div>
+				<h3 id="reset-fixture-title" class="text-xl font-black text-white">
+					Ya existe un fixture activo
+				</h3>
+				<p class="text-sm text-slate-400 mt-1">
+					¿Qué deseas hacer con el fixture actual?
+				</p>
+			</div>
+
+			<!-- Información del estado actual -->
+			<div class="flex flex-col gap-2.5 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+				<!-- Advertencia de partidos jugados -->
+				{#if playedMatchesCount > 0}
+					<div class="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+						<span class="text-xl flex-shrink-0">⚠️</span>
+						<div>
+							<p class="text-sm font-bold text-red-300">
+								{playedMatchesCount} partido{playedMatchesCount !== 1 ? 's' : ''} con resultado registrado
+							</p>
+							<p class="text-xs text-red-400/80 mt-0.5">
+								Al eliminar el fixture, se perderán todos los marcadores y la tabla de posiciones quedará en cero.
+							</p>
+						</div>
+					</div>
+				{:else}
+					<div class="flex items-center gap-2.5 text-sm text-slate-400">
+						<span>✅</span>
+						<span>No hay partidos jugados. El fixture puede eliminarse sin pérdida de datos.</span>
+					</div>
+				{/if}
+
+				<!-- Equipos que se incluirán en el nuevo fixture -->
+				<div class="flex items-center gap-2.5 text-sm text-slate-300">
+					<span>👥</span>
+					<span>
+						El nuevo fixture incluirá los <strong class="text-white">{totalTeamsCount} equipos</strong> actualmente registrados.
+					</span>
+				</div>
+			</div>
+
+			<!-- Botones de acción -->
+			<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
+				<!-- Cancelar -->
+				<button
+					type="button"
+					onclick={() => (showResetFixtureModal = false)}
+					disabled={deletingFixture || regeneratingFixture}
+					class="px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition disabled:opacity-40 order-last sm:order-first"
+				>
+					Cancelar
+				</button>
+
+				<!-- Solo eliminar -->
+				<button
+					type="button"
+					onclick={handleDeleteOnlyFixture}
+					disabled={deletingFixture || regeneratingFixture}
+					class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 transition flex items-center justify-center gap-2 disabled:opacity-40"
+				>
+					{#if deletingFixture}
+						<span class="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
+					{:else}
+						🗑️
+					{/if}
+					Solo Eliminar
+				</button>
+
+				<!-- Eliminar y regenerar (acción principal) -->
+				<button
+					type="button"
+					onclick={handleResetAndRegenerate}
+					disabled={deletingFixture || regeneratingFixture}
+					class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-amber-950/50"
+				>
+					{#if regeneratingFixture}
+						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+						Regenerando...
+					{:else}
+						⚡ Eliminar y Regenerar
 					{/if}
 				</button>
 			</div>

@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.player import PlayerPosition
 
 
 class PlayerCreate(BaseModel):
-    first_name: str
-    last_name: str
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
     dni: str
-    shirt_number: Optional[int] = None
+    shirt_number: Optional[int] = Field(default=None, ge=1, le=99)
     position: Optional[PlayerPosition] = None
     nationality: Optional[str] = None
     date_of_birth: Optional[date] = None
@@ -20,8 +21,31 @@ class PlayerCreate(BaseModel):
 
     @field_validator("dni")
     @classmethod
-    def normalize_dni(cls, v: str) -> str:
-        return v.strip().upper()
+    def validate_dni(cls, v: str) -> str:
+        v = v.strip().upper()
+        if len(v) < 5:
+            raise ValueError(
+                "El DNI/documento debe tener al menos 5 caracteres."
+            )
+        if len(v) > 20:
+            raise ValueError(
+                "El DNI/documento no puede superar 20 caracteres."
+            )
+        # Solo letras, números y guiones (cubre DNI nacionales e internacionales)
+        if not re.match(r"^[A-Z0-9\-]+$", v):
+            raise ValueError(
+                "El DNI/documento solo puede contener letras, números y guiones."
+            )
+        return v
+
+    @field_validator("shirt_number")
+    @classmethod
+    def validate_shirt_number(cls, v: Optional[int]) -> Optional[int]:
+        if v is None:
+            return v
+        if not isinstance(v, int) or v < 1 or v > 99:
+            raise ValueError("El dorsal debe ser un número entero entre 1 y 99.")
+        return v
 
 
 class PlayerRead(BaseModel):
@@ -40,7 +64,7 @@ class PlayerRead(BaseModel):
 
 
 class PlayerUpdate(BaseModel):
-    shirt_number: Optional[int] = None
+    shirt_number: Optional[int] = Field(default=None, ge=1, le=99)
     position: Optional[PlayerPosition] = None
     is_active: Optional[bool] = None
     photo_url: Optional[str] = None
