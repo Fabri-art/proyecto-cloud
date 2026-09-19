@@ -21,6 +21,19 @@
 	let loading = $state(true);
 	let error = $state(null);
 	let pitchModalTeam = $state(null);
+	let now = $state(Date.now());
+	let tickInterval = null;
+
+	function getMatchTimer(match) {
+		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		if (!match.started_at) return '00:00';
+		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
+		const startedMs = new Date(iso).getTime();
+		const totalSec = Math.max(0, Math.floor((now - startedMs) / 1000));
+		const m = Math.floor(totalSec / 60);
+		const s = totalSec % 60;
+		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	}
 	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
 	function getMatchSport(match) {
 		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';

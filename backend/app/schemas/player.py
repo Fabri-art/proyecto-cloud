@@ -8,6 +8,11 @@ from pydantic import BaseModel, Field, field_validator
 
 from app.models.player import PlayerPosition
 
+SOUTH_AMERICAN_COUNTRIES = {
+    'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Ecuador',
+    'Guyana', 'Paraguay', 'Perú', 'Peru', 'Surinam', 'Suriname', 'Uruguay', 'Venezuela'
+}
+
 
 class PlayerCreate(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
@@ -19,23 +24,49 @@ class PlayerCreate(BaseModel):
     date_of_birth: Optional[date] = None
     photo_url: Optional[str] = None
 
-    @field_validator("dni")
+    @field_validator('first_name')
+    @classmethod
+    def validate_first_name(cls, v: str) -> str:
+        v = v.strip()
+        if any(char.isdigit() for char in v):
+            raise ValueError('El nombre del jugador no puede contener números.')
+        return v
+
+    @field_validator('last_name')
+    @classmethod
+    def validate_last_name(cls, v: str) -> str:
+        v = v.strip()
+        if any(char.isdigit() for char in v):
+            raise ValueError('El apellido del jugador no puede contener números.')
+        return v
+
+    @field_validator('dni')
     @classmethod
     def validate_dni(cls, v: str) -> str:
         v = v.strip()
-        if not re.match(r"^\d{8}$", v):
-            raise ValueError(
-                "El DNI debe tener obligatoriamente 8 dígitos numéricos."
-            )
+        if any(char.isalpha() for char in v):
+            raise ValueError('El DNI no puede contener letras.')
+        if not re.match(r'^\d{8}$', v):
+            raise ValueError('El DNI debe tener exactamente 8 dígitos numéricos.')
         return v
 
-    @field_validator("shirt_number")
+    @field_validator('shirt_number')
     @classmethod
     def validate_shirt_number(cls, v: Optional[int]) -> Optional[int]:
         if v is None:
-            return v
+            return None
         if not isinstance(v, int) or v < 0 or v > 99:
-            raise ValueError("El dorsal debe ser un número entero entre 0 y 99.")
+            raise ValueError('El dorsal debe ser un número entero entre 0 y 99.')
+        return v
+
+    @field_validator('nationality')
+    @classmethod
+    def validate_nationality(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        v = v.strip()
+        if v not in SOUTH_AMERICAN_COUNTRIES:
+            raise ValueError(f'"{v}" no es un país de Sudamérica válido.')
         return v
 
 
@@ -51,7 +82,7 @@ class PlayerRead(BaseModel):
     date_of_birth: Optional[date]
     is_active: bool
 
-    model_config = {"from_attributes": True}
+    model_config = {'from_attributes': True}
 
 
 class PlayerUpdate(BaseModel):

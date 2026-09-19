@@ -8,6 +8,11 @@ from pydantic import BaseModel, Field, field_validator
 from app.schemas.player import PlayerRead
 from app.models.tournament import SportType
 
+SOUTH_AMERICAN_COUNTRIES = {
+    'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Ecuador',
+    'Guyana', 'Paraguay', 'Perú', 'Peru', 'Surinam', 'Suriname', 'Uruguay', 'Venezuela'
+}
+
 
 class TeamCreate(BaseModel):
     tournament_id: int
@@ -20,35 +25,65 @@ class TeamCreate(BaseModel):
     country: Optional[str] = None
     logo_url: Optional[str] = None
 
-    @field_validator("short_name")
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if any(char.isdigit() for char in v):
+            raise ValueError('El nombre del club no puede contener números.')
+        return v
+
+    @field_validator('short_name')
     @classmethod
     def validate_short_name(cls, v: str) -> str:
         v = v.strip().upper()
         if len(v) < 2:
-            raise ValueError("La sigla debe tener al menos 2 caracteres.")
+            raise ValueError('La sigla debe tener al menos 2 caracteres.')
         if len(v) > 5:
-            raise ValueError("La sigla no puede superar 5 caracteres.")
-        if not re.match(r"^[A-Z0-9]+$", v):
-            raise ValueError("La sigla solo puede contener letras mayúsculas y números.")
+            raise ValueError('La sigla no puede superar 5 caracteres.')
+        if not re.match(r'^[A-Z0-9]+$', v):
+            raise ValueError('La sigla solo puede contener letras mayúsculas y números.')
         return v
 
-    @field_validator("delegate_phone")
+    @field_validator('delegate_name')
     @classmethod
-    def validate_phone(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise ValueError("El teléfono del delegado es un campo obligatorio.")
+    def validate_delegate_name(cls, v: str) -> str:
         v = v.strip()
-        # Extraer solo los dígitos para verificar longitud mínima de 9 dígitos
-        digits = re.sub(r"[^\d]", "", v)
+        if any(char.isdigit() for char in v):
+            raise ValueError('El nombre del delegado no puede contener números.')
+        return v
+
+    @field_validator('delegate_phone')
+    @classmethod
+    def validate_delegate_phone(cls, v: str) -> str:
+        v = v.strip()
+        if any(char.isalpha() for char in v):
+            raise ValueError('El teléfono de contacto no puede contener letras.')
+        digits = re.sub(r'[^\d]', '', v)
         if len(digits) < 9:
-            raise ValueError(
-                "El teléfono debe tener al menos 9 dígitos numéricos."
-            )
-        # Validar formato general razonable
-        if not re.match(r"^\+?[\d\s\-(). ]{9,30}$", v):
-            raise ValueError(
-                "Formato de teléfono inválido. Usa dígitos, espacios o guiones (mínimo 9 dígitos)."
-            )
+            raise ValueError('El teléfono debe tener al menos 9 dígitos numéricos.')
+        if not re.match(r'^\+?[\d\s\-\(\)\.]{9,30}$', v):
+            raise ValueError('Formato de teléfono inválido (solo números y signos + - ()).')
+        return v
+
+    @field_validator('city')
+    @classmethod
+    def validate_city(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        v = v.strip()
+        if any(char.isdigit() for char in v):
+            raise ValueError('La ciudad no puede contener números.')
+        return v
+
+    @field_validator('country')
+    @classmethod
+    def validate_country(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        v = v.strip()
+        if v not in SOUTH_AMERICAN_COUNTRIES:
+            raise ValueError(f'"{v}" no es un país de Sudamérica válido.')
         return v
 
 
@@ -64,12 +99,14 @@ class TeamRead(BaseModel):
     country: Optional[str]
     logo_url: Optional[str]
 
-    model_config = {"from_attributes": True}
+    model_config = {'from_attributes': True}
 
 
 class TeamReadWithPlayers(TeamRead):
     """Extended response that includes the full player roster."""
     players: List[PlayerRead] = []
+
+TeamWithPlayers = TeamReadWithPlayers
 
 
 class TeamUpdate(BaseModel):
@@ -81,30 +118,3 @@ class TeamUpdate(BaseModel):
     city: Optional[str] = None
     country: Optional[str] = None
     logo_url: Optional[str] = None
-
-    @field_validator("short_name")
-    @classmethod
-    def validate_short_name(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
-        v = v.strip().upper()
-        if len(v) < 2:
-            raise ValueError("La sigla debe tener al menos 2 caracteres.")
-        if not re.match(r"^[A-Z0-9]+$", v):
-            raise ValueError("La sigla solo puede contener letras mayúsculas y números.")
-        return v
-
-    @field_validator("delegate_phone")
-    @classmethod
-    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
-        v = v.strip()
-        if not v:
-            return None
-        digits = re.sub(r"[^\d]", "", v)
-        if len(digits) < 9:
-            raise ValueError("El teléfono debe tener al menos 9 dígitos numéricos.")
-        if not re.match(r"^\+?[\d\s\-(). ]{9,30}$", v):
-            raise ValueError("Formato de teléfono inválido (mínimo 9 dígitos).")
-        return v

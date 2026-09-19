@@ -47,6 +47,18 @@
 		}
 		pitchModalTeam = t;
 	}
+	let now = $state(Date.now());
+	function getMatchTimer(match, _tick) {
+		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		if (!match.started_at) return '00:00';
+		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
+		const startedMs = new Date(iso).getTime();
+		const current = now || Date.now();
+		const totalSec = Math.max(0, Math.floor((current - startedMs) / 1000));
+		const m = Math.floor(totalSec / 60);
+		const s = totalSec % 60;
+		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	}
 	let lastUpdated = $state(null);
 	let secondsSince = $state(0);
 	let refreshTimer = null;
@@ -137,7 +149,7 @@
 			clearInterval(refreshTimer);
 			refreshTimer = setInterval(fetchAll, interval);
 		}, hasLiveMatch ? LIVE_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS);
-		clockTimer = setInterval(() => { secondsSince++; }, 1000);
+		clockTimer = setInterval(() => { secondsSince++; now = Date.now(); }, 1000);
 	});
 
 	onDestroy(() => {
@@ -344,15 +356,23 @@
 								</div>
 							</div>
 
-							<!-- Marcador central -->
-							<div class="score-center {isLive ? 'score-live' : isFinished ? 'score-done' : 'score-upcoming'}">
-								{#if match.home_score !== null && match.away_score !== null}
-									<span class="font-score text-2xl sm:text-3xl font-bold tabular-nums">
-										{match.home_score}:{match.away_score}
-									</span>
-								{:else}
-									<span class="text-slate-600 font-bold text-sm">VS</span>
+							<!-- Marcador central con timer encima -->
+							<div class="flex flex-col items-center gap-1.5 flex-shrink-0">
+								{#if isLive}
+									<div class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 font-mono font-black text-xs shadow-md animate-pulse tracking-wider">
+										<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+										<span>⏱️ {getMatchTimer(match, now)}</span>
+									</div>
 								{/if}
+								<div class="score-center {isLive ? 'score-live' : isFinished ? 'score-done' : 'score-upcoming'}">
+									{#if match.home_score !== null && match.away_score !== null}
+										<span class="font-score text-2xl sm:text-3xl font-bold tabular-nums">
+											{match.home_score}:{match.away_score}
+										</span>
+									{:else}
+										<span class="text-slate-600 font-bold text-sm">VS</span>
+									{/if}
+								</div>
 							</div>
 
 							<!-- Visitante -->
@@ -373,11 +393,11 @@
 						<!-- Botones de Alineación Táctica en Cancha -->
 						<div class="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-between text-xs">
 							<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
-								<span>🏟️</span> Alineación {teamShort(match.home_team_id)}
+								<span>🏟️</span> Ver alineación {teamShort(match.home_team_id)}
 							</button>
 							<span class="text-slate-700">•</span>
 							<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
-								<span>🏟️</span> Alineación {teamShort(match.away_team_id)}
+								<span>🏟️</span> Ver alineación {teamShort(match.away_team_id)}
 							</button>
 						</div>
 					</div>
@@ -576,7 +596,9 @@
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 		onclick={(e) => e.target === e.currentTarget && (pitchModalTeam = null)}
+		onkeydown={(e) => e.key === 'Escape' && (pitchModalTeam = null)}
 	>
 		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -598,12 +620,21 @@
 				</button>
 			</div>
 
-			<SoccerPitch
-				players={pitchModalTeam.players || []}
-				interactive={false}
-				teamName={pitchModalTeam.name}
-				teamColor={teamColor(pitchModalTeam.id)}
-			/>
+			{#if (pitchModalTeam.sport === 'basketball')}
+				<BasketballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#f59e0b"
+				/>
+			{:else}
+				<SoccerPitch
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor={teamColor(pitchModalTeam.id)}
+				/>
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button
