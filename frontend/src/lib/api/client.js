@@ -81,8 +81,11 @@ export const api = {
 
 /** Equipos */
 export const teamsApi = {
-	list: (tournamentId) => {
-		const qs = tournamentId ? `?tournament_id=${tournamentId}` : '';
+	list: (tournamentId, includePlayers = false) => {
+		const params = new URLSearchParams();
+		if (tournamentId) params.set('tournament_id', tournamentId);
+		if (includePlayers) params.set('include_players', 'true');
+		const qs = params.toString() ? `?${params.toString()}` : '';
 		return api.get(`/teams${qs}`);
 	},
 	get: (teamId) => api.get(`/teams/${teamId}`),

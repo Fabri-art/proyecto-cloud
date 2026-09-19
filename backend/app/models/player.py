@@ -30,7 +30,7 @@ class Player(SQLModel, table=True):
     last_name: str = Field(max_length=100)
     dni: str = Field(max_length=20, index=True)  # National ID – unique per tournament
 
-    shirt_number: Optional[int] = Field(default=None, ge=1, le=99)
+    shirt_number: Optional[int] = Field(default=None, ge=0, le=99)
 
     position: Optional[PlayerPosition] = Field(
         default=None,

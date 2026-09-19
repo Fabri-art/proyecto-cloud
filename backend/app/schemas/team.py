@@ -13,7 +13,7 @@ class TeamCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     short_name: str = Field(min_length=2, max_length=5)
     delegate_name: str = Field(min_length=2, max_length=100)
-    delegate_phone: Optional[str] = None
+    delegate_phone: str = Field(min_length=9, max_length=30)
     city: Optional[str] = None
     country: Optional[str] = None
     logo_url: Optional[str] = None
@@ -32,23 +32,20 @@ class TeamCreate(BaseModel):
 
     @field_validator("delegate_phone")
     @classmethod
-    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
+    def validate_phone(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("El teléfono del delegado es un campo obligatorio.")
         v = v.strip()
-        if not v:
-            return None
-        # Extraer solo los dígitos para verificar longitud mínima
+        # Extraer solo los dígitos para verificar longitud mínima de 9 dígitos
         digits = re.sub(r"[^\d]", "", v)
-        if len(digits) < 7:
+        if len(digits) < 9:
             raise ValueError(
-                "El teléfono debe tener al menos 7 dígitos. "
-                "Formato aceptado: +51 987 654 321 o 987654321."
+                "El teléfono debe tener al menos 9 dígitos numéricos."
             )
-        # Validar que el formato general sea razonable (dígitos, +, espacios, guiones, paréntesis)
-        if not re.match(r"^\+?[\d\s\-(). ]{7,25}$", v):
+        # Validar formato general razonable
+        if not re.match(r"^\+?[\d\s\-(). ]{9,30}$", v):
             raise ValueError(
-                "Formato de teléfono inválido. Usa dígitos, espacios, guiones o paréntesis."
+                "Formato de teléfono inválido. Usa dígitos, espacios o guiones (mínimo 9 dígitos)."
             )
         return v
 
@@ -102,8 +99,8 @@ class TeamUpdate(BaseModel):
         if not v:
             return None
         digits = re.sub(r"[^\d]", "", v)
-        if len(digits) < 7:
-            raise ValueError("El teléfono debe tener al menos 7 dígitos.")
-        if not re.match(r"^\+?[\d\s\-(). ]{7,25}$", v):
-            raise ValueError("Formato de teléfono inválido.")
+        if len(digits) < 9:
+            raise ValueError("El teléfono debe tener al menos 9 dígitos numéricos.")
+        if not re.match(r"^\+?[\d\s\-(). ]{9,30}$", v):
+            raise ValueError("Formato de teléfono inválido (mínimo 9 dígitos).")
         return v

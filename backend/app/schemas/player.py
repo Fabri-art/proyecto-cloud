@@ -12,8 +12,8 @@ from app.models.player import PlayerPosition
 class PlayerCreate(BaseModel):
     first_name: str = Field(min_length=1, max_length=100)
     last_name: str = Field(min_length=1, max_length=100)
-    dni: str
-    shirt_number: Optional[int] = Field(default=None, ge=1, le=99)
+    dni: str = Field(min_length=8, max_length=8)
+    shirt_number: Optional[int] = Field(default=None, ge=0, le=99)
     position: Optional[PlayerPosition] = None
     nationality: Optional[str] = None
     date_of_birth: Optional[date] = None
@@ -22,19 +22,10 @@ class PlayerCreate(BaseModel):
     @field_validator("dni")
     @classmethod
     def validate_dni(cls, v: str) -> str:
-        v = v.strip().upper()
-        if len(v) < 5:
+        v = v.strip()
+        if not re.match(r"^\d{8}$", v):
             raise ValueError(
-                "El DNI/documento debe tener al menos 5 caracteres."
-            )
-        if len(v) > 20:
-            raise ValueError(
-                "El DNI/documento no puede superar 20 caracteres."
-            )
-        # Solo letras, números y guiones (cubre DNI nacionales e internacionales)
-        if not re.match(r"^[A-Z0-9\-]+$", v):
-            raise ValueError(
-                "El DNI/documento solo puede contener letras, números y guiones."
+                "El DNI debe tener obligatoriamente 8 dígitos numéricos."
             )
         return v
 
@@ -43,8 +34,8 @@ class PlayerCreate(BaseModel):
     def validate_shirt_number(cls, v: Optional[int]) -> Optional[int]:
         if v is None:
             return v
-        if not isinstance(v, int) or v < 1 or v > 99:
-            raise ValueError("El dorsal debe ser un número entero entre 1 y 99.")
+        if not isinstance(v, int) or v < 0 or v > 99:
+            raise ValueError("El dorsal debe ser un número entero entre 0 y 99.")
         return v
 
 
@@ -64,7 +55,7 @@ class PlayerRead(BaseModel):
 
 
 class PlayerUpdate(BaseModel):
-    shirt_number: Optional[int] = Field(default=None, ge=1, le=99)
+    shirt_number: Optional[int] = Field(default=None, ge=0, le=99)
     position: Optional[PlayerPosition] = None
     is_active: Optional[bool] = None
     photo_url: Optional[str] = None

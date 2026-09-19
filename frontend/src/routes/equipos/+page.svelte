@@ -35,16 +35,30 @@
 
 	async function loadTeams() {
 		loading = true; error = null;
-		try { teams = await teamsApi.list(); }
-		catch (e) { error = e.message; toast.error('No se pudieron cargar los equipos.'); }
-		finally { loading = false; }
+		try {
+			// Pre-cargar la lista de equipos junto con su plantilla de jugadores en 1 sola consulta
+			teams = await teamsApi.list(null, true);
+		} catch (e) {
+			error = e.message;
+			toast.error('No se pudieron cargar los equipos.');
+		} finally {
+			loading = false;
+		}
 	}
 
 	async function viewTeamRoster(team) {
 		selectedTeam = team;
+		// Si la plantilla ya está pre-cargada en memoria, abrir modal al instante sin delay
+		if (team.players && Array.isArray(team.players)) {
+			loadingRoster = false;
+			return;
+		}
+
+		// Fallback por si no estuviese en memoria
 		loadingRoster = true;
 		try {
 			const fullTeam = await teamsApi.get(team.id);
+			team.players = fullTeam.players;
 			selectedTeam = fullTeam;
 		} catch {
 			toast.error('No se pudo cargar la plantilla del equipo.');
@@ -266,13 +280,13 @@
 					</div>
 				{:else}
 					<div class="space-y-2">
-						{#each selectedTeam.players.sort((a,b) => (a.shirt_number??99)-(b.shirt_number??99)) as p}
+						{#each [...(selectedTeam.players || [])].sort((a,b) => (a.shirt_number??99)-(b.shirt_number??99)) as p}
 							{@const pos = positionLabels[p.position]}
 							<div class="flex items-center gap-3 p-3 rounded-xl border border-slate-800/60 hover:border-slate-700 hover:bg-slate-800/30 transition-colors">
 								<!-- Dorsal -->
 								<div class="w-9 h-9 rounded-lg flex items-center justify-center font-score font-bold text-sm shrink-0"
 									style="background: {pal.text}15; color: {pal.text}; border: 1px solid {pal.text}30;">
-									{p.shirt_number ?? '-'}
+									{p.shirt_number !== null && p.shirt_number !== undefined ? p.shirt_number : '-'}
 								</div>
 								<!-- Nombre -->
 								<div class="flex-1 min-w-0">

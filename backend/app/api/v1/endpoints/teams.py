@@ -13,7 +13,7 @@ Routes:
 """
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -45,16 +45,24 @@ async def register_team(
 
 @router.get(
     "",
-    response_model=List[TeamRead],
+    response_model=Union[List[TeamReadWithPlayers], List[TeamRead]],
     summary="List teams",
-    description="List all teams. Filter by `tournament_id` query param.",
+    description="List all teams. Filter by `tournament_id` query param. Optionally pass `include_players=true`.",
 )
 async def list_teams(
     tournament_id: Optional[int] = Query(default=None, description="Filter by tournament"),
+    include_players: bool = Query(default=False, description="Include player roster for each team"),
     session: AsyncSession = Depends(get_session),
-) -> List[TeamRead]:
-    teams = await team_service.list_teams(session, tournament_id=tournament_id)
-    return [TeamRead.model_validate(t) for t in teams]
+) -> Union[List[TeamReadWithPlayers], List[TeamRead]]:
+    results = await team_service.list_teams(
+        session, tournament_id=tournament_id, include_players=include_players
+    )
+    if include_players:
+        return [
+            TeamReadWithPlayers.model_validate(t) if not isinstance(t, TeamReadWithPlayers) else t
+            for t in results
+        ]
+    return [TeamRead.model_validate(t) for t in results]
 
 
 @router.get(

@@ -15,7 +15,7 @@
 	import { toast } from '$lib/stores/toast';
 	import { auth } from '$lib/stores/auth';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	let isAdmin = $state(false);
 	let showPinModal = $state(false);
@@ -28,6 +28,17 @@
 	const TOURNAMENT_ID = 1;
 	/** Mínimo de jugadores exigidos para poder enviar el formulario */
 	const MIN_PLAYERS = 5;
+
+	/** Lista de equipos ya registrados en el torneo para validar duplicados en vivo */
+	let existingTeams = $state([]);
+
+	onMount(async () => {
+		try {
+			existingTeams = await teamsApi.list(TOURNAMENT_ID);
+		} catch {
+			// Si falla la consulta previa, el backend validará en el submit
+		}
+	});
 
 	// ── Estado del Club ────────────────────────────────────────────────────────
 	let teamData = $state({
@@ -80,11 +91,22 @@
 	// ── Helpers de validación ─────────────────────────────────────────────────
 
 	function validatePhone(phone) {
-		if (!phone || !phone.trim()) return ''; // Opcional
+		if (!phone || !phone.trim()) return 'El teléfono de contacto es obligatorio.';
 		const digits = phone.replace(/[^\d]/g, '');
-		if (digits.length < 7) return 'El teléfono debe tener al menos 7 dígitos.';
-		if (!/^\+?[\d\s\-(). ]{7,25}$/.test(phone.trim()))
-			return 'Formato inválido. Usa dígitos, espacios, guiones o paréntesis.';
+		if (digits.length < 9) return 'El teléfono debe tener al menos 9 dígitos.';
+		if (!/^\+?[\d\s\-(). ]{9,30}$/.test(phone.trim()))
+			return 'Formato inválido. Usa dígitos, espacios, guiones o paréntesis (mín. 9 dígitos).';
+		return '';
+	}
+
+	function validateTeamName(v) {
+		const n = v.trim();
+		if (!n) return 'El nombre del club es obligatorio.';
+		if (n.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
+		if (n.length > 100) return 'El nombre no puede superar 100 caracteres.';
+		if (existingTeams.some((t) => t.name?.trim().toLowerCase() === n.toLowerCase())) {
+			return `Ya existe un club registrado con el nombre "${n}" en este torneo.`;
+		}
 		return '';
 	}
 
@@ -94,19 +116,25 @@
 		if (s.length < 2) return 'La sigla debe tener al menos 2 caracteres.';
 		if (s.length > 5) return 'La sigla no puede superar 5 caracteres.';
 		if (!/^[A-Z0-9]+$/.test(s)) return 'Solo letras mayúsculas y números.';
+		if (existingTeams.some((t) => t.short_name?.trim().toUpperCase() === s)) {
+			return `La sigla "${s}" ya está asignada a otro equipo en este torneo.`;
+		}
 		return '';
 	}
 
 	function validateDni(v) {
-		const d = v.trim().toUpperCase();
+		const d = v.trim();
 		if (!d) return 'El DNI es obligatorio.';
-		if (d.length < 5) return 'Mínimo 5 caracteres.';
-		if (d.length > 20) return 'Máximo 20 caracteres.';
-		if (!/^[A-Z0-9\-]+$/.test(d)) return 'Solo letras, números y guiones.';
+		if (!/^\d{8}$/.test(d)) return 'El DNI debe tener obligatoriamente 8 dígitos numéricos.';
 		return '';
 	}
 
-	// ── Auto-uppercase en tiempo real para short_name ─────────────────────────
+	// ── Auto-uppercase y validaciones en tiempo real para club ───────────────
+	function handleNameInput(e) {
+		teamData.name = e.target.value;
+		errors.name = validateTeamName(teamData.name);
+	}
+
 	function handleShortNameInput(e) {
 		teamData.short_name = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
 		errors.short_name = validateShortName(teamData.short_name);
@@ -118,8 +146,11 @@
 
 		const first_name = newPlayer.first_name.trim();
 		const last_name = newPlayer.last_name.trim();
-		const dni = newPlayer.dni.trim().toUpperCase();
-		const shirt_number = newPlayer.shirt_number ? parseInt(newPlayer.shirt_number, 10) : null;
+		const dni = newPlayer.dni.trim();
+		const shirt_number =
+			newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
+				? parseInt(newPlayer.shirt_number, 10)
+				: null;
 		const position = newPlayer.position;
 
 		// Limpiar errores previos
@@ -141,7 +172,7 @@
 			hasError = true;
 		} else {
 			// Validar DNI único en la lista en memoria
-			const dniExists = players.some((p) => p.dni.toUpperCase() === dni);
+			const dniExists = players.some((p) => p.dni === dni);
 			if (dniExists) {
 				playerErrors.dni = `El DNI '${dni}' ya está en la plantilla.`;
 				hasError = true;
@@ -149,8 +180,8 @@
 		}
 
 		if (shirt_number !== null) {
-			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 1 || shirt_number > 99) {
-				playerErrors.shirt_number = 'El dorsal debe ser un número entero entre 1 y 99.';
+			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 0 || shirt_number > 99) {
+				playerErrors.shirt_number = 'El dorsal debe ser un número entero entre 0 y 99.';
 				hasError = true;
 			} else {
 				const numberExists = players.some((p) => p.shirt_number === shirt_number);
@@ -197,8 +228,9 @@
 		errors = { name: '', short_name: '', delegate_name: '', delegate_phone: '', players_count: '' };
 		let hasError = false;
 
-		if (!teamData.name.trim()) {
-			errors.name = 'El nombre del club es obligatorio.';
+		const nameError = validateTeamName(teamData.name);
+		if (nameError) {
+			errors.name = nameError;
 			hasError = true;
 		}
 
@@ -264,7 +296,13 @@
 			// Redirigir a la lista de equipos
 			goto('/equipos');
 		} catch (err) {
-			toast.error(err.message || 'Ocurrió un error al registrar el equipo.');
+			const msg = err.message || '';
+			if (msg.toLowerCase().includes('nombre')) {
+				errors.name = msg;
+			} else if (msg.toLowerCase().includes('sigla') || msg.toLowerCase().includes('abreviatura')) {
+				errors.short_name = msg;
+			}
+			toast.error(msg || 'Ocurrió un error al registrar el equipo.');
 		} finally {
 			isSubmitting = false;
 		}
@@ -325,6 +363,7 @@
 						id="team-name"
 						type="text"
 						bind:value={teamData.name}
+						oninput={handleNameInput}
 						placeholder="Ej. Deportivo Los Tigres"
 						required
 						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.name ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
@@ -378,14 +417,16 @@
 				<!-- Teléfono -->
 				<div>
 					<label for="delegate-phone" class="block text-sm font-semibold text-slate-300 mb-1.5">
-						Teléfono de Contacto
-						<span class="text-xs font-normal text-slate-500">(mín. 7 dígitos)</span>
+						Teléfono de Contacto <span class="text-emerald-400">*</span>
+						<span class="text-xs font-normal text-slate-500">(mín. 9 dígitos)</span>
 					</label>
 					<input
 						id="delegate-phone"
 						type="tel"
 						bind:value={teamData.delegate_phone}
-						placeholder="Ej. +51 987 654 321"
+						oninput={() => { errors.delegate_phone = validatePhone(teamData.delegate_phone); }}
+						placeholder="Ej. 987654321 o +51 987 654 321"
+						required
 						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.delegate_phone ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
 					{#if errors.delegate_phone}
@@ -480,28 +521,33 @@
 
 					<!-- DNI -->
 					<div>
-						<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI / Doc * <span class="text-slate-600">(5-20 chars)</span></label>
+						<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI / Doc * <span class="text-slate-500">(8 dígitos)</span></label>
 						<input
 							id="p-dni"
 							type="text"
+							maxlength="8"
 							bind:value={newPlayer.dni}
+							oninput={(e) => {
+								newPlayer.dni = e.target.value.replace(/\D/g, '').slice(0, 8);
+								if (playerErrors.dni) playerErrors.dni = validateDni(newPlayer.dni);
+							}}
 							placeholder="74859612"
-							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition uppercase {playerErrors.dni ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
+							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.dni ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
 						{#if playerErrors.dni}<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>{/if}
 					</div>
 
 					<!-- Dorsal -->
 					<div>
-						<label for="p-shirt" class="block text-xs text-slate-400 mb-1">Dorsal (1-99)</label>
+						<label for="p-shirt" class="block text-xs text-slate-400 mb-1">Dorsal (0-99)</label>
 						<input
 							id="p-shirt"
 							type="number"
-							min="1"
+							min="0"
 							max="99"
 							step="1"
 							bind:value={newPlayer.shirt_number}
-							placeholder="10"
+							placeholder="0"
 							class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.shirt_number ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 						/>
 						{#if playerErrors.shirt_number}<p class="mt-0.5 text-xs text-red-400">{playerErrors.shirt_number}</p>{/if}
@@ -556,7 +602,7 @@
 								<tr class="hover:bg-slate-800/40 transition">
 									<!-- Dorsal -->
 									<td class="px-4 py-3 text-center">
-										{#if p.shirt_number}
+										{#if p.shirt_number !== null && p.shirt_number !== undefined && p.shirt_number !== ''}
 											<span class="inline-block px-2 py-0.5 rounded bg-slate-800 font-mono font-bold text-emerald-400 text-xs">
 												{p.shirt_number}
 											</span>
