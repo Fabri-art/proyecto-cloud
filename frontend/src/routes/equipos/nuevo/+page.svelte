@@ -15,6 +15,8 @@
 	import { toast } from '$lib/stores/toast';
 	import { auth } from '$lib/stores/auth';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
+	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
+	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import { onDestroy, onMount } from 'svelte';
 
 	let isAdmin = $state(false);
@@ -81,6 +83,88 @@
 	// ── Lista dinámica de jugadores en plantilla ──────────────────────────────
 	let players = $state([]);
 	let isSubmitting = $state(false);
+	let editorView = $state('pitch'); // 'pitch' | 'classic'
+	let showQuickAddModal = $state(false);
+	let quickPosition = $state('forward');
+
+	// Indicador reactivo: ya hay un arquero (solo para fútbol)
+	let hasGoalkeeper = $derived(players.some((p) => p.position === 'goalkeeper'));
+
+	function openQuickAdd(position) {
+		// Bloquear segundo arquero en fútbol
+		if (tournament?.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+			toast.warning('El equipo ya tiene 1 arquero. Solo se permite uno.');
+			return;
+		}
+		quickPosition = position || (tournament?.sport === 'basketball' ? 'point_guard' : 'forward');
+		newPlayer.position = quickPosition;
+		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
+		showQuickAddModal = true;
+	}
+
+	function closeQuickAdd() {
+		showQuickAddModal = false;
+		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
+	}
+
+	function handleRemovePlayerFromPitch(player) {
+		const idx = players.findIndex(
+			(p) => p.dni === player.dni ||
+				(p.shirt_number === player.shirt_number && p.first_name === player.first_name)
+		);
+		if (idx !== -1) removePlayer(idx);
+	}
+
+	function handleQuickAddSubmit(e) {
+		if (e) e.preventDefault();
+		// Reutiliza la lógica de handleAddPlayer pero sin event
+		const first_name = newPlayer.first_name.trim();
+		const last_name = newPlayer.last_name.trim();
+		const dni = newPlayer.dni.trim();
+		const shirt_number =
+			newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
+				? parseInt(newPlayer.shirt_number, 10)
+				: null;
+		const position = newPlayer.position;
+
+		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
+		let hasError = false;
+
+		// Bloquear segundo arquero en fútbol
+		if (tournament?.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+			toast.error('Solo se permite registrar 1 arquero por equipo.');
+			return;
+		}
+
+		if (!first_name) { playerErrors.first_name = 'El nombre es obligatorio.'; hasError = true; }
+		if (!last_name) { playerErrors.last_name = 'El apellido es obligatorio.'; hasError = true; }
+
+		const dniError = validateDni(dni);
+		if (dniError) { playerErrors.dni = dniError; hasError = true; }
+		else if (players.some((p) => p.dni === dni)) {
+			playerErrors.dni = `El DNI '${dni}' ya está en la plantilla.`; hasError = true;
+		}
+
+		if (shirt_number !== null) {
+			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 0 || shirt_number > 99) {
+				playerErrors.shirt_number = 'El dorsal debe ser entre 0 y 99.'; hasError = true;
+			} else if (players.some((p) => p.shirt_number === shirt_number)) {
+				playerErrors.shirt_number = `El dorsal #${shirt_number} ya está asignado.`; hasError = true;
+			}
+		}
+
+		if (hasError) return;
+
+		players = [...players, { first_name, last_name, dni, shirt_number, position }];
+		newPlayer.first_name = '';
+		newPlayer.last_name = '';
+		newPlayer.dni = '';
+		newPlayer.shirt_number = '';
+		newPlayer.position = tournament?.sport === 'basketball' ? 'point_guard' : (position === 'goalkeeper' ? 'forward' : position);
+		if (players.length >= MIN_PLAYERS) errors.players_count = '';
+		toast.success(`Jugador ${first_name} ${last_name} agregado a la cancha.`);
+		showQuickAddModal = false;
+	}
 
 	// Posiciones disponibles con etiquetas amigables
 	const footballPositions = [
@@ -486,28 +570,126 @@
 
 		<!-- ── SECCIÓN 2: CARGA DE PLANTILLA (JUGADORES) ───────────────────────── -->
 		<div class="glass-card p-6 md:p-8 flex flex-col gap-6">
-			<!-- Sección de jugadores con contador y barra de progreso -->
-			<div class="flex items-center justify-between border-b pb-3" style="border-color: var(--border-color);">
+			<!-- Header de sección con selector de vista y contador -->
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">👥</span>
-					<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
+					<span class="text-2xl">{tournament?.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					<div>
+						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
+						<p class="text-xs text-slate-400">
+							{tournament?.sport === 'basketball'
+								? 'Ubica a tus jugadores en la pista de básquetbol (mín. 5).'
+								: 'Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).'}
+						</p>
+					</div>
 				</div>
-				<div class="flex flex-col items-end gap-1">
-					<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= MIN_PLAYERS ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
-						{players.length}/{MIN_PLAYERS} mínimo
-					</span>
-					<!-- Barra de progreso hacia el mínimo -->
-					<div class="w-24 h-1.5 rounded-full bg-slate-700 overflow-hidden">
-						<div
-							class="h-full rounded-full transition-all duration-300 {players.length >= MIN_PLAYERS ? 'bg-emerald-500' : 'bg-amber-500'}"
-							style="width: {Math.min(100, (players.length / MIN_PLAYERS) * 100)}%"
-						></div>
+
+				<div class="flex items-center gap-3">
+					<!-- Switcher de vistas -->
+					<div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+						<button
+							type="button"
+							onclick={() => editorView = 'pitch'}
+							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+						>
+							<span>{tournament?.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+							{tournament?.sport === 'basketball' ? 'Pista' : 'Cancha'}
+						</button>
+						<button
+							type="button"
+							onclick={() => editorView = 'classic'}
+							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'classic' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+						>
+							<span>📋</span> Lista
+						</button>
+					</div>
+
+					<!-- Contador y barra de progreso -->
+					<div class="flex flex-col items-end gap-1">
+						<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= MIN_PLAYERS ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
+							{players.length}/{MIN_PLAYERS} mín.
+						</span>
+						<div class="w-20 h-1.5 rounded-full bg-slate-700 overflow-hidden">
+							<div
+								class="h-full rounded-full transition-all duration-300 {players.length >= MIN_PLAYERS ? 'bg-emerald-500' : 'bg-amber-500'}"
+								style="width: {Math.min(100, (players.length / MIN_PLAYERS) * 100)}%"
+							></div>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Mini formulario para añadir jugador a la lista -->
-			<div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+			<!-- VISTA 1: CANCHA / PISTA TÁCTICA INTERACTIVA -->
+			{#if editorView === 'pitch'}
+				<div class="flex flex-col gap-4">
+					<div class="flex flex-wrap items-center justify-between gap-2 px-1">
+						<span class="text-xs text-slate-400">
+							Haz clic en los botones <strong>(+)</strong> para ubicar jugadores en su posición:
+						</span>
+						<button
+							type="button"
+							onclick={() => openQuickAdd(tournament?.sport === 'basketball' ? 'point_guard' : 'forward')}
+							class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow"
+						>
+							<span>+</span> Agregar Jugador
+						</button>
+					</div>
+
+					<!-- Cancha según deporte -->
+					{#if tournament?.sport === 'basketball'}
+						<BasketballCourt
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Nuevo Club'}
+							teamColor="#f59e0b"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else}
+						<SoccerPitch
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Nuevo Club'}
+							teamColor="#10b981"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{/if}
+
+					<!-- Resumen de plantilla debajo de la cancha -->
+					{#if players.length > 0}
+						<div class="mt-1 p-4 rounded-xl bg-slate-900/50 border border-slate-800">
+							<div class="flex items-center justify-between mb-2">
+								<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+									Jugadores en Plantilla ({players.length})
+								</h4>
+								<span class="text-[11px] text-slate-400">Clic en ✕ para retirar</span>
+							</div>
+							<div class="flex flex-wrap gap-2">
+								{#each players as p, idx}
+									<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-xs">
+										<span class="font-mono font-black text-emerald-400">
+											{p.shirt_number !== null && p.shirt_number !== undefined ? '#' + p.shirt_number : '—'}
+										</span>
+										<span class="text-white font-medium">{p.first_name} {p.last_name}</span>
+										<span class="text-[10px] text-slate-400">
+											({positions.find((pos) => pos.value === p.position)?.label || p.position})
+										</span>
+										<button
+											type="button"
+											onclick={() => removePlayer(idx)}
+											class="text-red-400 hover:text-red-300 ml-1 font-bold transition"
+											title="Eliminar jugador"
+										>✕</button>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				</div>
+			{:else}
+				<!-- VISTA 2: FORMULARIO CLÁSICO -->
+				<div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
 				<h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
 					<span>➕</span> Añadir Jugador a la Plantilla
 				</h3>
@@ -597,7 +779,7 @@
 						<span>➕</span> Agregar a la lista
 					</button>
 				</div>
-			</div>
+				</div>
 
 			<!-- Tabla de jugadores agregados -->
 			{#if players.length === 0}
@@ -664,6 +846,7 @@
 					</table>
 				</div>
 			{/if}
+			{/if}
 		</div>
 
 		<!-- ── BOTÓN DE GUARDADO FINAL ─────────────────────────────────────────── -->
@@ -705,3 +888,129 @@
 		</div>
 	</form>
 </div>
+
+<!-- ── MODAL QUICK-ADD DESDE LA CANCHA TÁCTICA ─────────────────────────────── -->
+{#if showQuickAddModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+		<div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-5">
+			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
+				<div class="flex items-center gap-2">
+					<span class="text-xl">{tournament?.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+					<h3 class="text-lg font-bold text-white">
+						{tournament?.sport === 'basketball' ? 'Ubicar en la Pista' : 'Ubicar en la Cancha'}
+					</h3>
+				</div>
+				<button
+					type="button"
+					onclick={closeQuickAdd}
+					class="text-slate-400 hover:text-white text-xl leading-none"
+				>✕</button>
+			</div>
+
+			<div class="flex flex-col gap-4">
+				<!-- Posición -->
+				<div>
+					<label for="qa-pos" class="block text-xs font-semibold text-slate-300 mb-1">Posición en el campo</label>
+					<select
+						id="qa-pos"
+						bind:value={newPlayer.position}
+						class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+					>
+						{#each positions as pos}
+							{#if pos.value === 'goalkeeper' && hasGoalkeeper}
+								<option value="goalkeeper" disabled>{pos.icon} {pos.label} (Máx. 1 ya asignado)</option>
+							{:else}
+								<option value={pos.value}>{pos.icon} {pos.label}</option>
+							{/if}
+						{/each}
+					</select>
+				</div>
+
+				<div class="grid grid-cols-2 gap-3">
+					<!-- Nombre -->
+					<div>
+						<label for="qa-fn" class="block text-xs font-semibold text-slate-300 mb-1">Nombre *</label>
+						<input
+							id="qa-fn"
+							type="text"
+							bind:value={newPlayer.first_name}
+							placeholder="Lucas"
+							class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.first_name ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
+						/>
+						{#if playerErrors.first_name}
+							<p class="mt-0.5 text-xs text-red-400">{playerErrors.first_name}</p>
+						{/if}
+					</div>
+					<!-- Apellido -->
+					<div>
+						<label for="qa-ln" class="block text-xs font-semibold text-slate-300 mb-1">Apellido *</label>
+						<input
+							id="qa-ln"
+							type="text"
+							bind:value={newPlayer.last_name}
+							placeholder="Díaz"
+							class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.last_name ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
+						/>
+						{#if playerErrors.last_name}
+							<p class="mt-0.5 text-xs text-red-400">{playerErrors.last_name}</p>
+						{/if}
+					</div>
+				</div>
+
+				<div class="grid grid-cols-2 gap-3">
+					<!-- DNI -->
+					<div>
+						<label for="qa-dni" class="block text-xs font-semibold text-slate-300 mb-1">DNI (8 dígitos) *</label>
+						<input
+							id="qa-dni"
+							type="text"
+							maxlength="8"
+							bind:value={newPlayer.dni}
+							oninput={() => {
+								newPlayer.dni = newPlayer.dni.replace(/[^0-9]/g, '');
+								if (playerErrors.dni) playerErrors.dni = validateDni(newPlayer.dni);
+							}}
+							placeholder="71234567"
+							class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.dni ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
+						/>
+						{#if playerErrors.dni}
+							<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>
+						{/if}
+					</div>
+					<!-- Dorsal -->
+					<div>
+						<label for="qa-shirt" class="block text-xs font-semibold text-slate-300 mb-1">Dorsal (0-99)</label>
+						<input
+							id="qa-shirt"
+							type="number"
+							min="0"
+							max="99"
+							bind:value={newPlayer.shirt_number}
+							placeholder="9"
+							class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.shirt_number ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
+						/>
+						{#if playerErrors.shirt_number}
+							<p class="mt-0.5 text-xs text-red-400">{playerErrors.shirt_number}</p>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			<div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+				<button
+					type="button"
+					onclick={closeQuickAdd}
+					class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white transition"
+				>Cancelar</button>
+				<button
+					type="button"
+					onclick={handleQuickAddSubmit}
+					class="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+				>
+					<span>{tournament?.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					Agregar a la {tournament?.sport === 'basketball' ? 'Pista' : 'Cancha'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
