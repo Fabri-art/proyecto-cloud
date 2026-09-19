@@ -1,17 +1,17 @@
-<script>
+﻿<script>
 	/**
-	 * routes/equipos/nuevo/+page.svelte — Formulario de Registro de Club y Plantilla (NOM-11)
+	 * routes/equipos/nuevo/+page.svelte â€” Formulario de Registro de Club y Plantilla (NOM-11)
 	 *
-	 * Características:
-	 * 1. Formulario del Club: Nombre, sigla, delegado, teléfono, ciudad, país (Selector Sudamérica).
+	 * CaracterÃ­sticas:
+	 * 1. Formulario del Club: Nombre, sigla, delegado, telÃ©fono, ciudad, paÃ­s (Selector SudamÃ©rica).
 	 * 2. Restricciones estrictas de caracteres:
-	 *    - Nombres, delegado, ciudad: Sin números.
-	 *    - Teléfono: Sin letras.
-	 *    - DNI: Solo 8 números, sin letras.
-	 *    - Dorsal: Solo números 0-99.
-	 * 3. Validación de DNI duplicado: En plantilla actual y en todos los equipos del torneo.
-	 * 4. Selector de países de Sudamérica tanto para el club como para cada jugador.
-	 * 5. Cancha/pista táctica interactiva + Vista formulario clásico.
+	 *    - Nombres, delegado, ciudad: Sin nÃºmeros.
+	 *    - TelÃ©fono: Sin letras.
+	 *    - DNI: Solo 8 nÃºmeros, sin letras.
+	 *    - Dorsal: Solo nÃºmeros 0-99.
+	 * 3. ValidaciÃ³n de DNI duplicado: En plantilla actual y en todos los equipos del torneo.
+	 * 4. Selector de paÃ­ses de SudamÃ©rica tanto para el club como para cada jugador.
+	 * 5. Cancha/pista tÃ¡ctica interactiva + Vista formulario clÃ¡sico.
 	 */
 	import { goto } from '$app/navigation';
 	import { teamsApi, tournamentsApi } from '$lib/api/client';
@@ -31,10 +31,10 @@
 	onDestroy(unsub);
 
 	const TOURNAMENT_ID = 1;
-	/** Mínimo de jugadores exigidos para poder enviar el formulario */
+	/** MÃ­nimo de jugadores exigidos para poder enviar el formulario */
 	const MIN_PLAYERS = 5;
 
-	/** Lista oficial de países de Sudamérica */
+	/** Lista oficial de paÃ­ses de SudamÃ©rica */
 	const southAmericanCountries = [
 		'Argentina',
 		'Bolivia',
@@ -44,7 +44,7 @@
 		'Ecuador',
 		'Guyana',
 		'Paraguay',
-		'Perú',
+		'PerÃº',
 		'Surinam',
 		'Uruguay',
 		'Venezuela'
@@ -59,7 +59,7 @@
 			tournament = await tournamentsApi.get(TOURNAMENT_ID).catch(() => null);
 			existingTeams = await teamsApi.list(TOURNAMENT_ID, true);
 		} catch {
-			// Si falla la consulta previa, el backend validará en el submit
+			// Si falla la consulta previa, el backend validarÃ¡ en el submit
 		} finally {
 			loading = false;
 		}
@@ -74,7 +74,7 @@
 				season: new Date().getFullYear().toString(),
 				sport: 'football'
 			});
-			toast.success('¡Torneo base creado! Ahora puedes registrar equipos.');
+			toast.success('Â¡Torneo base creado! Ahora puedes registrar equipos.');
 			existingTeams = await teamsApi.list(TOURNAMENT_ID, true).catch(() => []);
 		} catch (err) {
 			toast.error(err.message || 'Error al crear el torneo.');
@@ -83,7 +83,7 @@
 		}
 	}
 
-	// ── Estado del Club ──────────────────────────────────────────────────────────
+	// â”€â”€ Estado del Club â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	let teamData = $state({
 		name: '',
 		short_name: '',
@@ -91,10 +91,10 @@
 		delegate_name: '',
 		delegate_phone: '',
 		city: '',
-		country: 'Perú'
+		country: 'PerÃº'
 	});
 
-	/** Errores de validación por campo (vacío = sin error) */
+	/** Errores de validaciÃ³n por campo (vacÃ­o = sin error) */
 	let errors = $state({
 		name: '',
 		short_name: '',
@@ -104,17 +104,17 @@
 		players_count: ''
 	});
 
-	// ── Estado para nuevo jugador en borrador ─────────────────────────────────────
+	// â”€â”€ Estado para nuevo jugador en borrador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	let newPlayer = $state({
 		first_name: '',
 		last_name: '',
 		dni: '',
 		shirt_number: '',
 		position: 'midfielder',
-		nationality: 'Perú'
+		nationality: 'PerÃº'
 	});
 
-	/** Errores de validación del formulario de jugador actual */
+	/** Errores de validaciÃ³n del formulario de jugador actual */
 	let playerErrors = $state({
 		first_name: '',
 		last_name: '',
@@ -122,25 +122,25 @@
 		shirt_number: ''
 	});
 
-	// ── Lista dinámica de jugadores en plantilla ──────────────────────────────────
+	// â”€â”€ Lista dinÃ¡mica de jugadores en plantilla â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	let players = $state([]);
 	let isSubmitting = $state(false);
 	let editorView = $state('pitch'); // 'pitch' | 'classic'
 	let showQuickAddModal = $state(false);
 	let quickPosition = $state('forward');
 
-	// Indicador reactivo: ya hay un arquero (solo para fútbol)
+	// Indicador reactivo: ya hay un arquero (solo para fÃºtbol)
 	let hasGoalkeeper = $derived(players.some((p) => p.position === 'goalkeeper'));
 
 	function openQuickAdd(position) {
-		// Bloquear segundo arquero en fútbol
-		if (teamData.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+		// Bloquear segundo arquero en fÃºtbol
+		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.warning('El equipo ya tiene 1 arquero. Solo se permite un arquero.');
 			return;
 		}
-		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : 'forward');
+		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'forward');
 		newPlayer.position = quickPosition;
-		newPlayer.nationality = teamData.country || 'Perú';
+		newPlayer.nationality = teamData.country || 'PerÃº';
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		showQuickAddModal = true;
 	}
@@ -160,30 +160,37 @@
 
 	// Posiciones disponibles con etiquetas amigables
 	const footballPositions = [
-		{ value: 'goalkeeper', label: 'Arquero / Portero', icon: '🧤' },
-		{ value: 'defender',   label: 'Defensa',           icon: '🛡️' },
-		{ value: 'midfielder', label: 'Mediocampista',     icon: '⚡' },
-		{ value: 'forward',    label: 'Delantero',         icon: '⚽' }
+		{ value: 'goalkeeper', label: 'Arquero / Portero', icon: 'ðŸ§¤' },
+		{ value: 'defender',   label: 'Defensa',           icon: 'ðŸ›¡ï¸' },
+		{ value: 'midfielder', label: 'Mediocampista',     icon: 'âš¡' },
+		{ value: 'forward',    label: 'Delantero',         icon: 'âš½' }
 	];
 	const basketballPositions = [
-		{ value: 'point_guard',    label: 'Base',          icon: '🏀' },
-		{ value: 'shooting_guard', label: 'Escolta',       icon: '🎯' },
-		{ value: 'small_forward',  label: 'Alero',         icon: '🚀' },
-		{ value: 'power_forward',  label: 'Ala-Pívot',     icon: '💪' },
-		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
+		{ value: 'point_guard',    label: 'Base',          icon: 'ðŸ€' },
+		{ value: 'shooting_guard', label: 'Escolta',       icon: 'ðŸŽ¯' },
+		{ value: 'small_forward',  label: 'Alero',         icon: 'ðŸš€' },
+		{ value: 'power_forward',  label: 'Ala-PÃ­vot',     icon: 'ðŸ’ª' },
+		{ value: 'center',         label: 'PÃ­vot',         icon: 'ðŸ›¡ï¸' }
+	];
+	const volleyballPositions = [
+		{ value: 'setter',         label: 'Armador',   icon: '🎯' },
+		{ value: 'libero',          label: 'Líbero',    icon: '🛡' },
+		{ value: 'outside_hitter',  label: 'Punta',     icon: '⚡' },
+		{ value: 'opposite',        label: 'Opuesto',   icon: '🏐' },
+		{ value: 'middle_blocker',  label: 'Central',   icon: '🧱' }
 	];
 	
 	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : footballPositions);
 
-	// ── Helpers de validación y sanitización estricta ────────────────────────────
+	// â”€â”€ Helpers de validaciÃ³n y sanitizaciÃ³n estricta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 	function validatePhone(phone) {
-		if (!phone || !phone.trim()) return 'El teléfono de contacto es obligatorio.';
-		if (/[a-zA-Z]/.test(phone)) return 'El teléfono no puede contener letras.';
+		if (!phone || !phone.trim()) return 'El telÃ©fono de contacto es obligatorio.';
+		if (/[a-zA-Z]/.test(phone)) return 'El telÃ©fono no puede contener letras.';
 		const digits = phone.replace(/[^\d]/g, '');
-		if (digits.length < 9) return 'El teléfono debe tener al menos 9 dígitos.';
+		if (digits.length < 9) return 'El telÃ©fono debe tener al menos 9 dÃ­gitos.';
 		if (!/^\+?[\d\s\-().]{9,30}$/.test(phone.trim())) {
-			return 'Formato inválido. Usa solo dígitos y signos (+ - ()).';
+			return 'Formato invÃ¡lido. Usa solo dÃ­gitos y signos (+ - ()).';
 		}
 		return '';
 	}
@@ -191,7 +198,7 @@
 	function validateTeamName(v) {
 		const n = v.trim();
 		if (!n) return 'El nombre del club es obligatorio.';
-		if (/\d/.test(n)) return 'El nombre del club no puede contener números.';
+		if (/\d/.test(n)) return 'El nombre del club no puede contener nÃºmeros.';
 		if (n.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
 		if (n.length > 100) return 'El nombre no puede superar 100 caracteres.';
 		if (existingTeams.some((t) => t.name?.trim().toLowerCase() === n.toLowerCase())) {
@@ -205,9 +212,9 @@
 		if (!s) return 'La sigla es obligatoria.';
 		if (s.length < 2) return 'La sigla debe tener al menos 2 caracteres.';
 		if (s.length > 5) return 'La sigla no puede superar 5 caracteres.';
-		if (!/^[A-Z0-9]+$/.test(s)) return 'Solo letras mayúsculas y números.';
+		if (!/^[A-Z0-9]+$/.test(s)) return 'Solo letras mayÃºsculas y nÃºmeros.';
 		if (existingTeams.some((t) => t.short_name?.trim().toUpperCase() === s)) {
-			return `La sigla "${s}" ya está asignada a otro equipo en este torneo.`;
+			return `La sigla "${s}" ya estÃ¡ asignada a otro equipo en este torneo.`;
 		}
 		return '';
 	}
@@ -215,19 +222,19 @@
 	/**
 	 * Valida DNI:
 	 * 1. No letras
-	 * 2. Exactamente 8 dígitos
+	 * 2. Exactamente 8 dÃ­gitos
 	 * 3. No duplicado en la plantilla actual
 	 * 4. No duplicado en otros clubes del torneo
 	 */
 	function validateDni(v) {
 		const d = (v || '').trim();
 		if (!d) return 'El DNI es obligatorio.';
-		if (/[a-zA-Z]/.test(d)) return 'El DNI no puede contener letras. Solo números.';
-		if (!/^\d{8}$/.test(d)) return 'El DNI debe tener obligatoriamente 8 dígitos numéricos.';
+		if (/[a-zA-Z]/.test(d)) return 'El DNI no puede contener letras. Solo nÃºmeros.';
+		if (!/^\d{8}$/.test(d)) return 'El DNI debe tener obligatoriamente 8 dÃ­gitos numÃ©ricos.';
 
 		// 1. Validar contra la plantilla actual en borrador
 		if (players.some((p) => p.dni === d)) {
-			return `El DNI '${d}' ya está registrado en la plantilla de este equipo.`;
+			return `El DNI '${d}' ya estÃ¡ registrado en la plantilla de este equipo.`;
 		}
 		
 		// 2. Validar contra jugadores ya registrados en otros equipos del torneo
@@ -241,10 +248,10 @@
 		return '';
 	}
 
-	// ── Event handlers con sanitización en tiempo real ──────────────────────────
+	// â”€â”€ Event handlers con sanitizaciÃ³n en tiempo real â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 	function handleNameInput(e) {
-		// Restringir números en tiempo real
+		// Restringir nÃºmeros en tiempo real
 		teamData.name = e.target.value.replace(/[0-9]/g, '');
 		errors.name = validateTeamName(teamData.name);
 	}
@@ -255,7 +262,7 @@
 	}
 
 	function handleDelegateNameInput(e) {
-		// Restringir números en tiempo real
+		// Restringir nÃºmeros en tiempo real
 		teamData.delegate_name = e.target.value.replace(/[0-9]/g, '');
 		if (!teamData.delegate_name.trim()) {
 			errors.delegate_name = 'El nombre del delegado es obligatorio.';
@@ -271,7 +278,7 @@
 	}
 
 	function handleCityInput(e) {
-		// Restringir números en tiempo real
+		// Restringir nÃºmeros en tiempo real
 		teamData.city = e.target.value.replace(/[0-9]/g, '');
 	}
 
@@ -290,7 +297,7 @@
 	}
 
 	function handlePlayerDniInput(e) {
-		// Solo números, max 8 dígitos
+		// Solo nÃºmeros, max 8 dÃ­gitos
 		newPlayer.dni = e.target.value.replace(/\D/g, '').slice(0, 8);
 		if (newPlayer.dni.length === 8) {
 			playerErrors.dni = validateDni(newPlayer.dni);
@@ -300,13 +307,13 @@
 	}
 
 	function handlePlayerShirtInput(e) {
-		// Solo números, max 2 dígitos
+		// Solo nÃºmeros, max 2 dÃ­gitos
 		const clean = e.target.value.replace(/\D/g, '').slice(0, 2);
 		newPlayer.shirt_number = clean;
 		if (clean !== '') {
 			const num = parseInt(clean, 10);
 			if (players.some((p) => p.shirt_number === num)) {
-				playerErrors.shirt_number = `El dorsal #${num} ya está asignado.`;
+				playerErrors.shirt_number = `El dorsal #${num} ya estÃ¡ asignado.`;
 			} else {
 				playerErrors.shirt_number = '';
 			}
@@ -315,7 +322,7 @@
 		}
 	}
 
-	// ── Agregar jugador desde la Cancha (Quick Add) ──────────────────────────────
+	// â”€â”€ Agregar jugador desde la Cancha (Quick Add) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	function handleQuickAddSubmit(e) {
 		if (e) e.preventDefault();
 		const first_name = newPlayer.first_name.trim();
@@ -326,13 +333,13 @@
 				? parseInt(newPlayer.shirt_number, 10)
 				: null;
 		const position = newPlayer.position;
-		const nationality = newPlayer.nationality || teamData.country || 'Perú';
+		const nationality = newPlayer.nationality || teamData.country || 'PerÃº';
 
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		let hasError = false;
 
-		// Bloquear segundo arquero en fútbol
-		if (teamData.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+		// Bloquear segundo arquero en fÃºtbol
+		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.error('Solo se permite registrar 1 arquero por equipo.');
 			return;
 		}
@@ -352,8 +359,8 @@
 				playerErrors.shirt_number = 'El dorsal debe ser entre 0 y 99.';
 				hasError = true;
 			} else if (players.some((p) => p.shirt_number === shirt_number)) {
-				playerErrors.shirt_number = `El dorsal #${shirt_number} ya está asignado.`;
-				toast.error(`El dorsal #${shirt_number} ya está asignado.`);
+				playerErrors.shirt_number = `El dorsal #${shirt_number} ya estÃ¡ asignado.`;
+				toast.error(`El dorsal #${shirt_number} ya estÃ¡ asignado.`);
 				hasError = true;
 			}
 		}
@@ -365,13 +372,13 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : (position === 'goalkeeper' ? 'forward' : position);
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : (position === 'goalkeeper' ? 'forward' : position);
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';
 		toast.success(`Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
 		showQuickAddModal = false;
 	}
 
-	// ── Agregar jugador desde la Vista Clásica ──────────────────────────────────
+	// â”€â”€ Agregar jugador desde la Vista ClÃ¡sica â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	function handleAddPlayer(e) {
 		if (e) e.preventDefault();
 
@@ -383,13 +390,13 @@
 				? parseInt(newPlayer.shirt_number, 10)
 				: null;
 		const position = newPlayer.position;
-		const nationality = newPlayer.nationality || teamData.country || 'Perú';
+		const nationality = newPlayer.nationality || teamData.country || 'PerÃº';
 
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		let hasError = false;
 
-		// Bloquear segundo arquero en fútbol
-		if (teamData.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+		// Bloquear segundo arquero en fÃºtbol
+		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.error('Solo se permite registrar 1 arquero por equipo.');
 			return;
 		}
@@ -412,13 +419,13 @@
 
 		if (shirt_number !== null) {
 			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 0 || shirt_number > 99) {
-				playerErrors.shirt_number = 'El dorsal debe ser un número entero entre 0 y 99.';
+				playerErrors.shirt_number = 'El dorsal debe ser un nÃºmero entero entre 0 y 99.';
 				hasError = true;
 			} else {
 				const numberExists = players.some((p) => p.shirt_number === shirt_number);
 				if (numberExists) {
-					playerErrors.shirt_number = `El dorsal #${shirt_number} ya está asignado.`;
-					toast.error(`El dorsal #${shirt_number} ya está asignado.`);
+					playerErrors.shirt_number = `El dorsal #${shirt_number} ya estÃ¡ asignado.`;
+					toast.error(`El dorsal #${shirt_number} ya estÃ¡ asignado.`);
 					hasError = true;
 				}
 			}
@@ -435,7 +442,7 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : 'midfielder';
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'midfielder';
 
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';
 		toast.success(`Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
@@ -444,10 +451,10 @@
 	function removePlayer(index) {
 		const removed = players[index];
 		players = players.filter((_, i) => i !== index);
-		toast.info(`Se retiró a ${removed.first_name} ${removed.last_name}.`);
+		toast.info(`Se retirÃ³ a ${removed.first_name} ${removed.last_name}.`);
 	}
 
-	// ── Envío final a la API ───────────────────────────────────────────────────
+	// â”€â”€ EnvÃ­o final a la API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	async function handleSubmit(e) {
 		e.preventDefault();
 
@@ -470,7 +477,7 @@
 			errors.delegate_name = 'El nombre del delegado es obligatorio.';
 			hasError = true;
 		} else if (/\d/.test(teamData.delegate_name)) {
-			errors.delegate_name = 'El nombre del delegado no puede contener números.';
+			errors.delegate_name = 'El nombre del delegado no puede contener nÃºmeros.';
 			hasError = true;
 		}
 
@@ -481,7 +488,7 @@
 		}
 
 		if (teamData.city && /\d/.test(teamData.city)) {
-			errors.city = 'La ciudad no puede contener números.';
+			errors.city = 'La ciudad no puede contener nÃºmeros.';
 			hasError = true;
 		}
 
@@ -504,7 +511,7 @@
 				delegate_name: teamData.delegate_name.trim(),
 				delegate_phone: teamData.delegate_phone.trim() || null,
 				city: teamData.city.trim() || null,
-				country: teamData.country.trim() || 'Perú'
+				country: teamData.country.trim() || 'PerÃº'
 			};
 
 			const createdTeam = await teamsApi.create(payload);
@@ -519,14 +526,14 @@
 						dni: p.dni,
 						shirt_number: p.shirt_number,
 						position: p.position,
-						nationality: p.nationality || teamData.country || 'Perú'
+						nationality: p.nationality || teamData.country || 'PerÃº'
 					});
 					registeredPlayers++;
 				}
 			}
 
 			toast.success(
-				`¡Club '${createdTeam.name}' registrado con éxito con ${registeredPlayers} jugador(es)!`
+				`Â¡Club '${createdTeam.name}' registrado con Ã©xito con ${registeredPlayers} jugador(es)!`
 			);
 
 			goto('/equipos');
@@ -539,7 +546,7 @@
 			} else if (msg.toLowerCase().includes('dni')) {
 				toast.error(msg);
 			}
-			toast.error(msg || 'Ocurrió un error al registrar el equipo.');
+			toast.error(msg || 'OcurriÃ³ un error al registrar el equipo.');
 		} finally {
 			isSubmitting = false;
 		}
@@ -557,39 +564,39 @@
 {/if}
 
 <svelte:head>
-	<title>Registrar Club y Plantilla — TORNEO HUB</title>
+	<title>Registrar Club y Plantilla â€” TORNEO HUB</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto animate-fade-in-up pb-12">
-	<!-- Encabezado con navegación de retorno -->
+	<!-- Encabezado con navegaciÃ³n de retorno -->
 	<div class="flex items-center gap-3 mb-6">
 		<a
 			href="/equipos"
 			class="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition"
 		>
-			← Volver a Equipos
+			â† Volver a Equipos
 		</a>
 	</div>
 
 	<div class="mb-8">
 		<h1 class="text-3xl font-black text-white flex items-center gap-3">
-			📝 Registro de Club y Plantilla
+			ðŸ“ Registro de Club y Plantilla
 		</h1>
 		<p class="text-slate-400 mt-1">
-			Ingresa la información oficial del equipo y agrega los jugadores habilitados con sus países de Sudamérica.
+			Ingresa la informaciÃ³n oficial del equipo y agrega los jugadores habilitados con sus paÃ­ses de SudamÃ©rica.
 		</p>
 	</div>
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center p-12 glass-card rounded-xl border border-slate-700">
 			<span class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></span>
-			<p class="text-slate-400 font-medium">Cargando información del torneo...</p>
+			<p class="text-slate-400 font-medium">Cargando informaciÃ³n del torneo...</p>
 		</div>
 	{:else if !tournament}
 		<!-- EMPTY STATE: No hay torneo creado -->
 		<div class="flex flex-col items-center justify-center p-12 glass-card rounded-xl border border-slate-700 text-center animate-fade-in-up">
-			<div class="text-6xl mb-4">🏆</div>
-			<h2 class="text-2xl font-bold text-white mb-2">Aún no existe un Torneo</h2>
+			<div class="text-6xl mb-4">ðŸ†</div>
+			<h2 class="text-2xl font-bold text-white mb-2">AÃºn no existe un Torneo</h2>
 			<p class="text-slate-400 max-w-md mx-auto mb-6">
 				Para registrar un equipo y su plantilla, primero debes crear la base del torneo. 
 				Haz clic abajo para crear un torneo por defecto y comenzar.
@@ -599,41 +606,41 @@
 				onclick={createBaseTournament}
 				class="px-6 py-3 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-2"
 			>
-				<span>➕</span> Crear Torneo Inicial
+				<span>âž•</span> Crear Torneo Inicial
 			</button>
 		</div>
 	{:else}
 	<form onsubmit={handleSubmit} class="flex flex-col gap-8">
-		<!-- ── SECCIÓN 1: DATOS DEL CLUB ────────────────────────────────────────── -->
+		<!-- â”€â”€ SECCIÃ“N 1: DATOS DEL CLUB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 		<div class="glass-card p-6 md:p-8 flex flex-col gap-5">
 			<div class="flex items-center gap-2 border-b pb-3" style="border-color: var(--border-color);">
-				<span class="text-2xl">🛡️</span>
-				<h2 class="text-xl font-bold text-white">Información del Club</h2>
+				<span class="text-2xl">ðŸ›¡ï¸</span>
+				<h2 class="text-xl font-bold text-white">InformaciÃ³n del Club</h2>
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<!-- Selector de Deporte -->
 				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
 					<h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
-						<span class="text-emerald-400">🏅</span> Disciplina Deportiva
+						<span class="text-emerald-400">ðŸ…</span> Disciplina Deportiva
 					</h3>
 					<div class="flex gap-4">
 						<label class="flex items-center gap-2 cursor-pointer">
 							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500" />
-							<span class="text-white">⚽ Fútbol</span>
+							<span class="text-white">âš½ FÃºtbol</span>
 						</label>
 						<label class="flex items-center gap-2 cursor-pointer">
 							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500" />
-							<span class="text-white">🏀 Básquet</span>
+							<span class="text-white">ðŸ€ BÃ¡squet</span>
 						</label>
 					</div>
 				</div>
 
-				<!-- Nombre del Club (Restricción: Sin números) -->
+				<!-- Nombre del Club (RestricciÃ³n: Sin nÃºmeros) -->
 				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
 					<label for="team-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Nombre del Club <span class="text-emerald-400">*</span>
-						<span class="text-xs font-normal text-slate-400">(Solo letras, sin números)</span>
+						<span class="text-xs font-normal text-slate-400">(Solo letras, sin nÃºmeros)</span>
 					</label>
 					<input
 						id="team-name"
@@ -653,7 +660,7 @@
 				<div>
 					<label for="team-short-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Sigla / Abreviatura <span class="text-emerald-400">*</span>
-						<span class="text-xs font-normal text-slate-500">(2-5 letras o números)</span>
+						<span class="text-xs font-normal text-slate-500">(2-5 letras o nÃºmeros)</span>
 					</label>
 					<input
 						id="team-short-name"
@@ -672,7 +679,7 @@
 					{/if}
 				</div>
 
-				<!-- Delegado (Restricción: Sin números) -->
+				<!-- Delegado (RestricciÃ³n: Sin nÃºmeros) -->
 				<div>
 					<label for="delegate-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Nombre del Delegado Responsable <span class="text-emerald-400">*</span>
@@ -683,7 +690,7 @@
 						type="text"
 						bind:value={teamData.delegate_name}
 						oninput={handleDelegateNameInput}
-						placeholder="Ej. Juan Pérez"
+						placeholder="Ej. Juan PÃ©rez"
 						required
 						class="w-full px-4 py-2.5 rounded-lg bg-slate-900/80 border text-white placeholder-slate-500 focus:outline-none transition {errors.delegate_name ? 'border-red-500 focus:border-red-400' : 'border-slate-700 focus:border-emerald-500'}"
 					/>
@@ -692,11 +699,11 @@
 					{/if}
 				</div>
 
-				<!-- Teléfono (Restricción: Sin letras) -->
+				<!-- TelÃ©fono (RestricciÃ³n: Sin letras) -->
 				<div>
 					<label for="delegate-phone" class="block text-sm font-semibold text-slate-300 mb-1.5">
-						Teléfono de Contacto <span class="text-emerald-400">*</span>
-						<span class="text-xs font-normal text-slate-400">(Solo números, mín. 9 dígitos)</span>
+						TelÃ©fono de Contacto <span class="text-emerald-400">*</span>
+						<span class="text-xs font-normal text-slate-400">(Solo nÃºmeros, mÃ­n. 9 dÃ­gitos)</span>
 					</label>
 					<input
 						id="delegate-phone"
@@ -712,7 +719,7 @@
 					{/if}
 				</div>
 
-				<!-- Ciudad (Restricción: Sin números) -->
+				<!-- Ciudad (RestricciÃ³n: Sin nÃºmeros) -->
 				<div>
 					<label for="team-city" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Ciudad
@@ -731,10 +738,10 @@
 					{/if}
 				</div>
 
-				<!-- Selector de Países de Sudamérica para el Club -->
+				<!-- Selector de PaÃ­ses de SudamÃ©rica para el Club -->
 				<div>
 					<label for="team-country" class="block text-sm font-semibold text-slate-300 mb-1.5">
-						País de Origen (Sudamérica) <span class="text-emerald-400">*</span>
+						PaÃ­s de Origen (SudamÃ©rica) <span class="text-emerald-400">*</span>
 					</label>
 					<select
 						id="team-country"
@@ -749,18 +756,18 @@
 			</div>
 		</div>
 
-		<!-- ── SECCIÓN 2: CARGA DE PLANTILLA (JUGADORES) ────────────────────────── -->
+		<!-- â”€â”€ SECCIÃ“N 2: CARGA DE PLANTILLA (JUGADORES) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 		<div class="glass-card p-6 md:p-8 flex flex-col gap-6">
-			<!-- Header de sección con selector de vista y contador -->
+			<!-- Header de secciÃ³n con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					<span class="text-2xl">{teamData.sport === 'basketball' ? 'ðŸ€' : 'âš½'}</span>
 					<div>
 						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
 						<p class="text-xs text-slate-400">
 							{teamData.sport === 'basketball'
-								? 'Ubica a tus jugadores en la pista de básquetbol (mín. 5).'
-								: 'Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).'}
+								? 'Ubica a tus jugadores en la pista de bÃ¡squetbol (mÃ­n. 5).'
+								: 'Ubica a tus jugadores en la cancha tÃ¡ctica (mÃ­n. 5, mÃ¡x. 1 arquero).'}
 						</p>
 					</div>
 				</div>
@@ -773,7 +780,7 @@
 							onclick={() => editorView = 'pitch'}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 						>
-							<span>{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+							<span>{teamData.sport === 'basketball' ? 'ðŸ€' : 'ðŸŸï¸'}</span>
 							{teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
 						</button>
 						<button
@@ -781,14 +788,14 @@
 							onclick={() => editorView = 'classic'}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'classic' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 						>
-							<span>📋</span> Formulario
+							<span>ðŸ“‹</span> Formulario
 						</button>
 					</div>
 
 					<!-- Contador y barra de progreso -->
 					<div class="flex flex-col items-end gap-1">
 						<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= MIN_PLAYERS ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
-							{players.length}/{MIN_PLAYERS} mín.
+							{players.length}/{MIN_PLAYERS} mÃ­n.
 						</span>
 						<div class="w-20 h-1.5 rounded-full bg-slate-700 overflow-hidden">
 							<div
@@ -800,12 +807,12 @@
 				</div>
 			</div>
 
-			<!-- VISTA 1: CANCHA / PISTA TÁCTICA INTERACTIVA -->
+			<!-- VISTA 1: CANCHA / PISTA TÃCTICA INTERACTIVA -->
 			{#if editorView === 'pitch'}
 				<div class="flex flex-col gap-4">
 					<div class="flex flex-wrap items-center justify-between gap-2 px-1">
 						<span class="text-xs text-slate-400">
-							Haz clic en los botones <strong>(+)</strong> de la formación para ubicar jugadores:
+							Haz clic en los botones <strong>(+)</strong> de la formaciÃ³n para ubicar jugadores:
 						</span>
 						<button
 							type="button"
@@ -816,7 +823,7 @@
 						</button>
 					</div>
 
-					<!-- Cancha según deporte -->
+					<!-- Cancha segÃºn deporte -->
 					{#if teamData.sport === 'basketball'}
 						<BasketballCourt
 							{players}
@@ -844,13 +851,13 @@
 								<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
 									Jugadores en Plantilla ({players.length})
 								</h4>
-								<span class="text-[11px] text-slate-400">Clic en ✕ para retirar</span>
+								<span class="text-[11px] text-slate-400">Clic en âœ• para retirar</span>
 							</div>
 							<div class="flex flex-wrap gap-2">
 								{#each players as p, idx}
 									<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-xs">
 										<span class="font-mono font-black text-emerald-400">
-											{p.shirt_number !== null && p.shirt_number !== undefined && p.shirt_number !== '' ? '#' + p.shirt_number : '—'}
+											{p.shirt_number !== null && p.shirt_number !== undefined && p.shirt_number !== '' ? '#' + p.shirt_number : 'â€”'}
 										</span>
 										<span class="text-white font-medium">{p.first_name} {p.last_name}</span>
 										<span class="text-[10px] text-emerald-400/90 font-medium">({p.nationality || teamData.country})</span>
@@ -862,7 +869,7 @@
 											onclick={() => removePlayer(idx)}
 											class="text-red-400 hover:text-red-300 ml-1 font-bold transition"
 											title="Eliminar jugador"
-										>✕</button>
+										>âœ•</button>
 									</div>
 								{/each}
 							</div>
@@ -870,14 +877,14 @@
 					{/if}
 				</div>
 			{:else}
-				<!-- VISTA 2: FORMULARIO CLÁSICO -->
+				<!-- VISTA 2: FORMULARIO CLÃSICO -->
 				<div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
 					<h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
-						<span>➕</span> Añadir Jugador a la Plantilla
+						<span>âž•</span> AÃ±adir Jugador a la Plantilla
 					</h3>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-						<!-- Nombre (Sin números) -->
+						<!-- Nombre (Sin nÃºmeros) -->
 						<div>
 							<label for="p-firstname" class="block text-xs text-slate-400 mb-1">Nombre * <span class="text-[10px] text-slate-500">(Letras)</span></label>
 							<input
@@ -891,7 +898,7 @@
 							{#if playerErrors.first_name}<p class="mt-0.5 text-xs text-red-400">{playerErrors.first_name}</p>{/if}
 						</div>
 
-						<!-- Apellido (Sin números) -->
+						<!-- Apellido (Sin nÃºmeros) -->
 						<div>
 							<label for="p-lastname" class="block text-xs text-slate-400 mb-1">Apellido * <span class="text-[10px] text-slate-500">(Letras)</span></label>
 							<input
@@ -899,15 +906,15 @@
 								type="text"
 								bind:value={newPlayer.last_name}
 								oninput={handlePlayerLastNameInput}
-								placeholder="Gómez"
+								placeholder="GÃ³mez"
 								class="w-full px-3 py-2 text-sm rounded border text-white focus:outline-none transition {playerErrors.last_name ? 'bg-red-950/30 border-red-500/60' : 'bg-slate-950 border-slate-700 focus:border-emerald-500'}"
 							/>
 							{#if playerErrors.last_name}<p class="mt-0.5 text-xs text-red-400">{playerErrors.last_name}</p>{/if}
 						</div>
 
-						<!-- DNI (Solo números, 8 dígitos, sin duplicados) -->
+						<!-- DNI (Solo nÃºmeros, 8 dÃ­gitos, sin duplicados) -->
 						<div>
-							<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI (8 dígitos) *</label>
+							<label for="p-dni" class="block text-xs text-slate-400 mb-1">DNI (8 dÃ­gitos) *</label>
 							<input
 								id="p-dni"
 								type="text"
@@ -920,7 +927,7 @@
 							{#if playerErrors.dni}<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>{/if}
 						</div>
 
-						<!-- Dorsal (Solo números 0-99) -->
+						<!-- Dorsal (Solo nÃºmeros 0-99) -->
 						<div>
 							<label for="p-shirt" class="block text-xs text-slate-400 mb-1">Dorsal (0-99)</label>
 							<input
@@ -935,9 +942,9 @@
 							{#if playerErrors.shirt_number}<p class="mt-0.5 text-xs text-red-400">{playerErrors.shirt_number}</p>{/if}
 						</div>
 
-						<!-- Posición -->
+						<!-- PosiciÃ³n -->
 						<div>
-							<label for="p-position" class="block text-xs text-slate-400 mb-1">Posición</label>
+							<label for="p-position" class="block text-xs text-slate-400 mb-1">PosiciÃ³n</label>
 							<select
 								id="p-position"
 								bind:value={newPlayer.position}
@@ -945,7 +952,7 @@
 							>
 								{#each positions as pos}
 									{#if pos.value === 'goalkeeper' && hasGoalkeeper}
-										<option value="goalkeeper" disabled>{pos.icon} {pos.label} (Máx. 1)</option>
+										<option value="goalkeeper" disabled>{pos.icon} {pos.label} (MÃ¡x. 1)</option>
 									{:else}
 										<option value={pos.value}>{pos.icon} {pos.label}</option>
 									{/if}
@@ -953,9 +960,9 @@
 							</select>
 						</div>
 
-						<!-- Selector de País de Sudamérica para Jugador -->
+						<!-- Selector de PaÃ­s de SudamÃ©rica para Jugador -->
 						<div>
-							<label for="p-nationality" class="block text-xs text-slate-400 mb-1">País (Sudamérica)</label>
+							<label for="p-nationality" class="block text-xs text-slate-400 mb-1">PaÃ­s (SudamÃ©rica)</label>
 							<select
 								id="p-nationality"
 								bind:value={newPlayer.nationality}
@@ -974,7 +981,7 @@
 							onclick={handleAddPlayer}
 							class="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow-md shadow-emerald-950 cursor-pointer"
 						>
-							<span>➕</span> Agregar a la lista
+							<span>âž•</span> Agregar a la lista
 						</button>
 					</div>
 				</div>
@@ -982,7 +989,7 @@
 				<!-- Tabla de jugadores agregados -->
 				{#if players.length === 0}
 					<div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
-						<p class="text-sm">Aún no has agregado jugadores a la lista.</p>
+						<p class="text-sm">AÃºn no has agregado jugadores a la lista.</p>
 						<p class="text-xs text-slate-600 mt-1">Completa los campos arriba y haz clic en "Agregar a la lista".</p>
 					</div>
 				{:else}
@@ -993,9 +1000,9 @@
 									<th class="px-4 py-3 text-center w-12">#</th>
 									<th class="px-4 py-3 text-left">Jugador</th>
 									<th class="px-4 py-3 text-left">DNI</th>
-									<th class="px-4 py-3 text-left">País</th>
-									<th class="px-4 py-3 text-left">Posición</th>
-									<th class="px-4 py-3 text-center w-16">Acción</th>
+									<th class="px-4 py-3 text-left">PaÃ­s</th>
+									<th class="px-4 py-3 text-left">PosiciÃ³n</th>
+									<th class="px-4 py-3 text-center w-16">AcciÃ³n</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-slate-800">
@@ -1017,7 +1024,7 @@
 											{p.dni}
 										</td>
 										<td class="px-4 py-3 text-emerald-400 font-medium text-xs">
-											{p.nationality || teamData.country || 'Perú'}
+											{p.nationality || teamData.country || 'PerÃº'}
 										</td>
 										<td class="px-4 py-3 text-slate-300 text-xs">
 											{positions.find((pos) => pos.value === p.position)?.icon}
@@ -1030,7 +1037,7 @@
 												class="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition"
 												title="Eliminar de la lista"
 											>
-												🗑️
+												ðŸ—‘ï¸
 											</button>
 										</td>
 									</tr>
@@ -1042,11 +1049,11 @@
 			{/if}
 		</div>
 
-		<!-- ── BOTÓN DE GUARDADO FINAL ──────────────────────────────────────────── -->
+		<!-- â”€â”€ BOTÃ“N DE GUARDADO FINAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 		<div class="flex flex-col gap-3 pt-2">
 			{#if errors.players_count}
 				<div class="flex items-center gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-300">
-					<span>⚠️</span>
+					<span>âš ï¸</span>
 					<span>{errors.players_count}</span>
 				</div>
 			{/if}
@@ -1070,7 +1077,7 @@
 						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
 						<span>Guardando club y plantilla...</span>
 					{:else}
-						<span>💾 Registrar Club y Plantilla</span>
+						<span>ðŸ’¾ Registrar Club y Plantilla</span>
 						{#if players.length < MIN_PLAYERS}
 							<span class="text-xs font-normal opacity-70">({players.length}/{MIN_PLAYERS} jug.)</span>
 						{/if}
@@ -1082,13 +1089,13 @@
 	{/if}
 </div>
 
-<!-- ── MODAL QUICK-ADD DESDE LA CANCHA TÁCTICA ─────────────────────────────────── -->
+<!-- â”€â”€ MODAL QUICK-ADD DESDE LA CANCHA TÃCTICA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 {#if showQuickAddModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
 		<div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-5">
 			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
 				<div class="flex items-center gap-2">
-					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+					<span class="text-xl">{teamData.sport === 'basketball' ? 'ðŸ€' : 'ðŸŸï¸'}</span>
 					<h3 class="text-lg font-bold text-white">
 						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : 'Ubicar en la Cancha'}
 					</h3>
@@ -1097,13 +1104,13 @@
 					type="button"
 					onclick={closeQuickAdd}
 					class="text-slate-400 hover:text-white text-xl leading-none"
-				>✕</button>
+				>âœ•</button>
 			</div>
 
 			<div class="flex flex-col gap-4">
-				<!-- Posición -->
+				<!-- PosiciÃ³n -->
 				<div>
-					<label for="qa-pos" class="block text-xs font-semibold text-slate-300 mb-1">Posición en el campo</label>
+					<label for="qa-pos" class="block text-xs font-semibold text-slate-300 mb-1">PosiciÃ³n en el campo</label>
 					<select
 						id="qa-pos"
 						bind:value={newPlayer.position}
@@ -1111,7 +1118,7 @@
 					>
 						{#each positions as pos}
 							{#if pos.value === 'goalkeeper' && hasGoalkeeper}
-								<option value="goalkeeper" disabled>{pos.icon} {pos.label} (Máx. 1 arquero ya asignado)</option>
+								<option value="goalkeeper" disabled>{pos.icon} {pos.label} (MÃ¡x. 1 arquero ya asignado)</option>
 							{:else}
 								<option value={pos.value}>{pos.icon} {pos.label}</option>
 							{/if}
@@ -1120,7 +1127,7 @@
 				</div>
 
 				<div class="grid grid-cols-2 gap-3">
-					<!-- Nombre (Sin números) -->
+					<!-- Nombre (Sin nÃºmeros) -->
 					<div>
 						<label for="qa-fn" class="block text-xs font-semibold text-slate-300 mb-1">
 							Nombre * <span class="text-[10px] text-slate-400">(Letras)</span>
@@ -1137,7 +1144,7 @@
 							<p class="mt-0.5 text-xs text-red-400">{playerErrors.first_name}</p>
 						{/if}
 					</div>
-					<!-- Apellido (Sin números) -->
+					<!-- Apellido (Sin nÃºmeros) -->
 					<div>
 						<label for="qa-ln" class="block text-xs font-semibold text-slate-300 mb-1">
 							Apellido * <span class="text-[10px] text-slate-400">(Letras)</span>
@@ -1147,7 +1154,7 @@
 							type="text"
 							bind:value={newPlayer.last_name}
 							oninput={handlePlayerLastNameInput}
-							placeholder="Díaz"
+							placeholder="DÃ­az"
 							class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.last_name ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
 						/>
 						{#if playerErrors.last_name}
@@ -1157,9 +1164,9 @@
 				</div>
 
 				<div class="grid grid-cols-2 gap-3">
-					<!-- DNI (Solo números, 8 dígitos, sin duplicados) -->
+					<!-- DNI (Solo nÃºmeros, 8 dÃ­gitos, sin duplicados) -->
 					<div>
-						<label for="qa-dni" class="block text-xs font-semibold text-slate-300 mb-1">DNI (8 dígitos) *</label>
+						<label for="qa-dni" class="block text-xs font-semibold text-slate-300 mb-1">DNI (8 dÃ­gitos) *</label>
 						<input
 							id="qa-dni"
 							type="text"
@@ -1173,7 +1180,7 @@
 							<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>
 						{/if}
 					</div>
-					<!-- Dorsal (Solo números 0-99) -->
+					<!-- Dorsal (Solo nÃºmeros 0-99) -->
 					<div>
 						<label for="qa-shirt" class="block text-xs font-semibold text-slate-300 mb-1">Dorsal (0-99)</label>
 						<input
@@ -1191,9 +1198,9 @@
 					</div>
 				</div>
 
-				<!-- País / Nacionalidad (Sudamérica) -->
+				<!-- PaÃ­s / Nacionalidad (SudamÃ©rica) -->
 				<div>
-					<label for="qa-nationality" class="block text-xs font-semibold text-slate-300 mb-1">País de Origen (Sudamérica)</label>
+					<label for="qa-nationality" class="block text-xs font-semibold text-slate-300 mb-1">PaÃ­s de Origen (SudamÃ©rica)</label>
 					<select
 						id="qa-nationality"
 						bind:value={newPlayer.nationality}
@@ -1217,10 +1224,12 @@
 					onclick={handleQuickAddSubmit}
 					class="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-1.5 cursor-pointer"
 				>
-					<span>{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					<span>{teamData.sport === 'basketball' ? 'ðŸ€' : 'âš½'}</span>
 					Agregar a la {teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
 				</button>
 			</div>
 		</div>
 	</div>
 {/if}
+
+

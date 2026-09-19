@@ -1,8 +1,8 @@
-<script>
+﻿<script>
 	/**
-	 * routes/fixture/+page.svelte — Página de Fixture (/fixture)
+	 * routes/fixture/+page.svelte â€” PÃ¡gina de Fixture (/fixture)
 	 *
-	 * ¿Qué muestra?
+	 * Â¿QuÃ© muestra?
 	 * - Selector de jornadas (Jornada 1, Jornada 2, etc.)
 	 * - Tarjetas de partidos de la jornada seleccionada
 	 * - Estado de cada partido (Programado / En Juego / Finalizado / Cancelado)
@@ -87,14 +87,14 @@
 		}
 	});
 
-	// Configuración visual por estado de partido (claves en minúscula para coincidir con la API)
+	// ConfiguraciÃ³n visual por estado de partido (claves en minÃºscula para coincidir con la API)
 	const statusConfig = {
-		scheduled:   { label: 'Programado',     badgeClass: 'badge-scheduled',   icon: '🕐' },
-		live:        { label: 'En Juego (LIVE)',badgeClass: 'badge-in-progress', icon: '⚽' },
-		in_progress: { label: 'En Juego',       badgeClass: 'badge-in-progress', icon: '⚽' },
-		finished:    { label: 'Finalizado',     badgeClass: 'badge-finished',    icon: '✅' },
-		cancelled:   { label: 'Cancelado',      badgeClass: 'badge-cancelled',   icon: '❌' },
-		postponed:   { label: 'Pospuesto',      badgeClass: 'badge-scheduled',   icon: '⏸️' }
+		scheduled:   { label: 'Programado',     badgeClass: 'badge-scheduled',   icon: 'ðŸ•' },
+		live:        { label: 'En Juego (LIVE)',badgeClass: 'badge-in-progress', icon: 'âš½' },
+		in_progress: { label: 'En Juego',       badgeClass: 'badge-in-progress', icon: 'âš½' },
+		finished:    { label: 'Finalizado',     badgeClass: 'badge-finished',    icon: 'âœ…' },
+		cancelled:   { label: 'Cancelado',      badgeClass: 'badge-cancelled',   icon: 'âŒ' },
+		postponed:   { label: 'Pospuesto',      badgeClass: 'badge-scheduled',   icon: 'â¸ï¸' }
 	};
 
 	function getStatus(rawStatus) {
@@ -115,17 +115,17 @@
 </script>
 
 <svelte:head>
-	<title>Fixture — Nombre-Creativo</title>
+	<title>Fixture â€” Nombre-Creativo</title>
 	<meta name="description" content="Calendario completo de partidos del torneo organizado por jornadas." />
 </svelte:head>
 
-<!-- ── Encabezado ─────────────────────────────────────────────────────────── -->
+<!-- â”€â”€ Encabezado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 <div class="mb-8 animate-fade-in-up">
-	<h1 class="text-3xl font-black text-white flex items-center gap-3">📅 Fixture</h1>
+	<h1 class="text-3xl font-black text-white flex items-center gap-3">ðŸ“… Fixture</h1>
 	<p class="text-slate-400 mt-1">Calendario de partidos del torneo</p>
 </div>
 
-<!-- ── Estado: cargando ───────────────────────────────────────────────────── -->
+<!-- â”€â”€ Estado: cargando â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 {#if loading}
 	<div class="flex flex-col gap-4">
 		<div class="skeleton h-10 w-full rounded-xl"></div>
@@ -134,10 +134,10 @@
 		{/each}
 	</div>
 
-<!-- ── Estado: error ─────────────────────────────────────────────────────── -->
+<!-- â”€â”€ Estado: error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 {:else if error}
 	<div class="glass-card p-8 text-center">
-		<div class="text-4xl mb-3">⚠️</div>
+		<div class="text-4xl mb-3">âš ï¸</div>
 		<p class="text-white font-semibold">No se pudo cargar el fixture</p>
 		<p class="text-slate-400 text-sm mt-2">{error}</p>
 		<p class="text-slate-500 text-xs mt-2">
@@ -145,33 +145,33 @@
 		</p>
 	</div>
 
-<!-- ── Sin fixture generado ──────────────────────────────────────────────── -->
+<!-- â”€â”€ Sin fixture generado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 {:else if rounds.length === 0}
 	<div class="glass-card p-12 text-center animate-fade-in-up">
-		<div class="text-5xl mb-4">📅</div>
+		<div class="text-5xl mb-4">ðŸ“…</div>
 		<h2 class="text-xl font-bold text-white mb-2">Fixture no generado</h2>
 		<p class="text-slate-400 text-sm mb-4">
-			El fixture se genera automáticamente una vez que los equipos estén inscritos.
+			El fixture se genera automÃ¡ticamente una vez que los equipos estÃ©n inscritos.
 		</p>
 		<a
 			href="/mesa-control"
 			class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition shadow-lg"
 		>
-			<span>🎮</span>
+			<span>ðŸŽ®</span>
 			<span>Ir a Mesa de Control para Generar Fixture</span>
 		</a>
 	</div>
 
-<!-- ── Fixture con jornadas ───────────────────────────────────────────────── -->
+<!-- â”€â”€ Fixture con jornadas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 {:else}
-	<!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
+	<!-- â”€â”€ Filtro por Deporte â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 	<div class="flex items-center gap-2 mb-6 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
 		<button
 			type="button"
 			onclick={() => (selectedSport = 'all')}
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}"
 		>
-			<span>🌐</span>
+			<span>ðŸŒ</span>
 			<span>Todos</span>
 		</button>
 		<button
@@ -179,16 +179,16 @@
 			onclick={() => (selectedSport = 'football')}
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'football' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40' : 'text-slate-400 hover:text-white'}"
 		>
-			<span>⚽</span>
-			<span>Fútbol</span>
+			<span>âš½</span>
+			<span>FÃºtbol</span>
 		</button>
 		<button
 			type="button"
 			onclick={() => (selectedSport = 'basketball')}
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'basketball' ? 'bg-amber-600 text-white shadow-md shadow-amber-950/40' : 'text-slate-400 hover:text-white'}"
 		>
-			<span>🏀</span>
-			<span>Básquetbol</span>
+			<span>ðŸ€</span>
+			<span>BÃ¡squetbol</span>
 		</button>
 	</div>
 
@@ -211,7 +211,7 @@
 	<div class="flex flex-col gap-3">
 		{#if filteredMatches.length === 0}
 			<div class="col-span-full glass-card p-10 text-center">
-				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en la jornada {selectedRound}.</p>
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'bÃ¡squetbol' : 'fÃºtbol'} en la jornada {selectedRound}.</p>
 			</div>
 		{/if}
 		{#each filteredMatches as match}
@@ -223,10 +223,10 @@
 						{teamsMap[match.home_team_id]?.name ?? `Equipo #${match.home_team_id}`}
 					</p>
 					<p class="text-xs text-slate-500 font-mono">
-						{teamsMap[match.home_team_id]?.short_name ?? 'LOC'} • Local
+						{teamsMap[match.home_team_id]?.short_name ?? 'LOC'} â€¢ Local
 					</p>
 					<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="mt-1 text-[11px] text-slate-400 hover:text-emerald-400 transition inline-flex items-center gap-1 font-semibold">
-						<span>🏟️</span> Cancha Táctica
+						<span>ðŸŸï¸</span> Cancha TÃ¡ctica
 					</button>
 				</div>
 
@@ -234,7 +234,7 @@
 				<div class="flex flex-col items-center gap-1.5 px-4 min-w-[130px]">
 					{#if match.home_score !== null && match.away_score !== null}
 						<div class="text-2xl font-black text-white font-mono">
-							{match.home_score} – {match.away_score}
+							{match.home_score} â€“ {match.away_score}
 						</div>
 					{:else}
 						<div class="text-xl font-bold text-slate-500">VS</div>
@@ -256,10 +256,10 @@
 						{teamsMap[match.away_team_id]?.name ?? `Equipo #${match.away_team_id}`}
 					</p>
 					<p class="text-xs text-slate-500 font-mono">
-						{teamsMap[match.away_team_id]?.short_name ?? 'VIS'} • Visitante
+						{teamsMap[match.away_team_id]?.short_name ?? 'VIS'} â€¢ Visitante
 					</p>
 					<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="mt-1 text-[11px] text-slate-400 hover:text-emerald-400 transition inline-flex items-center gap-1 font-semibold">
-						<span>🏟️</span> Cancha Táctica
+						<span>ðŸŸï¸</span> Cancha TÃ¡ctica
 					</button>
 				</div>
 			</div>
@@ -267,7 +267,7 @@
 	</div>
 {/if}
 
-<!-- MODAL DE CANCHA TÁCTICA -->
+<!-- MODAL DE CANCHA TÃCTICA -->
 {#if pitchModalTeam}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
@@ -279,23 +279,24 @@
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{pitchModalTeam.name}</h3>
-					<p class="text-xs text-slate-400 font-mono">Alineación y Plantilla en Cancha</p>
+					<p class="text-xs text-slate-400 font-mono">AlineaciÃ³n y Plantilla en Cancha</p>
 				</div>
 				<button
 					type="button"
 					onclick={() => (pitchModalTeam = null)}
 					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
 				>
-					✕
+					âœ•
 				</button>
 			</div>
 
-			<SoccerPitch
-				players={pitchModalTeam.players || []}
-				interactive={false}
-				teamName={pitchModalTeam.name}
-				teamColor="#10b981"
-			/>
+			{#if pitchModalTeam.sport === 'basketball'}
+				<BasketballCourt players={pitchModalTeam.players || []} interactive={false} teamName={pitchModalTeam.name} teamColor="#f59e0b" />
+			{:else if pitchModalTeam.sport === 'volleyball'}
+				<VolleyballCourt players={pitchModalTeam.players || []} interactive={false} teamName={pitchModalTeam.name} teamColor="#7c3aed" />
+			{:else}
+				<SoccerPitch players={pitchModalTeam.players || []} interactive={false} teamName={pitchModalTeam.name} teamColor="#10b981" />
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button
@@ -309,3 +310,4 @@
 		</div>
 	</div>
 {/if}
+

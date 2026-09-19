@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
@@ -17,6 +17,7 @@ class TournamentFormat(str, Enum):
 class SportType(str, Enum):
     FOOTBALL = "football"
     BASKETBALL = "basketball"
+    VOLLEYBALL = "volleyball"
 
 
 class TournamentStatus(str, Enum):
@@ -27,7 +28,7 @@ class TournamentStatus(str, Enum):
 
 
 def _enum_values(enum_cls):
-    """Return the .value strings of an Enum – forces SA to use lowercase labels."""
+    """Return the .value strings of an Enum — forces SA to use lowercase labels."""
     return [e.value for e in enum_cls]
 
 
