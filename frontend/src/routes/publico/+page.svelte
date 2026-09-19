@@ -5,6 +5,7 @@
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { fixtureApi, standingsApi, teamsApi } from '$lib/api/client';
+	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 
 	const TOURNAMENT_ID = 1;
 	const REFRESH_INTERVAL_MS = 30_000;
@@ -16,6 +17,20 @@
 	let teamsMap = $state({});
 	let selectedRound = $state(1);
 	let loading = $state(true);
+	let pitchModalTeam = $state(null);
+
+	async function showTeamPitch(teamId) {
+		let t = teamsMap[teamId];
+		if (!t) return;
+		if (!t.players || t.players.length === 0) {
+			try {
+				const full = await teamsApi.get(teamId);
+				teamsMap[teamId] = full;
+				t = full;
+			} catch (_) {}
+		}
+		pitchModalTeam = t;
+	}
 	let lastUpdated = $state(null);
 	let secondsSince = $state(0);
 	let refreshTimer = null;
@@ -75,7 +90,7 @@
 			const [fixtureData, standingsData, teamsList] = await Promise.all([
 				fixtureApi.get(TOURNAMENT_ID).catch(() => ({ rounds: [] })),
 				standingsApi.get(TOURNAMENT_ID).catch(() => []),
-				teamsApi.list(TOURNAMENT_ID).catch(() => [])
+				teamsApi.list(TOURNAMENT_ID, true).catch(() => [])
 			]);
 			const map = {};
 			for (const t of teamsList) map[t.id] = t;
@@ -294,6 +309,16 @@
 								</div>
 							</div>
 						</div>
+						<!-- Botones de Alineación Táctica en Cancha -->
+						<div class="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-between text-xs">
+							<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
+								<span>🏟️</span> Alineación {teamShort(match.home_team_id)}
+							</button>
+							<span class="text-slate-700">•</span>
+							<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
+								<span>🏟️</span> Alineación {teamShort(match.away_team_id)}
+							</button>
+						</div>
 					</div>
 				</div>
 			{/each}
@@ -369,12 +394,15 @@
 											style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
 											{teamInitial(s.team_id)}
 										</div>
-										<div>
-											<p class="font-semibold text-white text-sm leading-tight">
+										<div class="flex-1 min-w-0">
+											<p class="font-semibold text-white text-sm leading-tight truncate">
 												{teamName(s.team_id)}
 											</p>
 											<p class="text-xs text-slate-500 font-mono">{teamShort(s.team_id)}</p>
 										</div>
+										<button type="button" onclick={() => showTeamPitch(s.team_id)} class="px-2 py-1 rounded-md text-[11px] font-semibold bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 text-slate-400 border border-slate-700/60 transition flex items-center gap-1 shrink-0" title="Ver alineación en la cancha">
+											<span>🏟️</span> Cancha
+										</button>
 									</div>
 								</td>
 
@@ -411,6 +439,54 @@
 
 {/if}
 
+
+<!-- MODAL DE CANCHA TÁCTICA PARA PÚBLICO -->
+{#if pitchModalTeam}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		onclick={(e) => e.target === e.currentTarget && (pitchModalTeam = null)}
+	>
+		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
+			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg" style="background: {teamColor(pitchModalTeam.id)}25; color: {teamColor(pitchModalTeam.id)};">
+						{teamInitial(pitchModalTeam.id)}
+					</div>
+					<div>
+						<h3 class="text-base font-bold text-white leading-tight">{pitchModalTeam.name}</h3>
+						<p class="text-xs text-slate-400 font-mono">Alineación y Plantilla en Cancha</p>
+					</div>
+				</div>
+				<button
+					type="button"
+					onclick={() => (pitchModalTeam = null)}
+					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
+				>
+					✕
+				</button>
+			</div>
+
+			<SoccerPitch
+				players={pitchModalTeam.players || []}
+				interactive={false}
+				teamName={pitchModalTeam.name}
+				teamColor={teamColor(pitchModalTeam.id)}
+			/>
+
+			<div class="flex justify-end pt-2 border-t border-slate-800">
+				<button
+					type="button"
+					onclick={() => (pitchModalTeam = null)}
+					class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
+				>
+					Cerrar
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 <style>
 	/* ── Pestañas ─────────────────────────────────────────────────────────────── */
 	.tab-pill {

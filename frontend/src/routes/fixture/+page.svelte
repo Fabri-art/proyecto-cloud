@@ -9,6 +9,7 @@
 	 */
 	import { onMount } from 'svelte';
 	import { fixtureApi, teamsApi } from '$lib/api/client';
+	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
@@ -18,6 +19,20 @@
 	let selectedRound = $state(1);
 	let loading = $state(true);
 	let error = $state(null);
+	let pitchModalTeam = $state(null);
+
+	async function showTeamPitch(teamId) {
+		let t = teamsMap[teamId];
+		if (!t) return;
+		if (!t.players || t.players.length === 0) {
+			try {
+				const full = await teamsApi.get(teamId);
+				teamsMap[teamId] = full;
+				t = full;
+			} catch (_) {}
+		}
+		pitchModalTeam = t;
+	}
 
 	// Partidos de la jornada seleccionada (soporta tanto matchday como round)
 	let currentMatches = $derived(
@@ -28,7 +43,7 @@
 		try {
 			const [fixtureData, teamsList] = await Promise.all([
 				fixtureApi.get(TOURNAMENT_ID).catch(() => ({ rounds: [] })),
-				teamsApi.list(TOURNAMENT_ID).catch(() => [])
+				teamsApi.list(TOURNAMENT_ID, true).catch(() => [])
 			]);
 
 			const map = {};
@@ -154,6 +169,9 @@
 					<p class="text-xs text-slate-500 font-mono">
 						{teamsMap[match.home_team_id]?.short_name ?? 'LOC'} • Local
 					</p>
+					<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="mt-1 text-[11px] text-slate-400 hover:text-emerald-400 transition inline-flex items-center gap-1 font-semibold">
+						<span>🏟️</span> Cancha Táctica
+					</button>
 				</div>
 
 				<!-- Marcador / Estado -->
@@ -184,8 +202,54 @@
 					<p class="text-xs text-slate-500 font-mono">
 						{teamsMap[match.away_team_id]?.short_name ?? 'VIS'} • Visitante
 					</p>
+					<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="mt-1 text-[11px] text-slate-400 hover:text-emerald-400 transition inline-flex items-center gap-1 font-semibold">
+						<span>🏟️</span> Cancha Táctica
+					</button>
 				</div>
 			</div>
 		{/each}
+	</div>
+{/if}
+
+<!-- MODAL DE CANCHA TÁCTICA -->
+{#if pitchModalTeam}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		onclick={(e) => e.target === e.currentTarget && (pitchModalTeam = null)}
+	>
+		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
+			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+				<div>
+					<h3 class="text-base font-bold text-white leading-tight">{pitchModalTeam.name}</h3>
+					<p class="text-xs text-slate-400 font-mono">Alineación y Plantilla en Cancha</p>
+				</div>
+				<button
+					type="button"
+					onclick={() => (pitchModalTeam = null)}
+					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
+				>
+					✕
+				</button>
+			</div>
+
+			<SoccerPitch
+				players={pitchModalTeam.players || []}
+				interactive={false}
+				teamName={pitchModalTeam.name}
+				teamColor="#10b981"
+			/>
+
+			<div class="flex justify-end pt-2 border-t border-slate-800">
+				<button
+					type="button"
+					onclick={() => (pitchModalTeam = null)}
+					class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
+				>
+					Cerrar
+				</button>
+			</div>
+		</div>
 	</div>
 {/if}
