@@ -82,7 +82,8 @@ export const api = {
 /** Torneos */
 export const tournamentsApi = {
 	get: (tournamentId) => api.get(`/tournaments/${tournamentId}`),
-	update: (tournamentId, body) => api.patch(`/tournaments/${tournamentId}`, body)
+	update: (tournamentId, body) => api.patch(`/tournaments/${tournamentId}`, body),
+	create: (body) => api.post('/tournaments', body)
 };
 
 /** Equipos */

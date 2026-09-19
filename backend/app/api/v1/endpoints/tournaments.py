@@ -4,9 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
 from app.models.tournament import Tournament
-from app.schemas.tournament import TournamentRead, TournamentUpdate
+from app.schemas.tournament import TournamentRead, TournamentUpdate, TournamentCreate
 
 router = APIRouter(prefix="/tournaments", tags=["Tournaments"])
+
+@router.post("", response_model=TournamentRead, status_code=201)
+async def create_tournament(tournament_in: TournamentCreate, db: AsyncSession = Depends(get_session)):
+    tournament = Tournament.model_validate(tournament_in)
+    db.add(tournament)
+    await db.commit()
+    await db.refresh(tournament)
+    return tournament
 
 @router.get("/{tournament_id}", response_model=TournamentRead)
 async def get_tournament(tournament_id: int, db: AsyncSession = Depends(get_session)):

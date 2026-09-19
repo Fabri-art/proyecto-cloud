@@ -31,9 +31,9 @@
 	/** Mínimo de jugadores exigidos para poder enviar el formulario */
 	const MIN_PLAYERS = 5;
 
-	/** Lista de equipos ya registrados en el torneo para validar duplicados en vivo */
 	let existingTeams = $state([]);
 	let tournament = $state(null);
+	let loading = $state(true);
 
 	onMount(async () => {
 		try {
@@ -41,8 +41,30 @@
 			existingTeams = await teamsApi.list(TOURNAMENT_ID, true);
 		} catch {
 			// Si falla la consulta previa, el backend validará en el submit
+		} finally {
+			loading = false;
 		}
 	});
+
+	async function createBaseTournament() {
+		try {
+			loading = true;
+			// Crear un torneo por defecto para arrancar
+			tournament = await tournamentsApi.create({
+				name: 'Torneo Oficial',
+				slug: 'torneo-oficial',
+				season: new Date().getFullYear().toString(),
+				sport: 'football'
+			});
+			toast.success('¡Torneo base creado! Ahora puedes registrar equipos.');
+			// Recargar equipos por si acaso
+			existingTeams = await teamsApi.list(TOURNAMENT_ID, true).catch(() => []);
+		} catch (err) {
+			toast.error(err.message || 'Error al crear el torneo.');
+		} finally {
+			loading = false;
+		}
+	}
 
 	// ── Estado del Club ────────────────────────────────────────────────────────
 	let teamData = $state({
@@ -449,6 +471,29 @@
 		</p>
 	</div>
 
+	{#if loading}
+		<div class="flex flex-col items-center justify-center p-12 glass-card rounded-xl border border-slate-700">
+			<span class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></span>
+			<p class="text-slate-400 font-medium">Cargando información del torneo...</p>
+		</div>
+	{:else if !tournament}
+		<!-- EMPTY STATE: No hay torneo creado -->
+		<div class="flex flex-col items-center justify-center p-12 glass-card rounded-xl border border-slate-700 text-center animate-fade-in-up">
+			<div class="text-6xl mb-4">🏆</div>
+			<h2 class="text-2xl font-bold text-white mb-2">Aún no existe un Torneo</h2>
+			<p class="text-slate-400 max-w-md mx-auto mb-6">
+				Para registrar un equipo y su plantilla, primero debes crear la base del torneo. 
+				Haz clic abajo para crear un torneo por defecto y comenzar.
+			</p>
+			<button
+				type="button"
+				onclick={createBaseTournament}
+				class="px-6 py-3 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-2"
+			>
+				<span>🚀</span> Crear Torneo Inicial
+			</button>
+		</div>
+	{:else}
 	<form onsubmit={handleSubmit} class="flex flex-col gap-8">
 		<!-- ── SECCIÓN 1: DATOS DEL CLUB ──────────────────────────────────────── -->
 		<div class="glass-card p-6 md:p-8 flex flex-col gap-5">
@@ -887,6 +932,7 @@
 			</div>
 		</div>
 	</form>
+	{/if}
 </div>
 
 <!-- ── MODAL QUICK-ADD DESDE LA CANCHA TÁCTICA ─────────────────────────────── -->
