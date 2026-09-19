@@ -186,19 +186,19 @@ async def _check_dni_duplicate(
 ) -> None:
     """Raise HTTP 400 if the DNI is already registered in this tournament."""
     stmt = (
-        select(Player)
-        .join(Team, Player.team_id == Team.id)  # type: ignore[arg-type]
+        select(Player, Team)
+        .join(Team, Player.team_id == Team.id)
         .where(Team.tournament_id == tournament_id)
         .where(Player.dni == dni)
     )
     result = await session.execute(stmt)
-    existing = result.scalars().first()
-    if existing:
+    row = result.first()
+    if row:
+        player_found, team_found = row
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                f"A player with DNI '{dni}' is already registered "
-                f"in tournament {tournament_id}."
+                f"El DNI '{dni}' ya está registrado en el equipo '{team_found.name}' de este torneo."
             ),
         )
 

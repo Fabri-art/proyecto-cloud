@@ -11,6 +11,8 @@
 	import { fixtureApi, teamsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
+	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
@@ -21,6 +23,19 @@
 	let loading = $state(true);
 	let error = $state(null);
 	let pitchModalTeam = $state(null);
+	let now = $state(Date.now());
+	let tickInterval = null;
+
+	function getMatchTimer(match) {
+		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		if (!match.started_at) return '00:00';
+		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
+		const startedMs = new Date(iso).getTime();
+		const totalSec = Math.max(0, Math.floor((now - startedMs) / 1000));
+		const m = Math.floor(totalSec / 60);
+		const s = totalSec % 60;
+		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	}
 	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
 	function getMatchSport(match) {
 		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
@@ -177,6 +192,22 @@
 			<span>🏀</span>
 			<span>Básquetbol</span>
 		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'volleyball')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow-md shadow-violet-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🏐</span>
+			<span>Vóley</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>♟️</span>
+			<span>Ajedrez bajo el agua</span>
+		</button>
 	</div>
 
 	<!-- Selector de jornadas -->
@@ -198,7 +229,7 @@
 	<div class="flex flex-col gap-3">
 		{#if filteredMatches.length === 0}
 			<div class="col-span-full glass-card p-10 text-center">
-				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en la jornada {selectedRound}.</p>
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en la jornada {selectedRound}.</p>
 			</div>
 		{/if}
 		{#each filteredMatches as match}
@@ -277,12 +308,35 @@
 				</button>
 			</div>
 
-			<SoccerPitch
+			{#if (pitchModalTeam.sport === 'basketball')}
+				<BasketballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#f59e0b"
+				/>
+			{:else if (pitchModalTeam.sport === 'volleyball')}
+				<VolleyballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#8b5cf6"
+				/>
+			{:else if (pitchModalTeam.sport === 'underwater_chess')}
+				<UnderwaterChessBoard
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#06b6d4"
+				/>
+			{:else}
+				<SoccerPitch
 				players={pitchModalTeam.players || []}
 				interactive={false}
 				teamName={pitchModalTeam.name}
 				teamColor="#10b981"
 			/>
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button

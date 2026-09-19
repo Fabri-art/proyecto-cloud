@@ -16,6 +16,8 @@
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
+	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 
 	const TOURNAMENT_ID = 1;
 
@@ -61,7 +63,19 @@
 	let showFinishModal = $state(false);
 	let isClosingMatch = $state(false);
 	let tacticalTeam = $state(null);
-	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	let now = $state(Date.now());
+	let globalTick = null;
+
+	function getMatchTimer(match, _tick) {
+		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		if (!match.started_at) return '00:00';
+		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
+		const startedMs = new Date(iso).getTime();
+		const current = now || Date.now();
+		const totalSec = Math.max(0, Math.floor((current - startedMs) / 1000));
+		return formatTime(totalSec);
+	}
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
 	function getMatchSport(match) {
 		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
 	}
@@ -220,7 +234,8 @@
 
 		// Calcular tiempo real transcurrido si el partido está EN VIVO
 		if (normalStatus === 'live' && match.started_at) {
-			const startedMs = new Date(match.started_at + 'Z').getTime(); // UTC
+			const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
+			const startedMs = new Date(iso).getTime();
 			timerSeconds = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
 			startTimer();
 		} else {
@@ -329,9 +344,15 @@
 		rounds.find((r) => (r.matchday ?? r.round) === selectedRound)?.matches ?? []
 	);
 
-	onMount(() => { loadData(); });
+	onMount(() => {
+		loadData();
+		globalTick = setInterval(() => {
+			now = Date.now();
+		}, 1000);
+	});
 	onDestroy(() => {
 		if (timerInterval) clearInterval(timerInterval);
+		if (globalTick) clearInterval(globalTick);
 		unsub();
 	});
 </script>
@@ -448,10 +469,10 @@
 			<!-- Botones de Cancha Táctica -->
 			<div class="flex items-center justify-center gap-3 py-1">
 				<button type="button" onclick={() => showTeamTactical(activeMatch.home_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 transition flex items-center gap-1.5 shadow-sm">
-					<span>🏟️</span> Formación Cancha ({homeTeam?.short_name ?? 'Local'})
+					<span>🏟️</span> Ver alineación ({homeTeam?.short_name ?? 'Local'})
 				</button>
 				<button type="button" onclick={() => showTeamTactical(activeMatch.away_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-950/60 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 transition flex items-center gap-1.5 shadow-sm">
-					<span>🏟️</span> Formación Cancha ({awayTeam?.short_name ?? 'Visita'})
+					<span>🏟️</span> Ver alineación ({awayTeam?.short_name ?? 'Visita'})
 				</button>
 			</div>
 
@@ -474,7 +495,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -496,7 +517,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -560,6 +581,20 @@
 				>
 					🏀 Básquetbol
 				</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'volleyball')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			🏐 Vóley
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			♟️ Ajedrez bajo el agua
+		</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
 				<div class="flex items-center gap-2 overflow-x-auto pb-1">
@@ -606,7 +641,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				{#if filteredMatches.length === 0}
 					<div class="col-span-full glass-card p-8 text-center">
-						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en esta jornada.</p>
+						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en esta jornada.</p>
 					</div>
 				{/if}
 				{#each filteredMatches as match}
@@ -630,9 +665,11 @@
 							</div>
 							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
-									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+									{status.icon} {status.label} · <span class="font-mono font-black text-emerald-300">⏱️ {getMatchTimer(match, now)}</span>
+								{:else}
+									{status.icon} {status.label}
 								{/if}
-								{status.icon} {status.label}
 							</span>
 						</div>
 						<div class="flex items-center justify-between gap-4 py-1">
@@ -640,12 +677,19 @@
 								<p class="font-bold text-white text-base truncate">{homeTeam?.name ?? `Equipo #${match.home_team_id}`}</p>
 								<p class="text-xs text-slate-500 font-mono">{homeTeam?.short_name ?? '---'}</p>
 							</div>
-							<div class="px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-center min-w-[70px]">
-								{#if match.home_score !== null && match.away_score !== null}
-									<span class="text-xl font-black font-mono text-emerald-400">{match.home_score} - {match.away_score}</span>
-								{:else}
-									<span class="text-sm font-bold text-slate-500">VS</span>
+							<div class="flex flex-col items-center gap-1 min-w-[80px]">
+								{#if (match.status ?? '').toLowerCase() === 'live'}
+									<span class="text-[11px] font-mono font-black text-emerald-400 bg-emerald-950/90 px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm animate-pulse tracking-wide">
+										⏱️ {getMatchTimer(match, now)}
+									</span>
 								{/if}
+								<div class="px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-center w-full">
+									{#if match.home_score !== null && match.away_score !== null}
+										<span class="text-xl font-black font-mono text-emerald-400">{match.home_score} - {match.away_score}</span>
+									{:else}
+										<span class="text-sm font-bold text-slate-500">VS</span>
+									{/if}
+								</div>
 							</div>
 							<div class="flex-1 text-center sm:text-right">
 								<p class="font-bold text-white text-base truncate">{awayTeam?.name ?? `Equipo #${match.away_team_id}`}</p>
@@ -807,7 +851,7 @@
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{tacticalTeam.name}</h3>
-					<p class="text-xs text-slate-400 font-mono">Alineación Táctica en Cancha</p>
+					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : tacticalTeam.sport === 'underwater_chess' ? 'Tablero — Ajedrez bajo el agua' : 'Alineación — Fútbol'}</p>
 				</div>
 				<button
 					type="button"
@@ -818,12 +862,35 @@
 				</button>
 			</div>
 
-			<SoccerPitch
-				players={tacticalTeam.players || []}
-				interactive={false}
-				teamName={tacticalTeam.name}
-				teamColor="#10b981"
-			/>
+			{#if (tacticalTeam.sport === 'basketball')}
+				<BasketballCourt
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#f59e0b"
+				/>
+			{:else if (tacticalTeam.sport === 'volleyball')}
+				<VolleyballCourt
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#8b5cf6"
+				/>
+			{:else if (tacticalTeam.sport === 'underwater_chess')}
+				<UnderwaterChessBoard
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#06b6d4"
+				/>
+			{:else}
+				<SoccerPitch
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#10b981"
+				/>
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button
