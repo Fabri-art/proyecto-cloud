@@ -13,7 +13,7 @@
 const BASE_URL =
 	(typeof import.meta !== 'undefined' &&
 		(import.meta.env?.PUBLIC_API_BASE_URL || import.meta.env?.VITE_API_BASE_URL)) ||
-	'http://localhost:8001/api/v1';
+	'/api/v1';
 
 /**
  * Realiza una petición al backend.
