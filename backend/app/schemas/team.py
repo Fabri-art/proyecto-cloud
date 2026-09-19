@@ -6,12 +6,14 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.player import PlayerRead
+from app.models.tournament import SportType
 
 
 class TeamCreate(BaseModel):
     tournament_id: int
     name: str = Field(min_length=2, max_length=100)
     short_name: str = Field(min_length=2, max_length=5)
+    sport: SportType = SportType.FOOTBALL
     delegate_name: str = Field(min_length=2, max_length=100)
     delegate_phone: str = Field(min_length=9, max_length=30)
     city: Optional[str] = None
@@ -55,6 +57,7 @@ class TeamRead(BaseModel):
     tournament_id: int
     name: str
     short_name: str
+    sport: SportType
     delegate_name: str
     delegate_phone: Optional[str]
     city: Optional[str]

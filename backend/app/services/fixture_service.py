@@ -240,14 +240,35 @@ async def generate_fixture(
             detail="Se requieren al menos 2 equipos registrados para generar el fixture.",
         )
 
-    # Shuffle for randomness, then extract IDs
-    random.shuffle(teams)
-    team_ids: List[int] = [t.id for t in teams]  # type: ignore[misc]
+    # Group teams by sport
+    teams_by_sport: Dict[str, List[int]] = defaultdict(list)
+    for t in teams:
+        teams_by_sport[t.sport].append(t.id) # type: ignore[misc]
 
-    rounds = _round_robin_pairs(team_ids)
+    # Generate rounds per sport independently
+    all_rounds: List[List[tuple[int | None, int | None]]] = []
+    for sport, ids in teams_by_sport.items():
+        if len(ids) < 2:
+            continue
+        
+        # Shuffle for randomness
+        random.shuffle(ids)
+        sport_rounds = _round_robin_pairs(ids)
+        
+        # Merge sport_rounds into all_rounds
+        for i, pairs in enumerate(sport_rounds):
+            if len(all_rounds) <= i:
+                all_rounds.append([])
+            all_rounds[i].extend(pairs)
+
+    if not all_rounds:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No hay suficientes equipos de la misma disciplina para armar partidos.",
+        )
 
     created: List[Match] = []
-    for matchday_num, pairs in enumerate(rounds, start=1):
+    for matchday_num, pairs in enumerate(all_rounds, start=1):
         for home_id, away_id in pairs:
             # Skip BYE matches (one team is None)
             if home_id is None or away_id is None:

@@ -464,7 +464,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{tournament?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -486,7 +486,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{tournament?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -524,31 +524,6 @@
 					</a>
 				</div>
 				
-				<div class="mt-8 p-4 border border-slate-800 rounded-xl bg-slate-900/50 flex flex-col items-center gap-3">
-					<p class="text-sm font-semibold text-slate-300">Configuración del Torneo</p>
-					<div class="flex items-center gap-3">
-						<label class="text-xs font-bold text-slate-400">Deporte:</label>
-						<select class="bg-slate-800 text-white rounded-lg px-3 py-1.5 text-sm outline-none border border-slate-700"
-							value={tournament?.sport ?? 'football'}
-							onchange={async (e) => {
-								if(tournament) {
-									const newSport = e.target.value;
-									try {
-										await tournamentsApi.update(TOURNAMENT_ID, { sport: newSport });
-										tournament.sport = newSport;
-										toast.success('Deporte actualizado a ' + newSport);
-									} catch(err) {
-										toast.error('Error al actualizar deporte');
-										e.target.value = tournament.sport;
-									}
-								}
-							}}
-						>
-							<option value="football">⚽ Fútbol</option>
-							<option value="basketball">🏀 Básquetbol</option>
-						</select>
-					</div>
-				</div>
 			</div>
 		{:else}
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">

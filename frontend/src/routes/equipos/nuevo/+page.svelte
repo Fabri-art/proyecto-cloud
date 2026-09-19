@@ -70,6 +70,7 @@
 	let teamData = $state({
 		name: '',
 		short_name: '',
+		sport: 'football',
 		delegate_name: '',
 		delegate_phone: '',
 		city: '',
@@ -114,11 +115,11 @@
 
 	function openQuickAdd(position) {
 		// Bloquear segundo arquero en fútbol
-		if (tournament?.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+		if (teamData.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.warning('El equipo ya tiene 1 arquero. Solo se permite uno.');
 			return;
 		}
-		quickPosition = position || (tournament?.sport === 'basketball' ? 'point_guard' : 'forward');
+		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : 'forward');
 		newPlayer.position = quickPosition;
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		showQuickAddModal = true;
@@ -153,7 +154,7 @@
 		let hasError = false;
 
 		// Bloquear segundo arquero en fútbol
-		if (tournament?.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
+		if (teamData.sport !== 'basketball' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.error('Solo se permite registrar 1 arquero por equipo.');
 			return;
 		}
@@ -182,7 +183,7 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = tournament?.sport === 'basketball' ? 'point_guard' : (position === 'goalkeeper' ? 'forward' : position);
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : (position === 'goalkeeper' ? 'forward' : position);
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';
 		toast.success(`Jugador ${first_name} ${last_name} agregado a la cancha.`);
 		showQuickAddModal = false;
@@ -203,7 +204,7 @@
 		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
 	];
 	
-	let positions = $derived(tournament?.sport === 'basketball' ? basketballPositions : footballPositions);
+	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : footballPositions);
 
 	// ── Helpers de validación ─────────────────────────────────────────────────
 
@@ -331,7 +332,7 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = tournament?.sport === 'basketball' ? 'point_guard' : 'midfielder';
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : 'midfielder';
 
 		// Limpiar error de mínimo si ya se alcanzó
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';
@@ -392,6 +393,7 @@
 				tournament_id: TOURNAMENT_ID,
 				name: teamData.name.trim(),
 				short_name: teamData.short_name.trim().toUpperCase(),
+				sport: teamData.sport,
 				delegate_name: teamData.delegate_name.trim(),
 				delegate_phone: teamData.delegate_phone.trim() || null,
 				city: teamData.city.trim() || null,
@@ -502,9 +504,25 @@
 				<h2 class="text-xl font-bold text-white">Información del Club</h2>
 			</div>
 
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-				<!-- Nombre del Club -->
-				<div>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<!-- Selector de Deporte -->
+				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
+					<h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+						<span class="text-emerald-400">🏅</span> Disciplina Deportiva
+					</h3>
+					<div class="flex gap-4">
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500" />
+							<span class="text-white">⚽ Fútbol</span>
+						</label>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500" />
+							<span class="text-white">🏀 Básquet</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
 					<label for="team-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Nombre del Club <span class="text-emerald-400">*</span>
 					</label>
@@ -618,11 +636,11 @@
 			<!-- Header de sección con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">{tournament?.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
 					<div>
 						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
 						<p class="text-xs text-slate-400">
-							{tournament?.sport === 'basketball'
+							{teamData.sport === 'basketball'
 								? 'Ubica a tus jugadores en la pista de básquetbol (mín. 5).'
 								: 'Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).'}
 						</p>
@@ -637,8 +655,8 @@
 							onclick={() => editorView = 'pitch'}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 						>
-							<span>{tournament?.sport === 'basketball' ? '🏀' : '🏟️'}</span>
-							{tournament?.sport === 'basketball' ? 'Pista' : 'Cancha'}
+							<span>{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+							{teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
 						</button>
 						<button
 							type="button"
@@ -673,7 +691,7 @@
 						</span>
 						<button
 							type="button"
-							onclick={() => openQuickAdd(tournament?.sport === 'basketball' ? 'point_guard' : 'forward')}
+							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : 'forward')}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow"
 						>
 							<span>+</span> Agregar Jugador
@@ -681,7 +699,7 @@
 					</div>
 
 					<!-- Cancha según deporte -->
-					{#if tournament?.sport === 'basketball'}
+					{#if teamData.sport === 'basketball'}
 						<BasketballCourt
 							{players}
 							interactive={true}
@@ -941,9 +959,9 @@
 		<div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-5">
 			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
 				<div class="flex items-center gap-2">
-					<span class="text-xl">{tournament?.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
 					<h3 class="text-lg font-bold text-white">
-						{tournament?.sport === 'basketball' ? 'Ubicar en la Pista' : 'Ubicar en la Cancha'}
+						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : 'Ubicar en la Cancha'}
 					</h3>
 				</div>
 				<button
@@ -1053,8 +1071,8 @@
 					onclick={handleQuickAddSubmit}
 					class="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-1.5 cursor-pointer"
 				>
-					<span>{tournament?.sport === 'basketball' ? '🏀' : '⚽'}</span>
-					Agregar a la {tournament?.sport === 'basketball' ? 'Pista' : 'Cancha'}
+					<span>{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					Agregar a la {teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
 				</button>
 			</div>
 		</div>
