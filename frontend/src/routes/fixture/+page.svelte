@@ -191,6 +191,14 @@
 			<span>🏀</span>
 			<span>Básquetbol</span>
 		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'volleyball')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow-md shadow-violet-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🏐</span>
+			<span>Vóley</span>
+		</button>
 	</div>
 
 	<!-- Selector de jornadas -->
@@ -291,12 +299,28 @@
 				</button>
 			</div>
 
-			<SoccerPitch
+			{#if (pitchModalTeam.sport === 'basketball')}
+				<BasketballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#f59e0b"
+				/>
+			{:else if (pitchModalTeam.sport === 'volleyball')}
+				<VolleyballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#8b5cf6"
+				/>
+			{:else}
+				<SoccerPitch
 				players={pitchModalTeam.players || []}
 				interactive={false}
 				teamName={pitchModalTeam.name}
 				teamColor="#10b981"
 			/>
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button

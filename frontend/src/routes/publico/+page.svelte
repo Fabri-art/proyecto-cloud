@@ -258,7 +258,7 @@
 			onclick={() => (selectedSport = 'volleyball')}
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
-			&#x1F3D0; V&#xF3;ley
+			🏐 Vóley
 		</button>
 	</div>
 </div>
@@ -306,7 +306,7 @@
 		<div class="flex flex-col gap-3">
 			{#if filteredMatches.length === 0}
 			<div class="glass-card p-10 text-center">
-				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en esta jornada.</p>
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en esta jornada.</p>
 			</div>
 		{/if}
 		{#each filteredMatches as match, i}
@@ -592,6 +592,84 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- TABLA VÓLEY -->
+			{#if (selectedSport === 'all' || selectedSport === 'volleyball') && volleyballStandings.length > 0}
+				<div class="glass-card overflow-hidden">
+					<div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
+						style="background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(124,58,237,0.04));">
+						<div class="flex items-center gap-3">
+							<span class="text-xl">🏐</span>
+							<div>
+								<h3 class="font-bold text-white text-base">Tabla de Posiciones — Vóley</h3>
+								<p class="text-xs text-violet-300/80">Sets y Puntos en tiempo real</p>
+							</div>
+						</div>
+						<a href="/posiciones" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1">
+							Ver completa →
+						</a>
+					</div>
+					<div class="overflow-x-auto">
+						<table class="w-full text-sm">
+							<thead>
+								<tr class="border-b border-slate-800 text-slate-400 text-xs">
+									<th class="px-4 py-3 text-center w-12 section-label">#</th>
+									<th class="px-4 py-3 text-left section-label">Club</th>
+									<th class="px-3 py-3 text-center text-xs section-label" title="Partidos Jugados">PJ</th>
+									<th class="px-3 py-3 text-center text-xs section-label" title="Ganados">PG</th>
+									<th class="px-3 py-3 text-center text-xs section-label" title="Perdidos">PP</th>
+									<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Sets a Favor">SF</th>
+									<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Sets en Contra">SC</th>
+									<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Diferencia de Sets">DS</th>
+									<th class="px-4 py-3 text-center text-xs section-label text-violet-400">PTS</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each volleyballStandings as s, i}
+									{@const accentLeft = i === 0 ? '#8b5cf6' : i === 1 ? '#a78bfa' : '#64748b'}
+									{@const tColor = teamColor(s.team_id)}
+									<tr class="standings-row border-b border-slate-800/50 transition-colors"
+										style="border-left: 3px solid {accentLeft};">
+										<td class="px-4 py-3 text-center">
+											{#if i === 0}<span class="text-base">🥇</span>
+											{:else if i === 1}<span class="text-base">🥈</span>
+											{:else if i === 2}<span class="text-base">🥉</span>
+											{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
+										</td>
+										<td class="px-4 py-3">
+											<div class="flex items-center gap-3">
+												<div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0"
+													style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
+													{teamInitial(s.team_id)}
+												</div>
+												<div class="flex-1 min-w-0">
+													<p class="font-bold text-white text-sm leading-tight truncate">{teamName(s.team_id)}</p>
+													<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
+												</div>
+												<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-violet-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
+													<span>🏐</span> Cancha
+												</button>
+											</div>
+										</td>
+										<td class="px-3 py-3 text-center font-mono text-slate-300">{s.played ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-emerald-400 font-semibold">{s.won ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-red-400/80">{s.lost ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_for ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_against ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono font-bold hidden sm:table-cell {(s.goals_for - s.goals_against) > 0 ? 'text-violet-400' : (s.goals_for - s.goals_against) < 0 ? 'text-red-400' : 'text-slate-400'}">
+											{(s.goals_for ?? 0) - (s.goals_against ?? 0) > 0 ? '+' : ''}{(s.goals_for ?? 0) - (s.goals_against ?? 0)}
+										</td>
+										<td class="px-4 py-3 text-center font-score font-bold text-violet-400 text-base">{s.points ?? 0}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+					<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
+						PJ = Jugados · PG = Ganados · PP = Perdidos · SF = Sets Favor · SC = Sets Contra · DS = Dif. Sets · PTS = Puntos
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 {/if}
@@ -634,6 +712,13 @@
 					interactive={false}
 					teamName={pitchModalTeam.name}
 					teamColor="#f59e0b"
+				/>
+			{:else if (pitchModalTeam.sport === 'volleyball')}
+				<VolleyballCourt
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#8b5cf6"
 				/>
 			{:else}
 				<SoccerPitch

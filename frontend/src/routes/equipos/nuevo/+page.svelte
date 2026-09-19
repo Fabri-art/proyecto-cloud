@@ -174,11 +174,11 @@
 		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
 	];
 	const volleyballPositions = [
-		{ value: 'setter',         label: 'Armador',   icon: '&#x1F3D0;' },
-		{ value: 'libero',          label: 'Libero',    icon: '&#x1F6E1;' },
-		{ value: 'outside_hitter',  label: 'Punta',     icon: '&#x26A1;'  },
-		{ value: 'opposite',        label: 'Opuesto',   icon: '&#x1F3AF;' },
-		{ value: 'middle_blocker',  label: 'Central',   icon: '&#x1F9F1;' }
+		{ value: 'setter',         label: 'Armador',   icon: '🎯' },
+		{ value: 'libero',         label: 'Líbero',    icon: '🛡️' },
+		{ value: 'outside_hitter', label: 'Punta',     icon: '⚡' },
+		{ value: 'opposite',       label: 'Opuesto',   icon: '💥' },
+		{ value: 'middle_blocker', label: 'Central',   icon: '🧱' }
 	];
 	
 	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : teamData.sport === 'volleyball' ? volleyballPositions : footballPositions);
@@ -625,7 +625,7 @@
 					<h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
 						<span class="text-emerald-400">🏅</span> Disciplina Deportiva
 					</h3>
-					<div class="flex gap-4">
+					<div class="flex flex-wrap gap-4">
 						<label class="flex items-center gap-2 cursor-pointer">
 							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500" />
 							<span class="text-white">⚽ Fútbol</span>
@@ -633,6 +633,10 @@
 						<label class="flex items-center gap-2 cursor-pointer">
 							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500" />
 							<span class="text-white">🏀 Básquet</span>
+						</label>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500" />
+							<span class="text-white">🏐 Vóley</span>
 						</label>
 					</div>
 				</div>
@@ -762,7 +766,7 @@
 			<!-- Header de sección con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
+					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '⚽'}</span>
 					<div>
 						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
 						<p class="text-xs text-slate-400">
@@ -817,7 +821,7 @@
 						</span>
 						<button
 							type="button"
-							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : 'forward')}
+							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'forward')}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow"
 						>
 							<span>+</span> Agregar Jugador
@@ -831,6 +835,15 @@
 							interactive={true}
 							teamName={teamData.name || 'Nuevo Club'}
 							teamColor="#f59e0b"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else if teamData.sport === 'volleyball'}
+						<VolleyballCourt
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Nuevo Club'}
+							teamColor="#8b5cf6"
 							onAddPlayer={(pos) => openQuickAdd(pos)}
 							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
 						/>
@@ -1096,9 +1109,9 @@
 		<div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-5">
 			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
 				<div class="flex items-center gap-2">
-					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
+					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '🏟️'}</span>
 					<h3 class="text-lg font-bold text-white">
-						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : 'Ubicar en la Cancha'}
+						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en la Cancha de Vóley' : 'Ubicar en la Cancha'}
 					</h3>
 				</div>
 				<button

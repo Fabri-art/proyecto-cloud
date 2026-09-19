@@ -30,7 +30,13 @@
 		shooting_guard: { label: 'Escolta (SG)',   icon: '🎯', color: '#ec4899' },
 		small_forward:  { label: 'Alero (SF)',     icon: '⚡', color: '#8b5cf6' },
 		power_forward:  { label: 'Ala-Pívot (PF)', icon: '🛡️', color: '#3b82f6' },
-		center:         { label: 'Pívot (C)',      icon: '👑', color: '#10b981' }
+		center:         { label: 'Pívot (C)',      icon: '👑', color: '#10b981' },
+		// Vóley
+		setter:         { label: 'Armador',   icon: '🎯', color: '#8b5cf6' },
+		libero:         { label: 'Líbero',    icon: '🛡️', color: '#06b6d4' },
+		outside_hitter: { label: 'Punta',     icon: '⚡', color: '#ec4899' },
+		opposite:       { label: 'Opuesto',   icon: '💥', color: '#f59e0b' },
+		middle_blocker: { label: 'Central',   icon: '🧱', color: '#10b981' }
 	};
 
 	let selectedSportFilter = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
@@ -155,6 +161,15 @@
 		<span>🏀</span>
 		<span>Básquetbol</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'basketball').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'volleyball')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'volleyball' ? 'bg-violet-600 text-white shadow-md shadow-violet-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🏐</span>
+		<span>Vóley</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'volleyball').length}</span>
 	</button>
 </div>
 
@@ -369,12 +384,28 @@
 					</div>
 				{:else if rosterViewMode === 'pitch'}
 					<div class="py-2">
+						{#if selectedTeam.sport === 'basketball'}
+						<BasketballCourt
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else if selectedTeam.sport === 'volleyball'}
+						<VolleyballCourt
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else}
 						<SoccerPitch
 							players={selectedTeam.players}
 							interactive={false}
 							teamName={selectedTeam.name}
 							teamColor={pal.text}
 						/>
+					{/if}
 					</div>
 				{:else}
 					<div class="space-y-2">

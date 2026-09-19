@@ -580,6 +580,13 @@
 				>
 					🏀 Básquetbol
 				</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'volleyball')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			🏐 Vóley
+		</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
 				<div class="flex items-center gap-2 overflow-x-auto pb-1">
@@ -847,12 +854,28 @@
 				</button>
 			</div>
 
-			<SoccerPitch
-				players={tacticalTeam.players || []}
-				interactive={false}
-				teamName={tacticalTeam.name}
-				teamColor="#10b981"
-			/>
+			{#if (tacticalTeam.sport === 'basketball')}
+				<BasketballCourt
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#f59e0b"
+				/>
+			{:else if (tacticalTeam.sport === 'volleyball')}
+				<VolleyballCourt
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#8b5cf6"
+				/>
+			{:else}
+				<SoccerPitch
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#10b981"
+				/>
+			{/if}
 
 			<div class="flex justify-end pt-2 border-t border-slate-800">
 				<button
