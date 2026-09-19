@@ -21,6 +21,12 @@ export default defineConfig({
 	server: {
 		// --- PERMITIR EL BALANCEADOR DE AWS ---
 		allowedHosts: true,
+		proxy: {
+			'/api': {
+				target: process.env.BACKEND_URL || 'http://localhost:8001',
+				changeOrigin: true
+			}
+		},
 		watch: {
 			usePolling: true,
 			interval: 1000,
