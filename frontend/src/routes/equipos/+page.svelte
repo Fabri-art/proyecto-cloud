@@ -39,7 +39,10 @@
 		opposite:       { label: 'Opuesto',   icon: '💥', color: '#f59e0b' },
 		middle_blocker: { label: 'Central',   icon: '🧱', color: '#10b981' },
 		// Ajedrez
-		chess_player:   { label: 'Ajedrecista', icon: '♟️', color: '#06b6d4' }
+		chess_player:   { label: 'Ajedrecista',            icon: '♟️', color: '#06b6d4' },
+		chess_main:     { label: 'Ajedrecista Principal',  icon: '👑', color: '#f59e0b' },
+		chess_sub_1:    { label: 'Ajedrecista Suplente 1', icon: '♟️', color: '#06b6d4' },
+		chess_sub_2:    { label: 'Ajedrecista Suplente 2', icon: '♟️', color: '#06b6d4' }
 	};
 
 	let selectedSportFilter = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'

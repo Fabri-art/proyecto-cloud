@@ -28,6 +28,9 @@ class PlayerPosition(str, Enum):
     MIDDLE_BLOCKER = "middle_blocker"
     # Chess
     CHESS_PLAYER = "chess_player"
+    CHESS_MAIN = "chess_main"
+    CHESS_SUB_1 = "chess_sub_1"
+    CHESS_SUB_2 = "chess_sub_2"
 
 
 def _enum_values(enum_cls):

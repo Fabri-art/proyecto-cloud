@@ -3,14 +3,19 @@
 	 * UnderwaterChessBoard.svelte
 	 * Tablero de Ajedrez Bajo el Agua (8x8 con ambientación subacuática)
 	 *
+	 * Roles:
+	 *   - chess_main:  Ajedrecista Principal (Titular) 👑
+	 *   - chess_sub_1: Ajedrecista Suplente 1 ♟️
+	 *   - chess_sub_2: Ajedrecista Suplente 2 ♟️
+	 *
 	 * Props:
-	 *   players        — array de jugadores (en ajedrez: 1 o 2 competidores)
-	 *   interactive    — si es true, permite agregar/quitar ajedrecistas
-	 *   teamName       — nombre del club o jugador
+	 *   players        — array de ajedrecistas registrados (hasta 3: 1 principal, 2 suplentes)
+	 *   interactive    — si es true, permite inscribir/retirar
+	 *   teamName       — nombre del club o competidor
 	 *   teamColor      — color temático
 	 *   onSelectPlayer — callback al hacer clic en un jugador
-	 *   onAddPlayer    — callback para registrar ajedrecista
-	 *   onRemovePlayer — callback para retirar ajedrecista
+	 *   onAddPlayer    — callback para inscribir jugador
+	 *   onRemovePlayer — callback para retirar jugador
 	 */
 
 	let {
@@ -26,7 +31,7 @@
 	const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 	const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-	// Piezas iniciales estándar (estética de tablero listo)
+	// Piezas iniciales estándar para ambientación visual del tablero
 	const initialPieces = {
 		'a8': '♜', 'b8': '♞', 'c8': '♝', 'd8': '♛', 'e8': '♚', 'f8': '♝', 'g8': '♞', 'h8': '♜',
 		'a7': '♟', 'b7': '♟', 'c7': '♟', 'd7': '♟', 'e7': '♟', 'f7': '♟', 'g7': '♟', 'h7': '♟',
@@ -38,8 +43,26 @@
 		return (fileIdx + rank) % 2 === 0;
 	}
 
-	const mainPlayer = $derived(players[0] ?? null);
-	const subPlayer = $derived(players[1] ?? null);
+	const hasMain = $derived(players.some((p) => p.position === 'chess_main' || p.position === 'chess_player'));
+	const hasSub1 = $derived(players.some((p) => p.position === 'chess_sub_1'));
+	const hasSub2 = $derived(players.some((p) => p.position === 'chess_sub_2'));
+
+	const nextChessRole = $derived(
+		!hasMain ? 'chess_main' : !hasSub1 ? 'chess_sub_1' : !hasSub2 ? 'chess_sub_2' : 'chess_sub_2'
+	);
+
+	function getRoleInfo(p, idx) {
+		if (p.position === 'chess_main' || (!p.position && idx === 0) || p.position === 'chess_player') {
+			return { label: 'Ajedrecista Principal', icon: '👑', isMain: true };
+		}
+		if (p.position === 'chess_sub_1' || (!p.position && idx === 1)) {
+			return { label: 'Ajedrecista Suplente 1', icon: '♟️', isMain: false };
+		}
+		if (p.position === 'chess_sub_2' || (!p.position && idx === 2)) {
+			return { label: 'Ajedrecista Suplente 2', icon: '♟️', isMain: false };
+		}
+		return { label: 'Ajedrecista', icon: '♟️', isMain: false };
+	}
 </script>
 
 <div class="flex flex-col gap-4 w-full select-none">
@@ -65,18 +88,18 @@
 						<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-normal border border-cyan-500/30">1 vs 1</span>
 					</h3>
 					<p class="text-[11px] text-cyan-300/70 font-mono">
-						{teamName ? teamName : 'Duelo Submarino'} &bull; Sin posiciones tácticas fijas
+						{teamName ? teamName : 'Duelo Submarino'} &bull; Sin posiciones tácticas de campo
 					</p>
 				</div>
 			</div>
 
-			{#if interactive && onAddPlayer && players.length === 0}
+			{#if interactive && onAddPlayer && players.length < 3}
 				<button
 					type="button"
-					onclick={() => onAddPlayer('chess_player')}
-					class="px-3 py-1 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg transition flex items-center gap-1"
+					onclick={() => onAddPlayer(nextChessRole)}
+					class="px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg transition flex items-center gap-1 cursor-pointer"
 				>
-					<span>+</span> Inscribir Ajedrecista
+					<span>+</span> Inscribir {nextChessRole === 'chess_main' ? 'Principal' : 'Suplente'}
 				</button>
 			{/if}
 		</div>
@@ -94,7 +117,7 @@
 								class="relative flex items-center justify-center font-serif text-lg sm:text-2xl transition-colors {isDark ? 'bg-cyan-950/80 text-cyan-100' : 'bg-cyan-600/30 text-cyan-200'}"
 								title="{coord.toUpperCase()}"
 							>
-								<!-- Coordenadas en las esquinas de los bordes -->
+								<!-- Coordenadas en los bordes -->
 								{#if file === 'a'}
 									<span class="absolute top-0.5 left-1 text-[8px] font-mono opacity-50">{rank}</span>
 								{/if}
@@ -115,45 +138,44 @@
 			</div>
 		</div>
 
-		<!-- Tarjeta de competidor(es) registrado(s) -->
+		<!-- Tarjeta de competidores inscritos (Principal y Suplentes) -->
 		<div class="relative z-10 w-full max-w-md bg-slate-900/80 rounded-xl p-3 border border-cyan-900/60 backdrop-blur-md">
 			<div class="flex items-center justify-between mb-2">
 				<span class="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-					<span>♟️</span> {players.length === 0 ? 'Sin ajedrecista registrado' : 'Competidor Habilitado'}
+					<span>♟️</span> Plantilla de Ajedrecistas
 				</span>
 				<span class="text-[11px] text-slate-400 font-mono">
-					{players.length}/1 titular
+					{players.length}/3 (1 principal, máx. 2 suplentes)
 				</span>
 			</div>
 
 			{#if players.length === 0}
-				<div class="text-center py-3 text-slate-400 text-xs">
+				<div class="text-center py-4 text-slate-400 text-xs">
 					{#if interactive && onAddPlayer}
 						<button
 							type="button"
-							onclick={() => onAddPlayer('chess_player')}
+							onclick={() => onAddPlayer('chess_main')}
 							class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2"
 						>
-							Haz clic aquí para agregar al jugador de ajedrez
+							Haz clic aquí para inscribir al Ajedrecista Principal
 						</button>
 					{:else}
-						No hay jugador inscrito para este tablero.
+						No hay ajedrecistas registrados en este tablero.
 					{/if}
 				</div>
 			{:else}
 				<div class="flex flex-col gap-2">
 					{#each players as p, idx}
-						<div class="flex items-center justify-between p-2 rounded-lg bg-cyan-950/40 border border-cyan-800/40 text-xs">
+						{@const r = getRoleInfo(p, idx)}
+						<div class="flex items-center justify-between p-2.5 rounded-lg border text-xs {r.isMain ? 'bg-cyan-950/60 border-cyan-500/40' : 'bg-slate-900/70 border-slate-800'}">
 							<div class="flex items-center gap-2.5">
-								<span class="text-lg">♟️</span>
+								<span class="text-xl">{r.icon}</span>
 								<div>
-									<div class="font-bold text-white flex items-center gap-1.5">
-										{p.first_name} {p.last_name}
-										{#if idx === 0}
-											<span class="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono">Titular</span>
-										{:else}
-											<span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-700 text-slate-300 font-mono">Suplente</span>
-										{/if}
+									<div class="font-bold text-white flex items-center gap-2">
+										<span>{p.first_name} {p.last_name}</span>
+										<span class="text-[10px] px-2 py-0.5 rounded-full font-mono border {r.isMain ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'}">
+											{r.label}
+										</span>
 									</div>
 									<div class="text-[11px] text-slate-400 font-mono">
 										DNI: {p.dni} &bull; {p.nationality || 'Perú'}
@@ -166,7 +188,7 @@
 									type="button"
 									onclick={() => onRemovePlayer(p)}
 									class="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition"
-									title="Retirar jugador"
+									title="Retirar ajedrecista"
 								>
 									✕
 								</button>

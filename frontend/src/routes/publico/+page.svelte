@@ -266,7 +266,7 @@
 			onclick={() => (selectedSport = 'underwater_chess')}
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
-			♟️ Ajedrez
+			♟️ Ajedrez bajo el agua
 		</button>
 	</div>
 </div>

@@ -593,7 +593,7 @@
 			onclick={() => (selectedSport = 'underwater_chess')}
 			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}"
 		>
-			♟️ Ajedrez
+			♟️ Ajedrez bajo el agua
 		</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -851,7 +851,7 @@
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{tacticalTeam.name}</h3>
-					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : 'Alineación — Fútbol'}</p>
+					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : tacticalTeam.sport === 'underwater_chess' ? 'Tablero — Ajedrez bajo el agua' : 'Alineación — Fútbol'}</p>
 				</div>
 				<button
 					type="button"

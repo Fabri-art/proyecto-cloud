@@ -133,6 +133,30 @@
 
 	// Indicador reactivo: ya hay un arquero (solo para fútbol)
 	let hasGoalkeeper = $derived(players.some((p) => p.position === 'goalkeeper'));
+	let hasChessMain = $derived(players.some((p) => p.position === 'chess_main' || p.position === 'chess_player'));
+	let hasChessSub1 = $derived(players.some((p) => p.position === 'chess_sub_1'));
+	let hasChessSub2 = $derived(players.some((p) => p.position === 'chess_sub_2'));
+
+	// Reactividad de rol según deporte
+	$effect(() => {
+		if (teamData.sport === 'underwater_chess') {
+			if (!newPlayer.position || !newPlayer.position.startsWith('chess_')) {
+				newPlayer.position = !hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2';
+			}
+		} else if (teamData.sport === 'basketball') {
+			if (!newPlayer.position || newPlayer.position.startsWith('chess_') || newPlayer.position === 'goalkeeper') {
+				newPlayer.position = 'point_guard';
+			}
+		} else if (teamData.sport === 'volleyball') {
+			if (!newPlayer.position || newPlayer.position.startsWith('chess_') || newPlayer.position === 'goalkeeper') {
+				newPlayer.position = 'setter';
+			}
+		} else {
+			if (newPlayer.position && newPlayer.position.startsWith('chess_')) {
+				newPlayer.position = 'forward';
+			}
+		}
+	});
 
 	function openQuickAdd(position) {
 		// Bloquear segundo arquero en fútbol
@@ -140,7 +164,7 @@
 			toast.warning('El equipo ya tiene 1 arquero. Solo se permite un arquero.');
 			return;
 		}
-		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? 'chess_player' : 'forward');
+		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2') : 'forward');
 		newPlayer.position = quickPosition;
 		newPlayer.nationality = teamData.country || 'Perú';
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
@@ -175,7 +199,9 @@
 		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
 	];
 	const chessPositions = [
-		{ value: 'chess_player', label: 'Ajedrecista', icon: '♟️' }
+		{ value: 'chess_main',  label: 'Ajedrecista Principal',  icon: '👑' },
+		{ value: 'chess_sub_1', label: 'Ajedrecista Suplente 1', icon: '♟️' },
+		{ value: 'chess_sub_2', label: 'Ajedrecista Suplente 2', icon: '♟️' }
 	];
 	const volleyballPositions = [
 		{ value: 'setter',         label: 'Armador',   icon: '🎯' },
@@ -334,7 +360,9 @@
 		const last_name = newPlayer.last_name.trim();
 		const dni = newPlayer.dni.trim();
 		const shirt_number =
-			newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
+			teamData.sport === 'underwater_chess'
+				? null
+				: newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
 				? parseInt(newPlayer.shirt_number, 10)
 				: null;
 		const position = newPlayer.position;
@@ -343,8 +371,28 @@
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		let hasError = false;
 
+		// Validar roles únicos en ajedrez (quick add)
+		if (teamData.sport === 'underwater_chess') {
+			if (position === 'chess_main' && hasChessMain) {
+				toast.error('Ya se registró un Ajedrecista Principal. Selecciona rol de suplente.');
+				return;
+			}
+			if (position === 'chess_sub_1' && hasChessSub1) {
+				toast.error('Ya se registró el Ajedrecista Suplente 1.');
+				return;
+			}
+			if (position === 'chess_sub_2' && hasChessSub2) {
+				toast.error('Ya se registró el Ajedrecista Suplente 2.');
+				return;
+			}
+			if (players.length >= 3) {
+				toast.error('Máximo 3 ajedrecistas por equipo (1 principal y 2 suplentes).');
+				return;
+			}
+		}
+
 		// Bloquear segundo arquero en fútbol
-		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && position === 'goalkeeper' && hasGoalkeeper) {
+		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && teamData.sport !== 'underwater_chess' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.error('Solo se permite registrar 1 arquero por equipo.');
 			return;
 		}
@@ -359,7 +407,7 @@
 			hasError = true;
 		}
 
-		if (shirt_number !== null) {
+		if (teamData.sport !== 'underwater_chess' && shirt_number !== null) {
 			if (isNaN(shirt_number) || !Number.isInteger(shirt_number) || shirt_number < 0 || shirt_number > 99) {
 				playerErrors.shirt_number = 'El dorsal debe ser entre 0 y 99.';
 				hasError = true;
@@ -377,9 +425,9 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? 'chess_player' : (position === 'goalkeeper' ? 'forward' : position);
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2') : (position === 'goalkeeper' ? 'forward' : position);
 		if (players.length >= minPlayers) errors.players_count = '';
-		toast.success(`Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
+		toast.success(teamData.sport === 'underwater_chess' ? `Ajedrecista ${first_name} ${last_name} inscrito.` : `Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
 		showQuickAddModal = false;
 	}
 
@@ -391,7 +439,9 @@
 		const last_name = newPlayer.last_name.trim();
 		const dni = newPlayer.dni.trim();
 		const shirt_number =
-			newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
+			teamData.sport === 'underwater_chess'
+				? null
+				: newPlayer.shirt_number !== '' && newPlayer.shirt_number !== null && newPlayer.shirt_number !== undefined
 				? parseInt(newPlayer.shirt_number, 10)
 				: null;
 		const position = newPlayer.position;
@@ -400,8 +450,28 @@
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
 		let hasError = false;
 
+		// Validar roles únicos en ajedrez (classic add)
+		if (teamData.sport === 'underwater_chess') {
+			if (position === 'chess_main' && hasChessMain) {
+				toast.error('Ya se registró un Ajedrecista Principal. Selecciona rol de suplente.');
+				return;
+			}
+			if (position === 'chess_sub_1' && hasChessSub1) {
+				toast.error('Ya se registró el Ajedrecista Suplente 1.');
+				return;
+			}
+			if (position === 'chess_sub_2' && hasChessSub2) {
+				toast.error('Ya se registró el Ajedrecista Suplente 2.');
+				return;
+			}
+			if (players.length >= 3) {
+				toast.error('Máximo 3 ajedrecistas por equipo (1 principal y 2 suplentes).');
+				return;
+			}
+		}
+
 		// Bloquear segundo arquero en fútbol
-		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && position === 'goalkeeper' && hasGoalkeeper) {
+		if (teamData.sport !== 'basketball' && teamData.sport !== 'volleyball' && teamData.sport !== 'underwater_chess' && position === 'goalkeeper' && hasGoalkeeper) {
 			toast.error('Solo se permite registrar 1 arquero por equipo.');
 			return;
 		}
@@ -776,10 +846,16 @@
 				<div class="flex items-center gap-2">
 					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : '⚽'}</span>
 					<div>
-						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
+						<h2 class="text-xl font-bold text-white">
+							{teamData.sport === 'underwater_chess' ? 'Plantilla de Ajedrecistas' : 'Plantilla de Jugadores'}
+						</h2>
 						<p class="text-xs text-slate-400">
 							{teamData.sport === 'basketball'
 								? 'Ubica a tus jugadores en la pista de básquetbol (mín. 5).'
+								: teamData.sport === 'volleyball'
+								? 'Ubica a tus jugadores en las 6 zonas de la cancha de vóley (mín. 5).'
+								: teamData.sport === 'underwater_chess'
+								? 'Inscribe al ajedrecista principal y hasta 2 suplentes para la partida submarina (mín. 1).'
 								: 'Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).'}
 						</p>
 					</div>
@@ -793,8 +869,8 @@
 							onclick={() => editorView = 'pitch'}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 						>
-							<span>{teamData.sport === 'basketball' ? '🏀' : '🏟️'}</span>
-							{teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
+							<span>{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : '🏟️'}</span>
+							{teamData.sport === 'basketball' ? 'Pista' : teamData.sport === 'volleyball' ? 'Cancha Vóley' : teamData.sport === 'underwater_chess' ? 'Tablero' : 'Cancha'}
 						</button>
 						<button
 							type="button"
@@ -825,14 +901,16 @@
 				<div class="flex flex-col gap-4">
 					<div class="flex flex-wrap items-center justify-between gap-2 px-1">
 						<span class="text-xs text-slate-400">
-							Haz clic en los botones <strong>(+)</strong> de la formación para ubicar jugadores:
+							{teamData.sport === 'underwater_chess'
+								? 'Inscribe al Ajedrecista Principal y hasta dos suplentes en el tablero:'
+								: 'Haz clic en los botones (+) de la formación para ubicar jugadores:'}
 						</span>
 						<button
 							type="button"
-							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'forward')}
+							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2') : 'forward')}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow"
 						>
-							<span>+</span> Agregar Jugador
+							<span>+</span> {teamData.sport === 'underwater_chess' ? 'Inscribir Ajedrecista' : 'Agregar Jugador'}
 						</button>
 					</div>
 
@@ -853,6 +931,15 @@
 							teamName={teamData.name || 'Nuevo Club'}
 							teamColor="#8b5cf6"
 							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else if teamData.sport === 'underwater_chess'}
+						<UnderwaterChessBoard
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Nuevo Club'}
+							teamColor="#06b6d4"
+							onAddPlayer={(pos) => openQuickAdd(pos || (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2'))}
 							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
 						/>
 					{:else}
@@ -878,13 +965,15 @@
 							<div class="flex flex-wrap gap-2">
 								{#each players as p, idx}
 									<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-xs">
+										{#if teamData.sport !== 'underwater_chess'}
 										<span class="font-mono font-black text-emerald-400">
 											{p.shirt_number !== null && p.shirt_number !== undefined && p.shirt_number !== '' ? '#' + p.shirt_number : '—'}
 										</span>
+										{/if}
 										<span class="text-white font-medium">{p.first_name} {p.last_name}</span>
 										<span class="text-[10px] text-emerald-400/90 font-medium">({p.nationality || teamData.country})</span>
 										<span class="text-[10px] text-slate-400">
-											({positions.find((pos) => pos.value === p.position)?.label || p.position})
+											({p.position === 'chess_main' ? 'Ajedrecista Principal' : p.position === 'chess_sub_1' ? 'Ajedrecista Suplente 1' : p.position === 'chess_sub_2' ? 'Ajedrecista Suplente 2' : (positions.find((pos) => pos.value === p.position)?.label || p.position)})
 										</span>
 										<button
 											type="button"
@@ -949,6 +1038,7 @@
 							{#if playerErrors.dni}<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>{/if}
 						</div>
 
+						{#if teamData.sport !== 'underwater_chess'}
 						<!-- Dorsal (Solo números 0-99) -->
 						<div>
 							<label for="p-shirt" class="block text-xs text-slate-400 mb-1">Dorsal (0-99)</label>
@@ -963,10 +1053,11 @@
 							/>
 							{#if playerErrors.shirt_number}<p class="mt-0.5 text-xs text-red-400">{playerErrors.shirt_number}</p>{/if}
 						</div>
+						{/if}
 
 						<!-- Posición -->
 						<div>
-							<label for="p-position" class="block text-xs text-slate-400 mb-1">Posición</label>
+							<label for="p-position" class="block text-xs text-slate-400 mb-1">{teamData.sport === 'underwater_chess' ? 'Rol' : 'Posición'}</label>
 							<select
 								id="p-position"
 								bind:value={newPlayer.position}
@@ -975,6 +1066,12 @@
 								{#each positions as pos}
 									{#if pos.value === 'goalkeeper' && hasGoalkeeper}
 										<option value="goalkeeper" disabled>{pos.icon} {pos.label} (Máx. 1)</option>
+									{:else if pos.value === 'chess_main' && hasChessMain}
+										<option value="chess_main" disabled>{pos.icon} {pos.label} (Asignado)</option>
+									{:else if pos.value === 'chess_sub_1' && hasChessSub1}
+										<option value="chess_sub_1" disabled>{pos.icon} {pos.label} (Asignado)</option>
+									{:else if pos.value === 'chess_sub_2' && hasChessSub2}
+										<option value="chess_sub_2" disabled>{pos.icon} {pos.label} (Asignado)</option>
 									{:else}
 										<option value={pos.value}>{pos.icon} {pos.label}</option>
 									{/if}
@@ -1019,11 +1116,11 @@
 						<table class="w-full text-sm">
 							<thead class="bg-slate-900/90 text-xs text-slate-400 uppercase tracking-wider">
 								<tr>
-									<th class="px-4 py-3 text-center w-12">#</th>
+									{#if teamData.sport !== 'underwater_chess'}<th class="px-4 py-3 text-center w-12">#</th>{/if}
 									<th class="px-4 py-3 text-left">Jugador</th>
 									<th class="px-4 py-3 text-left">DNI</th>
 									<th class="px-4 py-3 text-left">País</th>
-									<th class="px-4 py-3 text-left">Posición</th>
+									<th class="px-4 py-3 text-left">{teamData.sport === 'underwater_chess' ? 'Rol' : 'Posición'}</th>
 									<th class="px-4 py-3 text-center w-16">Acción</th>
 								</tr>
 							</thead>
@@ -1049,7 +1146,7 @@
 											{p.nationality || teamData.country || 'Perú'}
 										</td>
 										<td class="px-4 py-3 text-slate-300 text-xs">
-											{positions.find((pos) => pos.value === p.position)?.icon}
+											{p.position === 'chess_main' ? '👑' : p.position?.startsWith('chess_') ? '♟️' : (positions.find((pos) => pos.value === p.position)?.icon || '♟️')}
 											{positions.find((pos) => pos.value === p.position)?.label}
 										</td>
 										<td class="px-4 py-3 text-center">
@@ -1119,7 +1216,7 @@
 				<div class="flex items-center gap-2">
 					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '🏟️'}</span>
 					<h3 class="text-lg font-bold text-white">
-						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en la Cancha de Vóley' : 'Ubicar en la Cancha'}
+						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en la Cancha de Vóley' : teamData.sport === 'underwater_chess' ? 'Inscribir Ajedrecista' : 'Ubicar en la Cancha'}
 					</h3>
 				</div>
 				<button
@@ -1132,7 +1229,7 @@
 			<div class="flex flex-col gap-4">
 				<!-- Posición -->
 				<div>
-					<label for="qa-pos" class="block text-xs font-semibold text-slate-300 mb-1">Posición en el campo</label>
+					<label for="qa-pos" class="block text-xs font-semibold text-slate-300 mb-1">{teamData.sport === 'underwater_chess' ? 'Rol en la partida' : 'Posición en el campo'}</label>
 					<select
 						id="qa-pos"
 						bind:value={newPlayer.position}
@@ -1141,6 +1238,12 @@
 						{#each positions as pos}
 							{#if pos.value === 'goalkeeper' && hasGoalkeeper}
 								<option value="goalkeeper" disabled>{pos.icon} {pos.label} (Máx. 1 arquero ya asignado)</option>
+							{:else if pos.value === 'chess_main' && hasChessMain}
+								<option value="chess_main" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'chess_sub_1' && hasChessSub1}
+								<option value="chess_sub_1" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'chess_sub_2' && hasChessSub2}
+								<option value="chess_sub_2" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
 							{:else}
 								<option value={pos.value}>{pos.icon} {pos.label}</option>
 							{/if}
@@ -1185,6 +1288,7 @@
 					</div>
 				</div>
 
+				{#if teamData.sport !== 'underwater_chess'}
 				<div class="grid grid-cols-2 gap-3">
 					<!-- DNI (Solo números, 8 dígitos, sin duplicados) -->
 					<div>
@@ -1219,6 +1323,23 @@
 						{/if}
 					</div>
 				</div>
+				{:else}
+				<div>
+					<label for="qa-dni" class="block text-xs font-semibold text-slate-300 mb-1">DNI (8 dígitos) *</label>
+					<input
+						id="qa-dni"
+						type="text"
+						maxlength="8"
+						bind:value={newPlayer.dni}
+						oninput={handlePlayerDniInput}
+						placeholder="71234567"
+						class="w-full px-3 py-2 text-sm rounded-lg bg-slate-900 border text-white focus:outline-none transition {playerErrors.dni ? 'border-red-500' : 'border-slate-700 focus:border-emerald-500'}"
+					/>
+					{#if playerErrors.dni}
+						<p class="mt-0.5 text-xs text-red-400">{playerErrors.dni}</p>
+					{/if}
+				</div>
+				{/if}
 
 				<!-- País / Nacionalidad (Sudamérica) -->
 				<div>
@@ -1247,7 +1368,7 @@
 					class="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-1.5 cursor-pointer"
 				>
 					<span>{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
-					Agregar a la {teamData.sport === 'basketball' ? 'Pista' : 'Cancha'}
+					{teamData.sport === 'underwater_chess' ? 'Inscribir en Tablero' : teamData.sport === 'basketball' ? 'Agregar a la Pista' : 'Agregar a la Cancha'}
 				</button>
 			</div>
 		</div>
