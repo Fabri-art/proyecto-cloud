@@ -152,7 +152,8 @@
 			playedMatchesCount = 0;
 			activeMatch = null;
 			showResetFixtureModal = false;
-			toast.success('Fixture eliminado. Puedes generar uno nuevo cuando quieras.');
+			await loadTournamentInfo();
+			toast.success('Torneo reiniciado: fixture y equipos eliminados. Listo para registrar nuevos equipos.');
 		} catch (err) {
 			toast.error(err.message || 'No se pudo eliminar el fixture.');
 		} finally {
@@ -161,20 +162,20 @@
 	}
 
 	/**
-	 * Elimina el fixture existente y genera uno nuevo en una sola operación.
-	 * Usa force=true en el backend (transacción atómica).
-	 * Invocado desde el modal de confirmación con el botón "Eliminar y Regenerar".
+	 * Resetea el fixture y vacía los equipos, dejando el torneo limpio para nuevos registros.
 	 */
 	async function handleResetAndRegenerate() {
 		regeneratingFixture = true;
 		try {
 			await fixtureApi.generateForce(TOURNAMENT_ID);
-			showResetFixtureModal = false;
+			rounds = [];
+			playedMatchesCount = 0;
 			activeMatch = null;
-			toast.success(`¡Fixture regenerado! ${totalTeamsCount} equipos incluidos.`);
-			await loadFixture();
+			showResetFixtureModal = false;
+			await loadTournamentInfo();
+			toast.success('Torneo reseteado: fixture y equipos eliminados. Listo para registrar nuevos equipos.');
 		} catch (err) {
-			toast.error(err.message || 'No se pudo regenerar el fixture.');
+			toast.error(err.message || 'No se pudo reiniciar el torneo.');
 		} finally {
 			regeneratingFixture = false;
 		}
@@ -468,19 +469,32 @@
 	{:else}
 		{#if rounds.length === 0}
 			<!-- Sin fixture -->
-			<div class="glass-card p-12 text-center max-w-xl mx-auto">
+			<div class="glass-card p-12 text-center max-w-xl mx-auto animate-fade-in-up">
 				<div class="text-6xl mb-4">📅</div>
-				<h2 class="text-2xl font-bold text-white mb-2">Fixture no generado</h2>
-				<p class="text-slate-400 text-sm mb-6">Necesitas al menos 2 equipos registrados para generar el fixture.</p>
-				<button onclick={handleGenerateFixture} disabled={generatingFixture}
-					class="px-6 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition flex items-center gap-2 mx-auto disabled:opacity-50">
-					{#if generatingFixture}
-						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-						Generando...
+				<h2 class="text-2xl font-bold text-white mb-2">Fixture vacío</h2>
+				<p class="text-slate-400 text-sm mb-6">
+					{#if totalTeamsCount < 2}
+						Actualmente hay {totalTeamsCount} equipo(s) registrado(s). Registra al menos 2 equipos para generar el fixture.
 					{:else}
-						⚡ Generar Fixture Automático
+						Hay {totalTeamsCount} equipos listos. Puedes generar el fixture automático ahora.
 					{/if}
-				</button>
+				</p>
+				<div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+					{#if totalTeamsCount >= 2}
+						<button onclick={handleGenerateFixture} disabled={generatingFixture}
+							class="px-6 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition flex items-center gap-2 mx-auto sm:mx-0 disabled:opacity-50 shadow-lg shadow-emerald-950/50">
+							{#if generatingFixture}
+								<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+								Generando...
+							{:else}
+								⚡ Generar Fixture Automático
+							{/if}
+						</button>
+					{/if}
+					<a href="/equipos/nuevo" class="px-5 py-3 rounded-xl font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center justify-center gap-2 text-sm">
+						➕ Inscribir Nuevos Equipos
+					</a>
+				</div>
 			</div>
 		{:else}
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -618,43 +632,27 @@
 		<div class="glass-card w-full max-w-lg p-6 flex flex-col gap-5 border border-slate-700 shadow-2xl">
 			<!-- Encabezado del modal -->
 			<div class="text-center">
-				<div class="text-5xl mb-3">🔄</div>
+				<div class="text-5xl mb-3">⚠️</div>
 				<h3 id="reset-fixture-title" class="text-xl font-black text-white">
-					Ya existe un fixture activo
+					¿Eliminar Fixture y Equipos?
 				</h3>
 				<p class="text-sm text-slate-400 mt-1">
-					¿Qué deseas hacer con el fixture actual?
+					Esta acción reiniciará el torneo por completo desde cero.
 				</p>
 			</div>
 
 			<!-- Información del estado actual -->
 			<div class="flex flex-col gap-2.5 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
-				<!-- Advertencia de partidos jugados -->
-				{#if playedMatchesCount > 0}
-					<div class="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-						<span class="text-xl flex-shrink-0">⚠️</span>
-						<div>
-							<p class="text-sm font-bold text-red-300">
-								{playedMatchesCount} partido{playedMatchesCount !== 1 ? 's' : ''} con resultado registrado
-							</p>
-							<p class="text-xs text-red-400/80 mt-0.5">
-								Al eliminar el fixture, se perderán todos los marcadores y la tabla de posiciones quedará en cero.
-							</p>
-						</div>
+				<div class="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+					<span class="text-xl flex-shrink-0">🗑️</span>
+					<div>
+						<p class="text-sm font-bold text-red-300">
+							Se eliminarán todos los equipos, jugadores y partidos
+						</p>
+						<p class="text-xs text-red-400/90 mt-0.5">
+							Se borrarán los <strong class="text-white">{totalTeamsCount} equipos</strong> registrados con sus plantillas, todos los partidos ({playedMatchesCount} jugados) y la tabla de posiciones. El fixture quedará vacío y listo para inscribir nuevos equipos.
+						</p>
 					</div>
-				{:else}
-					<div class="flex items-center gap-2.5 text-sm text-slate-400">
-						<span>✅</span>
-						<span>No hay partidos jugados. El fixture puede eliminarse sin pérdida de datos.</span>
-					</div>
-				{/if}
-
-				<!-- Equipos que se incluirán en el nuevo fixture -->
-				<div class="flex items-center gap-2.5 text-sm text-slate-300">
-					<span>👥</span>
-					<span>
-						El nuevo fixture incluirá los <strong class="text-white">{totalTeamsCount} equipos</strong> actualmente registrados.
-					</span>
 				</div>
 			</div>
 
@@ -670,33 +668,18 @@
 					Cancelar
 				</button>
 
-				<!-- Solo eliminar -->
+				<!-- Eliminar y reiniciar -->
 				<button
 					type="button"
 					onclick={handleDeleteOnlyFixture}
 					disabled={deletingFixture || regeneratingFixture}
-					class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 transition flex items-center justify-center gap-2 disabled:opacity-40"
+					class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-500 border border-red-500/40 transition flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-red-950/50"
 				>
 					{#if deletingFixture}
-						<span class="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
-					{:else}
-						🗑️
-					{/if}
-					Solo Eliminar
-				</button>
-
-				<!-- Eliminar y regenerar (acción principal) -->
-				<button
-					type="button"
-					onclick={handleResetAndRegenerate}
-					disabled={deletingFixture || regeneratingFixture}
-					class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-amber-950/50"
-				>
-					{#if regeneratingFixture}
 						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-						Regenerando...
+						Eliminando torneo...
 					{:else}
-						⚡ Eliminar y Regenerar
+						🗑️ Eliminar Fixture y Equipos
 					{/if}
 				</button>
 			</div>

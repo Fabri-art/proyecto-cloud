@@ -31,6 +31,7 @@ from sqlmodel import delete as sql_delete
 from sqlmodel import select
 
 from app.models.match import Match, MatchStatus
+from app.models.player import Player
 from app.models.standing import Standing
 from app.models.team import Team
 from app.models.tournament import Tournament
@@ -126,14 +127,6 @@ async def delete_fixture(
 
     total_matches, played_matches = await _count_played_matches(tournament_id, session)
 
-    if total_matches == 0:
-        # Nothing to delete — return empty info
-        return FixtureDeleteInfo(
-            tournament_id=tournament_id,
-            deleted_matches=0,
-            had_played_matches=False,
-        )
-
     if played_matches > 0 and not force:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -146,15 +139,37 @@ async def delete_fixture(
 
     had_played = played_matches > 0
 
-    # 1. Delete all standings for this tournament (referential integrity)
+    # 1. Eliminar standings de este torneo (integridad referencial)
     await session.execute(
         sql_delete(Standing).where(Standing.tournament_id == tournament_id)
     )
 
-    # 2. Delete all matches for this tournament
+    # 2. Eliminar partidos de este torneo
     await session.execute(
         sql_delete(Match).where(Match.tournament_id == tournament_id)
     )
+
+    # 3. Obtener todos los IDs de equipos del torneo
+    team_ids_res = await session.execute(
+        select(Team.id).where(Team.tournament_id == tournament_id)
+    )
+    team_ids = [t for t in team_ids_res.scalars().all() if t is not None]
+
+    deleted_players = 0
+    if team_ids:
+        # Eliminar jugadores asociados a estos equipos
+        players_count_res = await session.execute(
+            select(Player.id).where(Player.team_id.in_(team_ids))
+        )
+        deleted_players = len(players_count_res.scalars().all())
+        await session.execute(
+            sql_delete(Player).where(Player.team_id.in_(team_ids))
+        )
+
+        # 4. Eliminar todos los equipos del torneo
+        await session.execute(
+            sql_delete(Team).where(Team.tournament_id == tournament_id)
+        )
 
     await session.flush()
 
@@ -162,6 +177,8 @@ async def delete_fixture(
         tournament_id=tournament_id,
         deleted_matches=total_matches,
         had_played_matches=had_played,
+        deleted_teams=len(team_ids),
+        deleted_players=deleted_players,
     )
 
 
@@ -177,8 +194,9 @@ async def generate_fixture(
     Args:
         tournament_id: ID del torneo.
         session:       Sesión de base de datos activa.
-        force:         Si True, elimina el fixture existente (incluyendo partidos
-                       jugados y standings) antes de generar uno nuevo.
+        force:         Si True, elimina el fixture existente y todos los equipos
+                       asociados, retornando el fixture reseteado listo para
+                       nuevos equipos.
                        Si False (default), lanza HTTP 409 si ya existe un fixture.
 
     Raises:
@@ -201,7 +219,7 @@ async def generate_fixture(
                     "Delete it first, or use force=true to reset and regenerate."
                 ),
             )
-        # force=True → delete existing fixture + standings atomically
+        # force=True → eliminar fixture existente y todos los equipos atómicamente
         await delete_fixture(tournament_id, session, force=True)
 
     # Fetch all teams
@@ -211,9 +229,13 @@ async def generate_fixture(
     teams: List[Team] = list(result.scalars().all())
 
     if len(teams) < 2:
+        if force:
+            # Al regenerar forzadamente tras borrar los equipos,
+            # el fixture queda vacío listo para la inscripción de nuevos equipos.
+            return []
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At least 2 teams are required to generate a fixture.",
+            detail="Se requieren al menos 2 equipos registrados para generar el fixture.",
         )
 
     # Shuffle for randomness, then extract IDs
