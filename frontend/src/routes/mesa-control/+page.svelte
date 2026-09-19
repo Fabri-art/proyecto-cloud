@@ -1,12 +1,12 @@
-﻿<script>
+<script>
 	/**
-	 * routes/mesa-control/+page.svelte â€” Panel de Mesa de Control y Arbitraje (NOM-12)
+	 * routes/mesa-control/+page.svelte — Panel de Mesa de Control y Arbitraje (NOM-12)
 	 *
-	 * â˜… Ruta protegida con PIN. Solo delegados y Ã¡rbitros.
-	 * â˜… CronÃ³metro calculado desde match.started_at (persiste entre recargas).
-	 * â˜… Goles se sincronizan al backend en tiempo real con PATCH /matches/{id}/score.
-	 * â˜… BotÃ³n "Eliminar Fixture" (destructivo) + Modal interactivo de Reset/Regenerar.
-	 * â˜… Flujo automÃ¡tico: si existe fixture, muestra diÃ¡logo antes de regenerar.
+	 * ★ Ruta protegida con PIN. Solo delegados y árbitros.
+	 * ★ Cronómetro calculado desde match.started_at (persiste entre recargas).
+	 * ★ Goles se sincronizan al backend en tiempo real con PATCH /matches/{id}/score.
+	 * ★ Botón "Eliminar Fixture" (destructivo) + Modal interactivo de Reset/Regenerar.
+	 * ★ Flujo automático: si existe fixture, muestra diálogo antes de regenerar.
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -16,10 +16,11 @@
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
+	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 
 	const TOURNAMENT_ID = 1;
 
-	// â”€â”€ AutenticaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Autenticación ───────────────────────────────────────────────────────────
 	let isAdmin = $state(false);
 	let showPinModal = $state(false);
 	const unsub = auth.subscribe((val) => {
@@ -27,7 +28,7 @@
 		if (!val) showPinModal = true;
 	});
 
-	// â”€â”€ Estados generales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Estados generales ──────────────────────────────────────────────────────
 	let rounds = $state([]);
 	let teamsMap = $state({});
 	let selectedRound = $state(1);
@@ -35,12 +36,12 @@
 	let generatingFixture = $state(false);
 	let regeneratingFixture = $state(false);
 
-	// â”€â”€ Estados para reset/eliminar fixture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Estados para reset/eliminar fixture ────────────────────────────────────
 	let showResetFixtureModal = $state(false);
 	let deletingFixture = $state(false);
-	/** NÃºmero de partidos con resultados registrados (FINISHED o LIVE) en el fixture actual */
+	/** Número de partidos con resultados registrados (FINISHED o LIVE) en el fixture actual */
 	let playedMatchesCount = $state(0);
-	/** NÃºmero total de equipos activos en el torneo */
+	/** Número total de equipos activos en el torneo */
 	let totalTeamsCount = $state(0);
 	
 	let tournament = $state(null);
@@ -52,12 +53,12 @@
 	let liveHomeScore = $state(0);
 	let liveAwayScore = $state(0);
 
-	// â”€â”€ CronÃ³metro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Cronómetro ─────────────────────────────────────────────────────────────
 	let timerSeconds = $state(0);
 	let timerRunning = $state(false);
 	let timerInterval = null;
 
-	// Modal de confirmaciÃ³n de cierre
+	// Modal de confirmación de cierre
 	let showFinishModal = $state(false);
 	let isClosingMatch = $state(false);
 	let tacticalTeam = $state(null);
@@ -73,7 +74,7 @@
 		const totalSec = Math.max(0, Math.floor((current - startedMs) / 1000));
 		return formatTime(totalSec);
 	}
-	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
 	function getMatchSport(match) {
 		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
 	}
@@ -96,13 +97,13 @@
 		tacticalTeam = t;
 	}
 
-	// ConfiguraciÃ³n visual de badges de estado (claves en minÃºsculas)
+	// Configuración visual de badges de estado (claves en minúsculas)
 	const statusConfig = {
-		scheduled: { label: 'Programado',      badgeClass: 'badge-scheduled',   icon: 'ðŸ•' },
-		live:      { label: 'EN JUEGO (LIVE)', badgeClass: 'badge-in-progress', icon: 'âš½' },
-		finished:  { label: 'Finalizado',      badgeClass: 'badge-finished',    icon: 'ðŸ' },
-		cancelled: { label: 'Cancelado',       badgeClass: 'badge-cancelled',   icon: 'âŒ' },
-		postponed: { label: 'Pospuesto',       badgeClass: 'badge-scheduled',   icon: 'â¸ï¸' }
+		scheduled: { label: 'Programado',      badgeClass: 'badge-scheduled',   icon: '🕐' },
+		live:      { label: 'EN JUEGO (LIVE)', badgeClass: 'badge-in-progress', icon: '⚽' },
+		finished:  { label: 'Finalizado',      badgeClass: 'badge-finished',    icon: '🏁' },
+		cancelled: { label: 'Cancelado',       badgeClass: 'badge-cancelled',   icon: '❌' },
+		postponed: { label: 'Pospuesto',       badgeClass: 'badge-scheduled',   icon: '⏸️' }
 	};
 
 	function getStatus(rawStatus) {
@@ -110,7 +111,7 @@
 		return statusConfig[key] ?? statusConfig.scheduled;
 	}
 
-	// â”€â”€ Carga inicial de datos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Carga inicial de datos ─────────────────────────────────────────────────
 	async function loadData() {
 		loading = true;
 		try {
@@ -133,7 +134,7 @@
 			const data = await fixtureApi.get(TOURNAMENT_ID);
 			rounds = data.rounds ?? [];
 
-			// Calcular cuÃ¡ntos partidos tienen resultados (para el modal de advertencia)
+			// Calcular cuántos partidos tienen resultados (para el modal de advertencia)
 			playedMatchesCount = rounds
 				.flatMap((r) => r.matches ?? [])
 				.filter((m) => {
@@ -151,12 +152,12 @@
 		}
 	}
 
-	// â”€â”€ GeneraciÃ³n inicial del fixture (cuando no existe ninguno) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Generación inicial del fixture (cuando no existe ninguno) ──────────────
 	async function handleGenerateFixture() {
 		generatingFixture = true;
 		try {
 			await fixtureApi.generate(TOURNAMENT_ID);
-			toast.success('Â¡Fixture generado exitosamente!');
+			toast.success('¡Fixture generado exitosamente!');
 			await loadFixture();
 		} catch (err) {
 			toast.error(err.message || 'No se pudo generar el fixture. Verifica tener al menos 2 equipos.');
@@ -172,17 +173,17 @@
 	 */
 	async function handleRegenerateFixture() {
 		if (rounds.length === 0) {
-			// No hay fixture â€” generar directamente
+			// No hay fixture — generar directamente
 			await handleGenerateFixture();
 			return;
 		}
-		// Hay fixture activo â†’ mostrar modal de confirmaciÃ³n
+		// Hay fixture activo → mostrar modal de confirmación
 		showResetFixtureModal = true;
 	}
 
 	/**
 	 * Elimina el fixture actual sin regenerar. Retorna al estado "sin fixture".
-	 * Invocado desde el modal de confirmaciÃ³n con el botÃ³n "Solo Eliminar".
+	 * Invocado desde el modal de confirmación con el botón "Solo Eliminar".
 	 */
 	async function handleDeleteOnlyFixture() {
 		deletingFixture = true;
@@ -202,7 +203,7 @@
 	}
 
 	/**
-	 * Resetea el fixture y vacÃ­a los equipos, dejando el torneo limpio para nuevos registros.
+	 * Resetea el fixture y vacía los equipos, dejando el torneo limpio para nuevos registros.
 	 */
 	async function handleResetAndRegenerate() {
 		regeneratingFixture = true;
@@ -221,7 +222,7 @@
 		}
 	}
 
-	// â”€â”€ Manejo de selecciÃ³n de partido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Manejo de selección de partido ─────────────────────────────────────────
 	function selectMatch(match) {
 		pauseTimer();
 
@@ -230,7 +231,7 @@
 		liveHomeScore = match.home_score ?? 0;
 		liveAwayScore = match.away_score ?? 0;
 
-		// Calcular tiempo real transcurrido si el partido estÃ¡ EN VIVO
+		// Calcular tiempo real transcurrido si el partido está EN VIVO
 		if (normalStatus === 'live' && match.started_at) {
 			const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
 			const startedMs = new Date(iso).getTime();
@@ -247,7 +248,7 @@
 		timerSeconds = 0;
 	}
 
-	// â”€â”€ CronÃ³metro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Cronómetro ─────────────────────────────────────────────────────────────
 	function startTimer() {
 		if (timerRunning) return;
 		timerRunning = true;
@@ -270,14 +271,14 @@
 		return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 	}
 
-	// â”€â”€ Goles tÃ¡ctiles (se sincronizan al backend) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Goles táctiles (se sincronizan al backend) ─────────────────────────────
 	async function adjustScore(team, delta) {
 		if (!activeMatch || activeMatch.status === 'finished') return;
 
 		if (team === 'home') liveHomeScore = Math.max(0, liveHomeScore + delta);
 		else liveAwayScore = Math.max(0, liveAwayScore + delta);
 
-		// Si el partido estaba programado, pasarlo a LIVE automÃ¡ticamente
+		// Si el partido estaba programado, pasarlo a LIVE automáticamente
 		if (activeMatch.status === 'scheduled') {
 			await setMatchStatus('live');
 		}
@@ -290,7 +291,7 @@
 		}
 	}
 
-	// â”€â”€ Cambio de Estado de Partido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Cambio de Estado de Partido ─────────────────────────────────────────────
 	async function setMatchStatus(status) {
 		if (!activeMatch) return;
 		const norm = status.toLowerCase();
@@ -305,7 +306,7 @@
 					timerSeconds = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
 				}
 				startTimer();
-				toast.success('El partido ahora estÃ¡ EN JUEGO (LIVE) âš½');
+				toast.success('El partido ahora está EN JUEGO (LIVE) ⚽');
 			} else {
 				pauseTimer();
 				toast.info(`Estado actualizado a: ${statusConfig[activeMatch.status]?.label ?? status}`);
@@ -316,7 +317,7 @@
 		}
 	}
 
-	// â”€â”€ Cierre definitivo del partido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+	// ── Cierre definitivo del partido ─────────────────────────────────────────
 	async function confirmFinishMatch() {
 		if (!activeMatch) return;
 		isClosingMatch = true;
@@ -328,7 +329,7 @@
 			pauseTimer();
 			activeMatch = { ...finished, status: 'finished' };
 			showFinishModal = false;
-			toast.success(`Â¡Partido finalizado! ${liveHomeScore} - ${liveAwayScore}. Posiciones actualizadas.`);
+			toast.success(`¡Partido finalizado! ${liveHomeScore} - ${liveAwayScore}. Posiciones actualizadas.`);
 			await loadFixture();
 		} catch (err) {
 			toast.error(err.message || 'No se pudo finalizar el partido.');
@@ -357,7 +358,7 @@
 
 
 <svelte:head>
-	<title>Mesa de Control â€” Nombre-Creativo</title>
+	<title>Mesa de Control — Nombre-Creativo</title>
 </svelte:head>
 
 <!-- Modal de PIN (si no es admin) -->
@@ -370,23 +371,23 @@
 
 {#if isAdmin}
 <div class="animate-fade-in-up pb-12">
-	<!-- â”€â”€ ENCABEZADO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+	<!-- ── ENCABEZADO ──────────────────────────────────────────────────────── -->
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
 		<div>
 			<h1 class="text-3xl font-black text-white flex items-center gap-3">
-				ðŸŽ® Mesa de Control
+				🎮 Mesa de Control
 				<span class="text-xs font-bold px-2 py-1 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/25">ADMIN</span>
 			</h1>
-			<p class="text-slate-400 mt-1">Gestiona cronÃ³metro, goles en tiempo real y cierre de partidos.</p>
+			<p class="text-slate-400 mt-1">Gestiona cronómetro, goles en tiempo real y cierre de partidos.</p>
 		</div>
 		{#if activeMatch}
 			<button onclick={closeActiveMatch} class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
-				â† Volver al Fixture
+				← Volver al Fixture
 			</button>
 		{/if}
 	</div>
 
-	<!-- â”€â”€ ESTADO: CARGANDO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+	<!-- ── ESTADO: CARGANDO ────────────────────────────────────────────────── -->
 	{#if loading}
 		<div class="space-y-4">
 			<div class="skeleton h-12 w-full rounded-xl"></div>
@@ -397,7 +398,7 @@
 			</div>
 		</div>
 
-	<!-- â”€â”€ CONSOLA DE ARBITRAJE (PARTIDO SELECCIONADO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+	<!-- ── CONSOLA DE ARBITRAJE (PARTIDO SELECCIONADO) ────────────────────── -->
 	{:else if activeMatch}
 		{@const homeTeam = teamsMap[activeMatch.home_team_id]}
 		{@const awayTeam = teamsMap[activeMatch.away_team_id]}
@@ -419,62 +420,62 @@
 				<div class="flex flex-wrap items-center gap-2">
 					{#if activeMatch.status !== 'live' && activeMatch.status !== 'finished'}
 						<button onclick={() => setMatchStatus('live')} class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1">
-							â–¶ï¸ Poner en Juego
+							▶️ Poner en Juego
 						</button>
 					{/if}
 					{#if activeMatch.status === 'live'}
 						<button onclick={() => setMatchStatus('scheduled')} class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
-							â¸ï¸ Pausar
+							⏸️ Pausar
 						</button>
 					{/if}
 					{#if activeMatch.status !== 'finished'}
 						<button onclick={() => (showFinishModal = true)} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition flex items-center gap-1">
-							ðŸ Finalizar Partido
+							🏁 Finalizar Partido
 						</button>
 					{:else}
 						<span class="text-xs font-bold text-emerald-400 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/60">
-							âœ… Partido Finalizado Oficialmente
+							✅ Partido Finalizado Oficialmente
 						</span>
 					{/if}
 				</div>
 			</div>
 
-			<!-- CRONÃ“METRO DIGITAL -->
+			<!-- CRONÓMETRO DIGITAL -->
 			<div class="glass-card p-6 text-center flex flex-col items-center gap-3">
 				<p class="text-xs font-bold uppercase tracking-wider text-slate-400">Tiempo de Juego</p>
 				<div class="text-5xl sm:text-6xl font-black font-mono tracking-widest text-emerald-400">
 					{formatTime(timerSeconds)}
 				</div>
 				{#if activeMatch.status === 'live'}
-					<p class="text-xs text-slate-500 italic">CronÃ³metro sincronizado desde el inicio real del partido</p>
+					<p class="text-xs text-slate-500 italic">Cronómetro sincronizado desde el inicio real del partido</p>
 				{/if}
 				<div class="flex items-center gap-2 mt-1">
 					{#if !timerRunning}
 						<button onclick={startTimer} disabled={activeMatch.status === 'finished'} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition disabled:opacity-30">
-							â–¶ï¸ Iniciar
+							▶️ Iniciar
 						</button>
 					{:else}
 						<button onclick={pauseTimer} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white transition">
-							â¸ï¸ Pausar
+							⏸️ Pausar
 						</button>
 					{/if}
 					<button onclick={resetTimer} class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 transition">
-						ðŸ”„ 00:00
+						🔄 00:00
 					</button>
 				</div>
 			</div>
 
-			<!-- Botones de Cancha TÃ¡ctica -->
+			<!-- Botones de Cancha Táctica -->
 			<div class="flex items-center justify-center gap-3 py-1">
 				<button type="button" onclick={() => showTeamTactical(activeMatch.home_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 transition flex items-center gap-1.5 shadow-sm">
-					<span>ðŸŸï¸</span> Ver alineaciÃ³n ({homeTeam?.short_name ?? 'Local'})
+					<span>🏟️</span> Ver alineación ({homeTeam?.short_name ?? 'Local'})
 				</button>
 				<button type="button" onclick={() => showTeamTactical(activeMatch.away_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-950/60 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 transition flex items-center gap-1.5 shadow-sm">
-					<span>ðŸŸï¸</span> Ver alineaciÃ³n ({awayTeam?.short_name ?? 'Visita'})
+					<span>🏟️</span> Ver alineación ({awayTeam?.short_name ?? 'Visita'})
 				</button>
 			</div>
 
-			<!-- MARCADOR TÃCTIL -->
+			<!-- MARCADOR TÁCTIL -->
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<!-- LOCAL -->
 				<div class="glass-card p-6 sm:p-8 flex flex-col items-center text-center gap-5 border-t-4 border-emerald-500">
@@ -484,7 +485,7 @@
 						</div>
 						<div>
 							<h2 class="text-2xl font-black text-white">{homeTeam?.name ?? 'Equipo Local'}</h2>
-							<p class="text-xs font-mono font-bold text-slate-400 uppercase">{homeTeam?.short_name ?? 'LOC'} Â· LOCAL</p>
+							<p class="text-xs font-mono font-bold text-slate-400 uppercase">{homeTeam?.short_name ?? 'LOC'} · LOCAL</p>
 						</div>
 					</div>
 					<span class="text-7xl sm:text-8xl font-black font-mono text-emerald-400">{liveHomeScore}</span>
@@ -493,7 +494,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? 'ðŸ€ +1 PUNTO' : 'âš½ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -506,7 +507,7 @@
 						</div>
 						<div>
 							<h2 class="text-2xl font-black text-white">{awayTeam?.name ?? 'Equipo Visitante'}</h2>
-							<p class="text-xs font-mono font-bold text-slate-400 uppercase">{awayTeam?.short_name ?? 'VIS'} Â· VISITANTE</p>
+							<p class="text-xs font-mono font-bold text-slate-400 uppercase">{awayTeam?.short_name ?? 'VIS'} · VISITANTE</p>
 						</div>
 					</div>
 					<span class="text-7xl sm:text-8xl font-black font-mono text-blue-400">{liveAwayScore}</span>
@@ -515,25 +516,25 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? 'ðŸ€ +1 PUNTO' : 'âš½ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-	<!-- â”€â”€ SELECTOR DE PARTIDOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+	<!-- ── SELECTOR DE PARTIDOS ───────────────────────────────────────────── -->
 	{:else}
 		{#if rounds.length === 0}
 			<!-- Sin fixture -->
 			<div class="glass-card p-12 text-center max-w-xl mx-auto animate-fade-in-up">
-				<div class="text-6xl mb-4">ðŸ“…</div>
-				<h2 class="text-2xl font-bold text-white mb-2">Fixture vacÃ­o</h2>
+				<div class="text-6xl mb-4">📅</div>
+				<h2 class="text-2xl font-bold text-white mb-2">Fixture vacío</h2>
 				<p class="text-slate-400 text-sm mb-6">
 					{#if totalTeamsCount < 2}
 						Actualmente hay {totalTeamsCount} equipo(s) registrado(s). Registra al menos 2 equipos para generar el fixture.
 					{:else}
-						Hay {totalTeamsCount} equipos listos. Puedes generar el fixture automÃ¡tico ahora.
+						Hay {totalTeamsCount} equipos listos. Puedes generar el fixture automático ahora.
 					{/if}
 				</p>
 				<div class="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -544,40 +545,40 @@
 								<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
 								Generando...
 							{:else}
-								âš¡ Generar Fixture AutomÃ¡tico
+								⚡ Generar Fixture Automático
 							{/if}
 						</button>
 					{/if}
 					<a href="/equipos/nuevo" class="px-5 py-3 rounded-xl font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center justify-center gap-2 text-sm">
-						âž• Inscribir Nuevos Equipos
+						➕ Inscribir Nuevos Equipos
 					</a>
 				</div>
 				
 			</div>
 		{:else}
 			
-			<!-- â”€â”€ Filtro por Deporte â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+			<!-- ── Filtro por Deporte ────────────────────────────────────────── -->
 			<div class="flex items-center gap-2 mb-4 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-fit">
 				<button
 					type="button"
 					onclick={() => (selectedSport = 'all')}
 					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'all' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}"
 				>
-					ðŸŒ Todos
+					🌐 Todos
 				</button>
 				<button
 					type="button"
 					onclick={() => (selectedSport = 'football')}
 					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'football' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}"
 				>
-					âš½ FÃºtbol
+					⚽ Fútbol
 				</button>
 				<button
 					type="button"
 					onclick={() => (selectedSport = 'basketball')}
 					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'basketball' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'}"
 				>
-					ðŸ€ BÃ¡squetbol
+					🏀 Básquetbol
 				</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -592,19 +593,19 @@
 						</button>
 					{/each}
 				</div>
-				<!-- Botones de gestiÃ³n de fixture -->
+				<!-- Botones de gestión de fixture -->
 				<div class="flex items-center gap-2">
 					<!-- Eliminar fixture (destructivo, rojo/outline) -->
 					<button
 						onclick={handleDeleteOnlyFixture}
 						disabled={deletingFixture || regeneratingFixture}
-						title="Eliminar fixture actual. Se perderÃ¡n todos los partidos."
+						title="Eliminar fixture actual. Se perderán todos los partidos."
 						class="px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 bg-slate-800/60 border border-red-500/30 hover:border-red-400/60 hover:bg-red-500/10 transition flex items-center gap-1.5 whitespace-nowrap disabled:opacity-40"
 					>
 						{#if deletingFixture}
 							<span class="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></span>
 						{:else}
-							ðŸ—‘ï¸
+							🗑️
 						{/if}
 						Eliminar Fixture
 					</button>
@@ -614,7 +615,7 @@
 						{#if regeneratingFixture}
 							<span class="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
 						{:else}
-							ðŸ”„
+							🔄
 						{/if}
 						Regenerar Fixture
 					</button>
@@ -625,7 +626,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				{#if filteredMatches.length === 0}
 					<div class="col-span-full glass-card p-8 text-center">
-						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'bÃ¡squetbol' : 'fÃºtbol'} en esta jornada.</p>
+						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en esta jornada.</p>
 					</div>
 				{/if}
 				{#each filteredMatches as match}
@@ -639,18 +640,18 @@
 								<span class="text-xs font-mono font-bold text-slate-400">#{match.id}</span>
 								{#if mSport === 'basketball'}
 									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-										ðŸ€ BÃ¡squet
+										🏀 Básquet
 									</span>
 								{:else}
 									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-										âš½ FÃºtbol
+										⚽ Fútbol
 									</span>
 								{/if}
 							</div>
 							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
 									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-									{status.icon} {status.label} Â· <span class="font-mono font-black text-emerald-300">â±ï¸ {getMatchTimer(match, now)}</span>
+									{status.icon} {status.label} · <span class="font-mono font-black text-emerald-300">⏱️ {getMatchTimer(match, now)}</span>
 								{:else}
 									{status.icon} {status.label}
 								{/if}
@@ -664,7 +665,7 @@
 							<div class="flex flex-col items-center gap-1 min-w-[80px]">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
 									<span class="text-[11px] font-mono font-black text-emerald-400 bg-emerald-950/90 px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm animate-pulse tracking-wide">
-										â±ï¸ {getMatchTimer(match, now)}
+										⏱️ {getMatchTimer(match, now)}
 									</span>
 								{/if}
 								<div class="px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-center w-full">
@@ -684,7 +685,7 @@
 							class="w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 {(match.status ?? '').toLowerCase() === 'live'
 								? 'bg-emerald-600 hover:bg-emerald-500 text-white'
 								: 'bg-slate-800 hover:bg-slate-700 text-slate-200'}">
-							ðŸŽ® {(match.status ?? '').toLowerCase() === 'finished' ? 'Ver Registro' : 'Arbitrar Partido'}
+							🎮 {(match.status ?? '').toLowerCase() === 'finished' ? 'Ver Registro' : 'Arbitrar Partido'}
 						</button>
 					</div>
 				{/each}
@@ -694,15 +695,15 @@
 </div>
 {/if}
 
-<!-- Modal de ConfirmaciÃ³n de FinalizaciÃ³n -->
+<!-- Modal de Confirmación de Finalización -->
 {#if showFinishModal && activeMatch}
 	{@const homeTeam = teamsMap[activeMatch.home_team_id]}
 	{@const awayTeam = teamsMap[activeMatch.away_team_id]}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80" role="dialog" aria-modal="true">
 		<div class="glass-card w-full max-w-md p-6 flex flex-col gap-5 border border-slate-700 shadow-2xl">
 			<div class="text-center">
-				<div class="text-4xl mb-2">ðŸ</div>
-				<h3 class="text-xl font-black text-white">Â¿Finalizar Partido Oficial?</h3>
+				<div class="text-4xl mb-2">🏁</div>
+				<h3 class="text-xl font-black text-white">¿Finalizar Partido Oficial?</h3>
 				<p class="text-xs text-slate-400 mt-1">Verifica el marcador final antes de cerrar el acta.</p>
 			</div>
 			<div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
@@ -714,7 +715,7 @@
 				</div>
 			</div>
 			<p class="text-xs text-slate-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg">
-				â„¹ï¸ Al confirmar, el partido quedarÃ¡ como <strong>FINALIZADO</strong> y la tabla de posiciones se recalcularÃ¡ automÃ¡ticamente.
+				ℹ️ Al confirmar, el partido quedará como <strong>FINALIZADO</strong> y la tabla de posiciones se recalculará automáticamente.
 			</p>
 			<div class="flex items-center justify-end gap-3">
 				<button type="button" onclick={() => (showFinishModal = false)} disabled={isClosingMatch}
@@ -735,51 +736,51 @@
 	</div>
 {/if}
 
-<!-- â”€â”€ MODAL INTERACTIVO: RESET / REGENERAR FIXTURE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── MODAL INTERACTIVO: RESET / REGENERAR FIXTURE ──────────────────────────── -->
 {#if showResetFixtureModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85" role="dialog" aria-modal="true" aria-labelledby="reset-fixture-title">
 		<div class="glass-card w-full max-w-lg p-6 flex flex-col gap-5 border border-slate-700 shadow-2xl">
 			<!-- Encabezado del modal -->
 			<div class="text-center">
-				<div class="text-5xl mb-3">âš ï¸</div>
+				<div class="text-5xl mb-3">⚠️</div>
 				<h3 id="reset-fixture-title" class="text-xl font-black text-white">
-					Â¿QuÃ© deseas hacer con el torneo?
+					¿Qué deseas hacer con el torneo?
 				</h3>
 				<p class="text-sm text-slate-400 mt-1">
 					Elige si quieres conservar los equipos o eliminar absolutamente todo.
 				</p>
 			</div>
 
-			<!-- InformaciÃ³n del estado actual -->
+			<!-- Información del estado actual -->
 			<div class="flex flex-col gap-2.5 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
-				<!-- OpciÃ³n 1: Regenerar (conservando equipos) -->
+				<!-- Opción 1: Regenerar (conservando equipos) -->
 				<div class="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-					<span class="text-xl flex-shrink-0">ðŸ”„</span>
+					<span class="text-xl flex-shrink-0">🔄</span>
 					<div>
 						<p class="text-sm font-bold text-amber-300">
 							Regenerar Fixture (Conservar Equipos)
 						</p>
 						<p class="text-xs text-amber-400/80 mt-0.5">
-							Se borrarÃ¡n todos los partidos actuales ({playedMatchesCount} jugados) y la tabla de posiciones, pero los <strong class="text-white">{totalTeamsCount} equipos</strong> seguirÃ¡n inscritos y se generarÃ¡n nuevos cruces entre ellos.
+							Se borrarán todos los partidos actuales ({playedMatchesCount} jugados) y la tabla de posiciones, pero los <strong class="text-white">{totalTeamsCount} equipos</strong> seguirán inscritos y se generarán nuevos cruces entre ellos.
 						</p>
 					</div>
 				</div>
 
-				<!-- OpciÃ³n 2: Eliminar Todo -->
+				<!-- Opción 2: Eliminar Todo -->
 				<div class="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-					<span class="text-xl flex-shrink-0">ðŸ—‘ï¸</span>
+					<span class="text-xl flex-shrink-0">🗑️</span>
 					<div>
 						<p class="text-sm font-bold text-red-300">
 							Eliminar Todo (Fixture y Equipos)
 						</p>
 						<p class="text-xs text-red-400/80 mt-0.5">
-							Se borrarÃ¡ absolutamente todo. El fixture quedarÃ¡ vacÃ­o y tendrÃ¡s que volver a inscribir equipos desde cero.
+							Se borrará absolutamente todo. El fixture quedará vacío y tendrás que volver a inscribir equipos desde cero.
 						</p>
 					</div>
 				</div>
 			</div>
 
-			<!-- Botones de acciÃ³n -->
+			<!-- Botones de acción -->
 			<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
 				<!-- Cancelar -->
 				<button
@@ -801,7 +802,7 @@
 					{#if deletingFixture}
 						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
 					{:else}
-						ðŸ—‘ï¸ Eliminar Todo
+						🗑️ Eliminar Todo
 					{/if}
 				</button>
 				
@@ -815,7 +816,7 @@
 					{#if regeneratingFixture}
 						<span class="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
 					{:else}
-						ðŸ”„ Regenerar Fixture
+						🔄 Regenerar Fixture
 					{/if}
 				</button>
 			</div>
@@ -823,7 +824,7 @@
 	</div>
 {/if}
 
-<!-- MODAL DE CANCHA TÃCTICA PARA MESA DE CONTROL -->
+<!-- MODAL DE CANCHA TÁCTICA PARA MESA DE CONTROL -->
 {#if tacticalTeam}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
@@ -835,14 +836,14 @@
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{tacticalTeam.name}</h3>
-					<p class="text-xs text-slate-400 font-mono">{(tacticalTeam.sport === 'basketball' || (activeMatch && getMatchSport(activeMatch) === 'basketball')) ? 'AlineaciÃ³n TÃ¡ctica en Pista de BÃ¡squetbol' : 'AlineaciÃ³n TÃ¡ctica en Cancha de FÃºtbol'}</p>
+					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : 'Alineación — Fútbol'}</p>
 				</div>
 				<button
 					type="button"
 					onclick={() => (tacticalTeam = null)}
 					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
 				>
-					âœ•
+					✕
 				</button>
 			</div>
 
@@ -865,5 +866,3 @@
 		</div>
 	</div>
 {/if}
-
-

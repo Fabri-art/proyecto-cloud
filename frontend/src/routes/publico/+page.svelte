@@ -1,12 +1,13 @@
-﻿<script>
+<script>
 	/**
-	 * routes/publico/+page.svelte â€” Vista PÃºblica para Hinchas y Jugadores (/publico)
-	 * RediseÃ±ada con estÃ©tica deportiva profesional al estilo Sofascore/ESPN.
+	 * routes/publico/+page.svelte — Vista Pública para Hinchas y Jugadores (/publico)
+	 * Rediseñada con estética deportiva profesional al estilo Sofascore/ESPN.
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { fixtureApi, standingsApi, teamsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
+	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 
 	const TOURNAMENT_ID = 1;
 	const REFRESH_INTERVAL_MS = 30_000;
@@ -19,7 +20,7 @@
 	let selectedRound = $state(1);
 	let loading = $state(true);
 	let pitchModalTeam = $state(null);
-	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
 	function getMatchSport(match) {
 		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
 	}
@@ -83,7 +84,7 @@
 		)
 	);
 
-	// Colores Ãºnicos por equipo (basado en hash del ID)
+	// Colores únicos por equipo (basado en hash del ID)
 	const teamColors = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899'];
 	function teamColor(id) { return teamColors[(id ?? 0) % teamColors.length]; }
 
@@ -167,17 +168,17 @@
 </script>
 
 <svelte:head>
-	<title>Torneo Hub â€” Fixture & Posiciones</title>
+	<title>Torneo Hub — Fixture & Posiciones</title>
 	<meta name="description" content="Fixture y tabla de posiciones del torneo en tiempo real." />
 </svelte:head>
 
-<!-- â”€â”€ ENCABEZADO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── ENCABEZADO ─────────────────────────────────────────────────────────── -->
 <div class="mb-7 animate-fade-in-up">
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 		<div>
 			<div class="flex items-center gap-3 mb-1">
 				<h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">
-					Vista PÃºblica
+					Vista Pública
 				</h1>
 				{#if hasLiveMatch}
 					<span class="live-badge-pill">
@@ -185,7 +186,7 @@
 					</span>
 				{/if}
 			</div>
-			<p class="text-slate-500 text-sm">Torneo Hub Â· Fixture y clasificaciÃ³n en tiempo real</p>
+			<p class="text-slate-500 text-sm">Torneo Hub · Fixture y clasificación en tiempo real</p>
 		</div>
 
 		<!-- Refresh indicator -->
@@ -205,9 +206,9 @@
 	</div>
 </div>
 
-<!-- â”€â”€ PESTAÃ‘AS Y SELECTOR DE DEPORTE â”€â”€ -->
+<!-- ── PESTAÑAS Y SELECTOR DE DEPORTE ── -->
 <div class="flex flex-wrap items-center justify-between gap-3 mb-7">
-	<!-- PestaÃ±as Fixture / Posiciones -->
+	<!-- Pestañas Fixture / Posiciones -->
 	<div class="flex gap-0 p-1 bg-slate-900 rounded-xl border border-slate-800/80 w-fit">
 		<button
 			onclick={() => (activeTab = 'fixture')}
@@ -236,14 +237,14 @@
 			onclick={() => (selectedSport = 'all')}
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'all' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
-			ðŸŒ Todos
+			🌐 Todos
 		</button>
 		<button
 			type="button"
 			onclick={() => (selectedSport = 'football')}
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'football' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
-			âš½ FÃºtbol
+			⚽ Fútbol
 		</button>
 		<button
 			type="button"
@@ -257,13 +258,12 @@
 			onclick={() => (selectedSport = 'volleyball')}
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
-			🏐 Vóley
+			&#x1F3D0; V&#xF3;ley
 		</button>
-		
 	</div>
 </div>
 
-<!-- â”€â”€ CARGANDO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── CARGANDO ────────────────────────────────────────────────────────────── -->
 {#if loading}
 	<div class="space-y-3">
 		<div class="flex gap-2 mb-5">
@@ -278,13 +278,13 @@
 
 {:else}
 
-<!-- â•â•â•â•â•â•â•â• PESTAÃ‘A: FIXTURE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ════════ PESTAÑA: FIXTURE ══════════════════════════════════════════════════ -->
 {#if activeTab === 'fixture'}
 	{#if rounds.length === 0}
 		<div class="glass-card p-16 text-center">
-			<div class="text-5xl mb-4 opacity-30">ðŸ“…</div>
+			<div class="text-5xl mb-4 opacity-30">📅</div>
 			<h2 class="text-lg font-bold text-white mb-2">Fixture no disponible</h2>
-			<p class="text-slate-500 text-sm">El fixture del torneo se publicarÃ¡ prÃ³ximamente.</p>
+			<p class="text-slate-500 text-sm">El fixture del torneo se publicará próximamente.</p>
 		</div>
 	{:else}
 		<!-- Selector de jornadas tipo pill-scroll -->
@@ -306,7 +306,7 @@
 		<div class="flex flex-col gap-3">
 			{#if filteredMatches.length === 0}
 			<div class="glass-card p-10 text-center">
-				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'bÃ¡squetbol' : 'fÃºtbol'} en esta jornada.</p>
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en esta jornada.</p>
 			</div>
 		{/if}
 		{#each filteredMatches as match, i}
@@ -330,11 +330,11 @@
 							<div class="flex items-center gap-2">
 								{#if mSport === 'basketball'}
 									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-										ðŸ€ BÃ¡squet
+										🏀 Básquet
 									</span>
 								{:else}
 									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-										âš½ FÃºtbol
+										⚽ Fútbol
 									</span>
 								{/if}
 								<span class="status-pill {status.cls}">
@@ -369,7 +369,7 @@
 								{#if isLive}
 									<div class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 font-mono font-black text-xs shadow-md animate-pulse tracking-wider">
 										<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-										<span>â±ï¸ {getMatchTimer(match, now)}</span>
+										<span>⏱️ {getMatchTimer(match, now)}</span>
 									</div>
 								{/if}
 								<div class="score-center {isLive ? 'score-live' : isFinished ? 'score-done' : 'score-upcoming'}">
@@ -398,14 +398,14 @@
 								</div>
 							</div>
 						</div>
-						<!-- Botones de AlineaciÃ³n TÃ¡ctica en Cancha -->
+						<!-- Botones de Alineación Táctica en Cancha -->
 						<div class="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-between text-xs">
-							<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formaciÃ³n en cancha">
-								<span>ðŸŸï¸</span> Ver alineaciÃ³n {teamShort(match.home_team_id)}
+							<button type="button" onclick={() => showTeamPitch(match.home_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
+								<span>🏟️</span> Ver alineación {teamShort(match.home_team_id)}
 							</button>
-							<span class="text-slate-700">â€¢</span>
-							<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formaciÃ³n en cancha">
-								<span>ðŸŸï¸</span> Ver alineaciÃ³n {teamShort(match.away_team_id)}
+							<span class="text-slate-700">•</span>
+							<button type="button" onclick={() => showTeamPitch(match.away_team_id)} class="text-slate-400 hover:text-emerald-400 flex items-center gap-1 transition" title="Ver formación en cancha">
+								<span>🏟️</span> Ver alineación {teamShort(match.away_team_id)}
 							</button>
 						</div>
 					</div>
@@ -415,25 +415,25 @@
 	{/if}
 {/if}
 
-<!-- â•â•â•â•â•â•â•â• PESTAÃ‘A: POSICIONES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ════════ PESTAÑA: POSICIONES ══════════════════════════════════════════════ -->
 {#if activeTab === 'posiciones'}
 	{#if standings.length === 0}
 		<div class="glass-card p-16 text-center">
-			<div class="text-5xl mb-4 opacity-30">ðŸ“Š</div>
-			<h2 class="text-lg font-bold text-white mb-2">Sin datos todavÃ­a</h2>
-			<p class="text-slate-500 text-sm">La tabla se completa automÃ¡ticamente al finalizar partidos.</p>
+			<div class="text-5xl mb-4 opacity-30">📊</div>
+			<h2 class="text-lg font-bold text-white mb-2">Sin datos todavía</h2>
+			<p class="text-slate-500 text-sm">La tabla se completa automáticamente al finalizar partidos.</p>
 		</div>
 	{:else}
 		<div class="space-y-10">
-			<!-- TABLA DE FÃšTBOL -->
+			<!-- TABLA DE FÚTBOL -->
 			{#if (selectedSport === 'all' || selectedSport === 'football') && footballStandings.length > 0}
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
-							<span class="text-2xl">âš½</span>
+							<span class="text-2xl">⚽</span>
 							<div>
-								<h3 class="text-lg font-black text-white">Tabla de Posiciones â€” FÃºtbol</h3>
-								<p class="text-xs text-slate-400">Torneo oficial de fÃºtbol 11</p>
+								<h3 class="text-lg font-black text-white">Tabla de Posiciones — Fútbol</h3>
+								<p class="text-xs text-slate-400">Torneo oficial de fútbol 11</p>
 							</div>
 						</div>
 						<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
@@ -460,7 +460,7 @@
 								</thead>
 								<tbody>
 									{#if footballStandings.length === 0}
-										<tr><td colspan="10" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en fÃºtbol</td></tr>
+										<tr><td colspan="10" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en fútbol</td></tr>
 									{/if}
 									{#each footballStandings as s, i}
 										{@const accentLeft = i === 0 ? '#10b981' : i === 1 ? '#38bdf8' : i === 2 ? '#f59e0b' : 'transparent'}
@@ -468,9 +468,9 @@
 										<tr class="standings-row border-b border-slate-800/50 transition-colors"
 											style="border-left: 3px solid {accentLeft};">
 											<td class="px-4 py-3 text-center">
-												{#if i === 0}<span class="text-base">ðŸ¥‡</span>
-												{:else if i === 1}<span class="text-base">ðŸ¥ˆ</span>
-												{:else if i === 2}<span class="text-base">ðŸ¥‰</span>
+												{#if i === 0}<span class="text-base">🥇</span>
+												{:else if i === 1}<span class="text-base">🥈</span>
+												{:else if i === 2}<span class="text-base">🥉</span>
 												{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
 											</td>
 											<td class="px-4 py-3">
@@ -484,7 +484,7 @@
 														<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
 													</div>
 													<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-emerald-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
-														<span>ðŸŸï¸</span> Cancha
+														<span>🏟️</span> Cancha
 													</button>
 												</div>
 											</td>
@@ -504,21 +504,21 @@
 							</table>
 						</div>
 						<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
-							PJ = Jugados Â· PG = Ganados Â· PE = Empates Â· PP = Perdidos Â· GF = Goles Favor Â· GC = Goles Contra Â· DG = Dif. Goles Â· PTS = Puntos
+							PJ = Jugados · PG = Ganados · PE = Empates · PP = Perdidos · GF = Goles Favor · GC = Goles Contra · DG = Dif. Goles · PTS = Puntos
 						</div>
 					</div>
 				</div>
 			{/if}
 
-			<!-- TABLA DE BÃSQUETBOL -->
+			<!-- TABLA DE BÁSQUETBOL -->
 			{#if (selectedSport === 'all' || selectedSport === 'basketball') && basketballStandings.length > 0}
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
-							<span class="text-2xl">ðŸ€</span>
+							<span class="text-2xl">🏀</span>
 							<div>
-								<h3 class="text-lg font-black text-white">Tabla de Posiciones â€” BÃ¡squetbol</h3>
-								<p class="text-xs text-slate-400">Torneo oficial de bÃ¡squetbol 5x5</p>
+								<h3 class="text-lg font-black text-white">Tabla de Posiciones — Básquetbol</h3>
+								<p class="text-xs text-slate-400">Torneo oficial de básquetbol 5x5</p>
 							</div>
 						</div>
 						<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
@@ -544,7 +544,7 @@
 								</thead>
 								<tbody>
 									{#if basketballStandings.length === 0}
-										<tr><td colspan="9" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en bÃ¡squetbol</td></tr>
+										<tr><td colspan="9" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en básquetbol</td></tr>
 									{/if}
 									{#each basketballStandings as s, i}
 										{@const accentLeft = i === 0 ? '#f59e0b' : i === 1 ? '#38bdf8' : '#64748b'}
@@ -552,9 +552,9 @@
 										<tr class="standings-row border-b border-slate-800/50 transition-colors"
 											style="border-left: 3px solid {accentLeft};">
 											<td class="px-4 py-3 text-center">
-												{#if i === 0}<span class="text-base">ðŸ¥‡</span>
-												{:else if i === 1}<span class="text-base">ðŸ¥ˆ</span>
-												{:else if i === 2}<span class="text-base">ðŸ¥‰</span>
+												{#if i === 0}<span class="text-base">🥇</span>
+												{:else if i === 1}<span class="text-base">🥈</span>
+												{:else if i === 2}<span class="text-base">🥉</span>
 												{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
 											</td>
 											<td class="px-4 py-3">
@@ -568,7 +568,7 @@
 														<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
 													</div>
 													<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-amber-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
-														<span>ðŸ€</span> Cancha
+														<span>🏀</span> Cancha
 													</button>
 												</div>
 											</td>
@@ -587,7 +587,7 @@
 							</table>
 						</div>
 						<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
-							PJ = Jugados Â· PG = Ganados Â· PP = Perdidos Â· PF = Puntos Favor Â· PC = Puntos Contra Â· DP = Dif. Puntos Â· PTS = Puntos
+							PJ = Jugados · PG = Ganados · PP = Perdidos · PF = Puntos Favor · PC = Puntos Contra · DP = Dif. Puntos · PTS = Puntos
 						</div>
 					</div>
 				</div>
@@ -598,7 +598,7 @@
 
 {/if}
 
-<!-- MODAL DE CANCHA TÃCTICA PARA PÃšBLICO -->
+<!-- MODAL DE CANCHA TÁCTICA PARA PÚBLICO -->
 {#if pitchModalTeam}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
@@ -616,7 +616,7 @@
 					</div>
 					<div>
 						<h3 class="text-base font-bold text-white leading-tight">{pitchModalTeam.name}</h3>
-						<p class="text-xs text-slate-400 font-mono">AlineaciÃ³n y Plantilla en Cancha</p>
+						<p class="text-xs text-slate-400 font-mono">Alineación y Plantilla en Cancha</p>
 					</div>
 				</div>
 				<button
@@ -624,7 +624,7 @@
 					onclick={() => (pitchModalTeam = null)}
 					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
 				>
-					âœ•
+					✕
 				</button>
 			</div>
 
@@ -634,13 +634,6 @@
 					interactive={false}
 					teamName={pitchModalTeam.name}
 					teamColor="#f59e0b"
-				/>
-			{:else if pitchModalTeam.sport === 'volleyball'}
-				<VolleyballCourt
-					players={pitchModalTeam.players || []}
-					interactive={false}
-					teamName={pitchModalTeam.name}
-					teamColor="#7c3aed"
 				/>
 			{:else}
 				<SoccerPitch
@@ -664,7 +657,7 @@
 	</div>
 {/if}
 <style>
-	/* â”€â”€ PestaÃ±as â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+	/* ── Pestañas ─────────────────────────────────────────────────────────────── */
 	.tab-pill {
 		display: flex;
 		align-items: center;
@@ -683,7 +676,7 @@
 	.tab-pill-inactive { color: #64748b; }
 	.tab-pill-inactive:hover { color: #e2e8f0; }
 
-	/* â”€â”€ Botones de jornada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+	/* ── Botones de jornada ─────────────────────────────────────────────────── */
 	.round-btn {
 		display: flex;
 		align-items: center;
@@ -708,7 +701,7 @@
 	}
 	.round-btn-inactive:hover { color: #e2e8f0; border-color: rgba(148,163,184,0.25); }
 
-	/* â”€â”€ Tarjetas de partido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+	/* ── Tarjetas de partido ────────────────────────────────────────────────── */
 	.match-card-new {
 		display: flex;
 		align-items: stretch;
@@ -769,7 +762,7 @@
 	.score-done   { background: rgba(99,102,241,0.1);  border: 1.5px solid rgba(99,102,241,0.25); color: #a5b4fc; }
 	.score-upcoming { background: #0b1120; border: 1.5px solid rgba(148,163,184,0.1); }
 
-	/* PÃ­ldora LIVE del encabezado */
+	/* Píldora LIVE del encabezado */
 	.live-badge-pill {
 		display: inline-flex;
 		align-items: center;
@@ -785,6 +778,3 @@
 		text-transform: uppercase;
 	}
 </style>
-
-
-

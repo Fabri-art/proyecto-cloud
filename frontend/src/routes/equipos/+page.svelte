@@ -1,12 +1,13 @@
-﻿<script>
+<script>
 	/**
-	 * routes/equipos/+page.svelte â€” PÃ¡gina de Equipos (/equipos)
-	 * RediseÃ±ada con escudos Ãºnicos por equipo y modal mejorado.
+	 * routes/equipos/+page.svelte — Página de Equipos (/equipos)
+	 * Rediseñada con escudos únicos por equipo y modal mejorado.
 	 */
 	import { onMount } from 'svelte';
 	import { teamsApi, tournamentsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
+	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	let teams = $state([]);
@@ -19,23 +20,17 @@
 	const TOURNAMENT_ID = 1;
 
 	const positionLabels = {
-		// FÃºtbol
-		goalkeeper: { label: 'Arquero',       icon: 'ðŸ§¤', color: '#f59e0b' },
-		defender:   { label: 'Defensa',       icon: 'ðŸ›¡ï¸',  color: '#3b82f6' },
-		midfielder: { label: 'Mediocampista', icon: 'âš¡', color: '#10b981' },
-		forward:    { label: 'Delantero',     icon: 'âš½', color: '#ef4444' },
-		// BÃ¡squetbol
-		point_guard:    { label: 'Base (PG)',      icon: 'ðŸ€', color: '#f59e0b' },
-		shooting_guard: { label: 'Escolta (SG)',   icon: 'ðŸŽ¯', color: '#ec4899' },
-		small_forward:  { label: 'Alero (SF)',     icon: 'âš¡', color: '#8b5cf6' },
-		power_forward:  { label: 'Ala-PÃ­vot (PF)', icon: 'ðŸ›¡ï¸', color: '#3b82f6' },
-		center:         { label: 'Pívot (C)',      icon: '🏟', color: '#10b981' },
-		// Vóley
-		setter:         { label: 'Armador',       icon: '🏐', color: '#7c3aed' },
-		libero:         { label: 'Líbero',        icon: '🛡', color: '#ca8a04' },
-		outside_hitter: { label: 'Punta',         icon: '⚡', color: '#4f46e5' },
-		opposite:       { label: 'Opuesto',       icon: '🎯', color: '#7c3aed' },
-		middle_blocker: { label: 'Central',       icon: '🧱', color: '#9333ea' }
+		// Fútbol
+		goalkeeper: { label: 'Arquero',       icon: '🧤', color: '#f59e0b' },
+		defender:   { label: 'Defensa',       icon: '🛡️',  color: '#3b82f6' },
+		midfielder: { label: 'Mediocampista', icon: '⚡', color: '#10b981' },
+		forward:    { label: 'Delantero',     icon: '⚽', color: '#ef4444' },
+		// Básquetbol
+		point_guard:    { label: 'Base (PG)',      icon: '🏀', color: '#f59e0b' },
+		shooting_guard: { label: 'Escolta (SG)',   icon: '🎯', color: '#ec4899' },
+		small_forward:  { label: 'Alero (SF)',     icon: '⚡', color: '#8b5cf6' },
+		power_forward:  { label: 'Ala-Pívot (PF)', icon: '🛡️', color: '#3b82f6' },
+		center:         { label: 'Pívot (C)',      icon: '👑', color: '#10b981' }
 	};
 
 	let selectedSportFilter = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
@@ -45,7 +40,7 @@
 			: teams.filter((t) => (t.sport || 'football') === selectedSportFilter)
 	);
 
-	// Color Ãºnico por equipo basado en su ID
+	// Color único por equipo basado en su ID
 	const palette = [
 		{ bg: 'linear-gradient(135deg,#065f46,#047857)', text: '#34d399' },
 		{ bg: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)', text: '#93c5fd' },
@@ -79,7 +74,7 @@
 
 	async function viewTeamRoster(team) {
 		selectedTeam = team;
-		// Si la plantilla ya estÃ¡ pre-cargada en memoria, abrir modal al instante sin delay
+		// Si la plantilla ya está pre-cargada en memoria, abrir modal al instante sin delay
 		if (team.players && Array.isArray(team.players)) {
 			loadingRoster = false;
 			return;
@@ -107,13 +102,13 @@
 </script>
 
 <svelte:head>
-	<title>Equipos â€” Torneo Hub</title>
+	<title>Equipos — Torneo Hub</title>
 	<meta name="description" content="Directorio de clubes y plantillas registradas en el torneo." />
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- â”€â”€ Encabezado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Encabezado ───────────────────────────────────────────────────────────── -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in-up">
 	<div>
 		<h1 class="text-3xl font-black text-white tracking-tight font-display">
@@ -132,14 +127,14 @@
 	</a>
 </div>
 
-<!-- â”€â”€ Filtro por Deporte â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
 <div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
 	<button
 		type="button"
 		onclick={() => (selectedSportFilter = 'all')}
 		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}"
 	>
-		<span>ðŸŒ</span>
+		<span>🌐</span>
 		<span>Todos</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.length}</span>
 	</button>
@@ -148,8 +143,8 @@
 		onclick={() => (selectedSportFilter = 'football')}
 		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'football' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40' : 'text-slate-400 hover:text-white'}"
 	>
-		<span>âš½</span>
-		<span>FÃºtbol</span>
+		<span>⚽</span>
+		<span>Fútbol</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => (t.sport || 'football') === 'football').length}</span>
 	</button>
 	<button
@@ -157,13 +152,13 @@
 		onclick={() => (selectedSportFilter = 'basketball')}
 		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'basketball' ? 'bg-amber-600 text-white shadow-md shadow-amber-950/40' : 'text-slate-400 hover:text-white'}"
 	>
-		<span>ðŸ€</span>
-		<span>BÃ¡squetbol</span>
+		<span>🏀</span>
+		<span>Básquetbol</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'basketball').length}</span>
 	</button>
 </div>
 
-<!-- â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Loading ──────────────────────────────────────────────────────────────── -->
 {#if loading}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 		{#each Array(6) as _}
@@ -184,7 +179,7 @@
 		{/each}
 	</div>
 
-<!-- â”€â”€ Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Error ─────────────────────────────────────────────────────────────────── -->
 {:else if error}
 	<div class="glass-card p-10 text-center max-w-md mx-auto">
 		<div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
@@ -192,32 +187,32 @@
 				<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z"/>
 			</svg>
 		</div>
-		<h2 class="font-bold text-white mb-1">Sin conexiÃ³n con el servidor</h2>
+		<h2 class="font-bold text-white mb-1">Sin conexión con el servidor</h2>
 		<p class="text-slate-500 text-sm mb-5">{error}</p>
 		<button onclick={loadTeams} class="btn-ghost text-sm">Reintentar</button>
 	</div>
 
-<!-- â”€â”€ Sin equipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Sin equipos ─────────────────────────────────────────────────────────── -->
 {:else if teams.length === 0}
 	<div class="glass-card p-16 text-center animate-fade-in-up">
 		<div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-4xl">
-			{tournament?.sport === 'basketball' ? 'ðŸ€' : 'âš½'}
+			{team.sport === 'basketball' ? '🏀' : team.sport === 'volleyball' ? '🏐' : '⚽'}
 		</div>
 		<h2 class="text-xl font-bold text-white mb-2">Sin clubes registrados</h2>
 		<p class="text-slate-500 text-sm max-w-sm mx-auto mb-7">
-			SÃ© el primero en inscribir a tu club y cargar la plantilla de jugadores.
+			Sé el primero en inscribir a tu club y cargar la plantilla de jugadores.
 		</p>
 		<a href="/equipos/nuevo" class="btn-primary">
 			Registrar Primer Club
 		</a>
 	</div>
 
-<!-- â”€â”€ Lista de equipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Lista de equipos ─────────────────────────────────────────────────────── -->
 {:else}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 		{#if filteredTeams.length === 0}
 		<div class="col-span-full glass-card p-12 text-center">
-			<div class="text-4xl mb-3">{selectedSportFilter === 'basketball' ? 'ðŸ€' : 'âš½'}</div>
+			<div class="text-4xl mb-3">{selectedSportFilter === 'basketball' ? '🏀' : selectedSportFilter === 'volleyball' ? '🏐' : '⚽'}</div>
 			<p class="text-white font-bold">No hay equipos de {selectedSportFilter === 'basketball' ? 'básquetbol' : selectedSportFilter === 'volleyball' ? 'vóley' : 'fútbol'} registrados</p>
 			<p class="text-slate-400 text-sm mt-1">Registra nuevos clubes para este deporte.</p>
 		</div>
@@ -246,15 +241,15 @@
 							</span>
 							{#if team.sport === 'basketball'}
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-									ðŸ€ BÃ¡squet
+									🏀 Básquet
 								</span>
 							{:else}
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-									âš½ FÃºtbol
+									⚽ Fútbol
 								</span>
 							{/if}
 							{#if team.city}
-								<span class="text-xs text-slate-500 truncate">ðŸ“ {team.city}</span>
+								<span class="text-xs text-slate-500 truncate">📍 {team.city}</span>
 							{/if}
 						</div>
 					</div>
@@ -278,7 +273,7 @@
 					{/if}
 				</div>
 
-				<!-- BotÃ³n ver plantilla -->
+				<!-- Botón ver plantilla -->
 				<button
 					onclick={() => viewTeamRoster(team)}
 					class="mt-auto mx-4 mb-4 py-2.5 px-4 rounded-xl text-xs font-bold border border-slate-700/60 bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white transition-colors flex items-center justify-center gap-2"
@@ -293,7 +288,7 @@
 	</div>
 {/if}
 
-<!-- â”€â”€ MODAL: PLANTILLA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── MODAL: PLANTILLA ─────────────────────────────────────────────────────── -->
 {#if selectedTeam}
 	{@const pal = teamPalette(selectedTeam.id)}
 	<div
@@ -318,14 +313,14 @@
 						onclick={() => (rosterViewMode = 'list')}
 						class="px-2.5 py-1 rounded text-xs font-bold transition {rosterViewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}"
 					>
-						ðŸ“‹ Lista
+						📋 Lista
 					</button>
 					<button
 						type="button"
 						onclick={() => (rosterViewMode = 'pitch')}
 						class="px-2.5 py-1 rounded text-xs font-bold transition {rosterViewMode === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 					>
-						ðŸŸï¸ Cancha
+						🏟️ Cancha
 					</button>
 				</div>
 				<div class="flex-1 min-w-0">
@@ -369,8 +364,8 @@
 					</div>
 				{:else if !selectedTeam.players || selectedTeam.players.length === 0}
 					<div class="py-12 text-center text-slate-600">
-						<div class="text-3xl mb-3 opacity-40">ðŸ‘¥</div>
-						<p class="text-sm">Sin jugadores registrados aÃºn.</p>
+						<div class="text-3xl mb-3 opacity-40">👥</div>
+						<p class="text-sm">Sin jugadores registrados aún.</p>
 					</div>
 				{:else if rosterViewMode === 'pitch'}
 					<div class="py-2">
@@ -398,7 +393,7 @@
 									</p>
 									<p class="text-xs text-slate-500 font-mono">DNI {p.dni}</p>
 								</div>
-								<!-- PosiciÃ³n -->
+								<!-- Posición -->
 								{#if pos}
 									<span class="text-xs px-2.5 py-1 rounded-lg font-semibold shrink-0"
 										style="background: {pos.color}18; color: {pos.color}; border: 1px solid {pos.color}25;">
@@ -418,6 +413,3 @@
 		</div>
 	</div>
 {/if}
-
-
-

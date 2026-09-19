@@ -1,4 +1,4 @@
-﻿<script>
+<script>
 	/**
 	 * VolleyballCourt.svelte — Cancha táctica de Vóley (6 zonas reglamentarias)
 	 *
