@@ -6,6 +6,7 @@
 	import { onMount } from 'svelte';
 	import { teamsApi, tournamentsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
+	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	let teams = $state([]);
@@ -18,11 +19,25 @@
 	const TOURNAMENT_ID = 1;
 
 	const positionLabels = {
+		// Fútbol
 		goalkeeper: { label: 'Arquero',       icon: '🧤', color: '#f59e0b' },
 		defender:   { label: 'Defensa',       icon: '🛡️',  color: '#3b82f6' },
-		midfielder: { label: 'Mediocampista', icon: '⚙️', color: '#10b981' },
-		forward:    { label: 'Delantero',     icon: '⚽', color: '#ef4444' }
+		midfielder: { label: 'Mediocampista', icon: '⚡', color: '#10b981' },
+		forward:    { label: 'Delantero',     icon: '⚽', color: '#ef4444' },
+		// Básquetbol
+		point_guard:    { label: 'Base (PG)',      icon: '🏀', color: '#f59e0b' },
+		shooting_guard: { label: 'Escolta (SG)',   icon: '🎯', color: '#ec4899' },
+		small_forward:  { label: 'Alero (SF)',     icon: '⚡', color: '#8b5cf6' },
+		power_forward:  { label: 'Ala-Pívot (PF)', icon: '🛡️', color: '#3b82f6' },
+		center:         { label: 'Pívot (C)',      icon: '👑', color: '#10b981' }
 	};
+
+	let selectedSportFilter = $state('all'); // 'all' | 'football' | 'basketball'
+	let filteredTeams = $derived(
+		selectedSportFilter === 'all'
+			? teams
+			: teams.filter((t) => (t.sport || 'football') === selectedSportFilter)
+	);
 
 	// Color único por equipo basado en su ID
 	const palette = [
@@ -111,6 +126,37 @@
 	</a>
 </div>
 
+<!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
+<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'all')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🌐</span>
+		<span>Todos</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'football')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'football' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>⚽</span>
+		<span>Fútbol</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => (t.sport || 'football') === 'football').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'basketball')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'basketball' ? 'bg-amber-600 text-white shadow-md shadow-amber-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🏀</span>
+		<span>Básquetbol</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'basketball').length}</span>
+	</button>
+</div>
+
 <!-- ── Loading ──────────────────────────────────────────────────────────────── -->
 {#if loading}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -163,7 +209,14 @@
 <!-- ── Lista de equipos ─────────────────────────────────────────────────────── -->
 {:else}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-		{#each teams as team, i}
+		{#if filteredTeams.length === 0}
+		<div class="col-span-full glass-card p-12 text-center">
+			<div class="text-4xl mb-3">{selectedSportFilter === 'basketball' ? '🏀' : '⚽'}</div>
+			<p class="text-white font-bold">No hay equipos de {selectedSportFilter === 'basketball' ? 'básquetbol' : 'fútbol'} registrados</p>
+			<p class="text-slate-400 text-sm mt-1">Registra nuevos clubes para este deporte.</p>
+		</div>
+	{/if}
+	{#each filteredTeams as team, i}
 			{@const pal = teamPalette(team.id)}
 			<div
 				class="glass-card glass-card-green flex flex-col gap-0 animate-fade-in-up overflow-hidden group"
@@ -185,6 +238,15 @@
 								style="background: {pal.text}18; color: {pal.text};">
 								{team.short_name}
 							</span>
+							{#if team.sport === 'basketball'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+									🏀 Básquet
+								</span>
+							{:else}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+									⚽ Fútbol
+								</span>
+							{/if}
 							{#if team.city}
 								<span class="text-xs text-slate-500 truncate">📍 {team.city}</span>
 							{/if}

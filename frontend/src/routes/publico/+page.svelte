@@ -6,6 +6,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { fixtureApi, standingsApi, teamsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
+	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 
 	const TOURNAMENT_ID = 1;
 	const REFRESH_INTERVAL_MS = 30_000;
@@ -18,6 +19,21 @@
 	let selectedRound = $state(1);
 	let loading = $state(true);
 	let pitchModalTeam = $state(null);
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	function getMatchSport(match) {
+		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
+	}
+	let filteredMatches = $derived(
+		selectedSport === 'all'
+			? sortedMatches
+			: sortedMatches.filter((m) => getMatchSport(m) === selectedSport)
+	);
+	let footballStandings = $derived(
+		standings.filter((s) => (teamsMap[s.team_id]?.sport || 'football') === 'football')
+	);
+	let basketballStandings = $derived(
+		standings.filter((s) => teamsMap[s.team_id]?.sport === 'basketball')
+	);
 
 	async function showTeamPitch(teamId) {
 		let t = teamsMap[teamId];
@@ -177,26 +193,54 @@
 	</div>
 </div>
 
-<!-- ── PESTAÑAS ───────────────────────────────────────────────────────────── -->
-<div class="flex gap-0 p-1 bg-slate-900 rounded-xl border border-slate-800/80 mb-7 w-fit">
-	<button
-		onclick={() => (activeTab = 'fixture')}
-		class="tab-pill {activeTab === 'fixture' ? 'tab-pill-active' : 'tab-pill-inactive'}"
-	>
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
-			<path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Z" clip-rule="evenodd"/>
-		</svg>
-		Fixture
-	</button>
-	<button
-		onclick={() => (activeTab = 'posiciones')}
-		class="tab-pill {activeTab === 'posiciones' ? 'tab-pill-active' : 'tab-pill-inactive'}"
-	>
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
-			<path d="M15.5 2A1.5 1.5 0 0 0 14 3.5v13a1.5 1.5 0 0 0 3 0v-13A1.5 1.5 0 0 0 15.5 2ZM9.5 6A1.5 1.5 0 0 0 8 7.5v9a1.5 1.5 0 0 0 3 0v-9A1.5 1.5 0 0 0 9.5 6ZM3.5 10A1.5 1.5 0 0 0 2 11.5v5a1.5 1.5 0 0 0 3 0v-5A1.5 1.5 0 0 0 3.5 10Z"/>
-		</svg>
-		Posiciones
-	</button>
+<!-- ── PESTAÑAS Y SELECTOR DE DEPORTE ── -->
+<div class="flex flex-wrap items-center justify-between gap-3 mb-7">
+	<!-- Pestañas Fixture / Posiciones -->
+	<div class="flex gap-0 p-1 bg-slate-900 rounded-xl border border-slate-800/80 w-fit">
+		<button
+			onclick={() => (activeTab = 'fixture')}
+			class="tab-pill {activeTab === 'fixture' ? 'tab-pill-active' : 'tab-pill-inactive'}"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
+				<path fill-rule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Z" clip-rule="evenodd"/>
+			</svg>
+			Fixture
+		</button>
+		<button
+			onclick={() => (activeTab = 'posiciones')}
+			class="tab-pill {activeTab === 'posiciones' ? 'tab-pill-active' : 'tab-pill-inactive'}"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 shrink-0">
+				<path d="M15.5 2A1.5 1.5 0 0 0 14 3.5v13a1.5 1.5 0 0 0 3 0v-13A1.5 1.5 0 0 0 15.5 2ZM9.5 6A1.5 1.5 0 0 0 8 7.5v9a1.5 1.5 0 0 0 3 0v-9A1.5 1.5 0 0 0 9.5 6ZM3.5 10A1.5 1.5 0 0 0 2 11.5v5a1.5 1.5 0 0 0 3 0v-5A1.5 1.5 0 0 0 3.5 10Z"/>
+			</svg>
+			Posiciones
+		</button>
+	</div>
+
+	<!-- Selector de Deporte -->
+	<div class="flex items-center gap-1.5 p-1 bg-slate-900 rounded-xl border border-slate-800/80 w-fit">
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'all')}
+			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'all' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}"
+		>
+			🌐 Todos
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'football')}
+			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'football' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+		>
+			⚽ Fútbol
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'basketball')}
+			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'basketball' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+		>
+			🏀 Básquetbol
+		</button>
+	</div>
 </div>
 
 <!-- ── CARGANDO ────────────────────────────────────────────────────────────── -->
@@ -240,7 +284,13 @@
 
 		<!-- Tarjetas de partidos -->
 		<div class="flex flex-col gap-3">
-			{#each sortedMatches as match, i}
+			{#if filteredMatches.length === 0}
+			<div class="glass-card p-10 text-center">
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en esta jornada.</p>
+			</div>
+		{/if}
+		{#each filteredMatches as match, i}
+			{@const mSport = getMatchSport(match)}
 				{@const status = getStatus(match.status)}
 				{@const isLive = (match.status ?? '').toLowerCase() === 'live'}
 				{@const isFinished = (match.status ?? '').toLowerCase() === 'finished'}
@@ -257,10 +307,21 @@
 					<div class="match-inner">
 						<!-- Badge de estado + fecha -->
 						<div class="flex items-center justify-between mb-3">
-							<span class="status-pill {status.cls}">
+							<div class="flex items-center gap-2">
+								{#if mSport === 'basketball'}
+									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+										🏀 Básquet
+									</span>
+								{:else}
+									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+										⚽ Fútbol
+									</span>
+								{/if}
+								<span class="status-pill {status.cls}">
 								{#if isLive}<span class="live-dot"></span>{/if}
 								{status.label}
 							</span>
+							</div>
 							{#if match.scheduled_at}
 								<span class="text-xs text-slate-600">{formatDate(match.scheduled_at)}</span>
 							{/if}
@@ -335,110 +396,179 @@
 			<p class="text-slate-500 text-sm">La tabla se completa automáticamente al finalizar partidos.</p>
 		</div>
 	{:else}
-		<!-- Leyenda de posiciones -->
-		<div class="flex flex-wrap items-center gap-4 mb-4 text-xs text-slate-500">
-			<div class="flex items-center gap-1.5">
-				<span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
-				<span>Líder</span>
-			</div>
-			<div class="flex items-center gap-1.5">
-				<span class="w-2.5 h-2.5 rounded-sm bg-sky-500"></span>
-				<span>2.º</span>
-			</div>
-			<div class="flex items-center gap-1.5">
-				<span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
-				<span>3.º</span>
-			</div>
-		</div>
+		<div class="space-y-10">
+			<!-- TABLA DE FÚTBOL -->
+			{#if selectedSport === 'all' || selectedSport === 'football'}
+				<div class="space-y-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<span class="text-2xl">⚽</span>
+							<div>
+								<h3 class="text-lg font-black text-white">Tabla de Posiciones — Fútbol</h3>
+								<p class="text-xs text-slate-400">Torneo oficial de fútbol 11</p>
+							</div>
+						</div>
+						<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+							{footballStandings.length} clubes
+						</span>
+					</div>
 
-		<div class="rounded-2xl overflow-hidden border border-slate-800">
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
-					<thead>
-						<tr style="background: #0b1120; border-bottom: 1px solid #1e293b;">
-							<th class="px-4 py-3 text-left text-xs section-label w-10">#</th>
-							<th class="px-4 py-3 text-left text-xs section-label">Club</th>
-							<th class="px-3 py-3 text-center text-xs section-label" title="Partidos Jugados">PJ</th>
-							<th class="px-3 py-3 text-center text-xs section-label" title="Ganados">PG</th>
-							<th class="px-3 py-3 text-center text-xs section-label" title="Empates">PE</th>
-							<th class="px-3 py-3 text-center text-xs section-label" title="Perdidos">PP</th>
-							<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Goles Favor">GF</th>
-							<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Goles Contra">GC</th>
-							<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Diferencia">DG</th>
-							<th class="px-4 py-3 text-center text-xs section-label">PTS</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each standings as s, i}
-							{@const accentLeft = i === 0 ? '#10b981' : i === 1 ? '#38bdf8' : i === 2 ? '#f59e0b' : 'transparent'}
-							{@const tColor = teamColor(s.team_id)}
-							<tr class="standings-row border-b border-slate-800/50 transition-colors"
-								style="border-left: 3px solid {accentLeft};">
-								<!-- Posición -->
-								<td class="px-4 py-3 text-center">
-									{#if i === 0}
-										<span class="text-base">🥇</span>
-									{:else if i === 1}
-										<span class="text-base">🥈</span>
-									{:else if i === 2}
-										<span class="text-base">🥉</span>
-									{:else}
-										<span class="text-xs text-slate-500 font-mono">{i + 1}</span>
+					<div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/40 shadow-xl">
+						<div class="overflow-x-auto">
+							<table class="w-full text-sm">
+								<thead>
+									<tr style="background: #0b1120; border-bottom: 1px solid #1e293b;">
+										<th class="px-4 py-3 text-left text-xs section-label w-10">#</th>
+										<th class="px-4 py-3 text-left text-xs section-label">Club</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Partidos Jugados">PJ</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Ganados">PG</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Empates">PE</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Perdidos">PP</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Goles Favor">GF</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Goles Contra">GC</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Diferencia">DG</th>
+										<th class="px-4 py-3 text-center text-xs section-label text-emerald-400">PTS</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#if footballStandings.length === 0}
+										<tr><td colspan="10" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en fútbol</td></tr>
 									{/if}
-								</td>
+									{#each footballStandings as s, i}
+										{@const accentLeft = i === 0 ? '#10b981' : i === 1 ? '#38bdf8' : i === 2 ? '#f59e0b' : 'transparent'}
+										{@const tColor = teamColor(s.team_id)}
+										<tr class="standings-row border-b border-slate-800/50 transition-colors"
+											style="border-left: 3px solid {accentLeft};">
+											<td class="px-4 py-3 text-center">
+												{#if i === 0}<span class="text-base">🥇</span>
+												{:else if i === 1}<span class="text-base">🥈</span>
+												{:else if i === 2}<span class="text-base">🥉</span>
+												{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
+											</td>
+											<td class="px-4 py-3">
+												<div class="flex items-center gap-3">
+													<div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0"
+														style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
+														{teamInitial(s.team_id)}
+													</div>
+													<div class="flex-1 min-w-0">
+														<p class="font-bold text-white text-sm leading-tight truncate">{teamName(s.team_id)}</p>
+														<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
+													</div>
+													<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-emerald-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
+														<span>🏟️</span> Cancha
+													</button>
+												</div>
+											</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-300">{s.played ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-emerald-400 font-semibold">{s.won ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-400">{s.drawn ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-red-400/80">{s.lost ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_for ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_against ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono font-bold hidden sm:table-cell {(s.goals_for - s.goals_against) > 0 ? 'text-emerald-400' : (s.goals_for - s.goals_against) < 0 ? 'text-red-400' : 'text-slate-400'}">
+												{(s.goals_for ?? 0) - (s.goals_against ?? 0) > 0 ? '+' : ''}{(s.goals_for ?? 0) - (s.goals_against ?? 0)}
+											</td>
+											<td class="px-4 py-3 text-center font-score font-bold text-emerald-400 text-base">{s.points ?? 0}</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+						<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
+							PJ = Jugados · PG = Ganados · PE = Empates · PP = Perdidos · GF = Goles Favor · GC = Goles Contra · DG = Dif. Goles · PTS = Puntos
+						</div>
+					</div>
+				</div>
+			{/if}
 
-								<!-- Equipo -->
-								<td class="px-4 py-3">
-									<div class="flex items-center gap-3">
-										<div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0"
-											style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
-											{teamInitial(s.team_id)}
-										</div>
-										<div class="flex-1 min-w-0">
-											<p class="font-semibold text-white text-sm leading-tight truncate">
-												{teamName(s.team_id)}
-											</p>
-											<p class="text-xs text-slate-500 font-mono">{teamShort(s.team_id)}</p>
-										</div>
-										<button type="button" onclick={() => showTeamPitch(s.team_id)} class="px-2 py-1 rounded-md text-[11px] font-semibold bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 text-slate-400 border border-slate-700/60 transition flex items-center gap-1 shrink-0" title="Ver alineación en la cancha">
-											<span>🏟️</span> Cancha
-										</button>
-									</div>
-								</td>
+			<!-- TABLA DE BÁSQUETBOL -->
+			{#if selectedSport === 'all' || selectedSport === 'basketball'}
+				<div class="space-y-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<span class="text-2xl">🏀</span>
+							<div>
+								<h3 class="text-lg font-black text-white">Tabla de Posiciones — Básquetbol</h3>
+								<p class="text-xs text-slate-400">Torneo oficial de básquetbol 5x5</p>
+							</div>
+						</div>
+						<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+							{basketballStandings.length} clubes
+						</span>
+					</div>
 
-								<td class="px-3 py-3 text-center text-slate-400 font-mono text-xs">{s.played ?? 0}</td>
-								<td class="px-3 py-3 text-center font-semibold text-emerald-400 text-xs">{s.won ?? 0}</td>
-								<td class="px-3 py-3 text-center text-slate-400 text-xs">{s.drawn ?? 0}</td>
-								<td class="px-3 py-3 text-center text-rose-400 text-xs">{s.lost ?? 0}</td>
-								<td class="px-3 py-3 text-center text-slate-400 text-xs hidden sm:table-cell">{s.goals_for ?? 0}</td>
-								<td class="px-3 py-3 text-center text-slate-400 text-xs hidden sm:table-cell">{s.goals_against ?? 0}</td>
-								<td class="px-3 py-3 text-center text-xs hidden sm:table-cell">
-									<span class="font-mono font-semibold"
-										style="color: {(s.goals_for??0)-(s.goals_against??0) >= 0 ? '#34d399' : '#f87171'}">
-										{goalDiff(s)}
-									</span>
-								</td>
-								<td class="px-4 py-3 text-center">
-									<span class="font-score text-lg font-bold"
-										style="color: {i === 0 ? '#10b981' : '#f1f5f9'}">
-										{s.points ?? 0}
-									</span>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-			<!-- Pie de tabla -->
-			<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-600">
-				PJ = Jugados · PG = Ganados · PE = Empates · PP = Perdidos · GF = Goles Favor · GC = Goles Contra · DG = Diferencia · PTS = Puntos
-			</div>
+					<div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/40 shadow-xl">
+						<div class="overflow-x-auto">
+							<table class="w-full text-sm">
+								<thead>
+									<tr style="background: #0b1120; border-bottom: 1px solid #1e293b;">
+										<th class="px-4 py-3 text-left text-xs section-label w-10">#</th>
+										<th class="px-4 py-3 text-left text-xs section-label">Club</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Partidos Jugados">PJ</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Ganados">PG</th>
+										<th class="px-3 py-3 text-center text-xs section-label" title="Perdidos">PP</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Puntos a Favor">PF</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Puntos en Contra">PC</th>
+										<th class="px-3 py-3 text-center text-xs section-label hidden sm:table-cell" title="Diferencia de Puntos">DP</th>
+										<th class="px-4 py-3 text-center text-xs section-label text-amber-400">PTS</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#if basketballStandings.length === 0}
+										<tr><td colspan="9" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en básquetbol</td></tr>
+									{/if}
+									{#each basketballStandings as s, i}
+										{@const accentLeft = i === 0 ? '#f59e0b' : i === 1 ? '#38bdf8' : '#64748b'}
+										{@const tColor = teamColor(s.team_id)}
+										<tr class="standings-row border-b border-slate-800/50 transition-colors"
+											style="border-left: 3px solid {accentLeft};">
+											<td class="px-4 py-3 text-center">
+												{#if i === 0}<span class="text-base">🥇</span>
+												{:else if i === 1}<span class="text-base">🥈</span>
+												{:else if i === 2}<span class="text-base">🥉</span>
+												{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
+											</td>
+											<td class="px-4 py-3">
+												<div class="flex items-center gap-3">
+													<div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0"
+														style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
+														{teamInitial(s.team_id)}
+													</div>
+													<div class="flex-1 min-w-0">
+														<p class="font-bold text-white text-sm leading-tight truncate">{teamName(s.team_id)}</p>
+														<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
+													</div>
+													<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-amber-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
+														<span>🏀</span> Cancha
+													</button>
+												</div>
+											</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-300">{s.played ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-emerald-400 font-semibold">{s.won ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-red-400/80">{s.lost ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_for ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono text-slate-400 hidden sm:table-cell">{s.goals_against ?? 0}</td>
+											<td class="px-3 py-3 text-center font-mono font-bold hidden sm:table-cell {(s.goals_for - s.goals_against) > 0 ? 'text-amber-400' : (s.goals_for - s.goals_against) < 0 ? 'text-red-400' : 'text-slate-400'}">
+												{(s.goals_for ?? 0) - (s.goals_against ?? 0) > 0 ? '+' : ''}{(s.goals_for ?? 0) - (s.goals_against ?? 0)}
+											</td>
+											<td class="px-4 py-3 text-center font-score font-bold text-amber-400 text-base">{s.points ?? 0}</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+						<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
+							PJ = Jugados · PG = Ganados · PP = Perdidos · PF = Puntos Favor · PC = Puntos Contra · DP = Dif. Puntos · PTS = Puntos
+						</div>
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 {/if}
 
 {/if}
-
 
 <!-- MODAL DE CANCHA TÁCTICA PARA PÚBLICO -->
 {#if pitchModalTeam}

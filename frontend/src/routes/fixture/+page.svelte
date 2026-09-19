@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import { fixtureApi, teamsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
+	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
@@ -20,6 +21,15 @@
 	let loading = $state(true);
 	let error = $state(null);
 	let pitchModalTeam = $state(null);
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	function getMatchSport(match) {
+		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
+	}
+	let filteredMatches = $derived(
+		selectedSport === 'all'
+			? currentMatches
+			: currentMatches.filter((m) => getMatchSport(m) === selectedSport)
+	);
 
 	async function showTeamPitch(teamId) {
 		let t = teamsMap[teamId];
@@ -141,6 +151,34 @@
 
 <!-- ── Fixture con jornadas ───────────────────────────────────────────────── -->
 {:else}
+	<!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
+	<div class="flex items-center gap-2 mb-6 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'all')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🌐</span>
+			<span>Todos</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'football')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'football' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>⚽</span>
+			<span>Fútbol</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'basketball')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'basketball' ? 'bg-amber-600 text-white shadow-md shadow-amber-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🏀</span>
+			<span>Básquetbol</span>
+		</button>
+	</div>
+
 	<!-- Selector de jornadas -->
 	<div class="flex flex-wrap gap-2 mb-6">
 		{#each rounds as r}
@@ -158,7 +196,12 @@
 
 	<!-- Partidos de la jornada seleccionada -->
 	<div class="flex flex-col gap-3">
-		{#each currentMatches as match}
+		{#if filteredMatches.length === 0}
+			<div class="col-span-full glass-card p-10 text-center">
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en la jornada {selectedRound}.</p>
+			</div>
+		{/if}
+		{#each filteredMatches as match}
 			{@const status = getStatus(match.status)}
 			<div class="glass-card p-5 flex flex-col sm:flex-row items-center gap-4">
 				<!-- Equipo local -->
