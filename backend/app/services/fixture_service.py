@@ -105,6 +105,7 @@ async def delete_fixture(
     tournament_id: int,
     session: AsyncSession,
     force: bool = False,
+    delete_teams: bool = False,
 ) -> FixtureDeleteInfo:
     """
     Elimina todos los partidos (y standings asociados) del torneo indicado.
@@ -115,6 +116,7 @@ async def delete_fixture(
         force:         Si False (default), lanza HTTP 409 cuando existen partidos
                        FINISHED o LIVE (datos ya jugados).
                        Si True, elimina todo sin importar el estado.
+        delete_teams:  Si True, también elimina todos los equipos y jugadores.
 
     Returns:
         FixtureDeleteInfo con información sobre los partidos eliminados.
@@ -156,7 +158,7 @@ async def delete_fixture(
     team_ids = [t for t in team_ids_res.scalars().all() if t is not None]
 
     deleted_players = 0
-    if team_ids:
+    if delete_teams and team_ids:
         # Eliminar jugadores asociados a estos equipos
         players_count_res = await session.execute(
             select(Player.id).where(Player.team_id.in_(team_ids))
@@ -177,7 +179,7 @@ async def delete_fixture(
         tournament_id=tournament_id,
         deleted_matches=total_matches,
         had_played_matches=had_played,
-        deleted_teams=len(team_ids),
+        deleted_teams=len(team_ids) if delete_teams else 0,
         deleted_players=deleted_players,
     )
 
@@ -219,8 +221,8 @@ async def generate_fixture(
                     "Delete it first, or use force=true to reset and regenerate."
                 ),
             )
-        # force=True → eliminar fixture existente y todos los equipos atómicamente
-        await delete_fixture(tournament_id, session, force=True)
+        # force=True → eliminar fixture existente (NO equipos) atómicamente
+        await delete_fixture(tournament_id, session, force=True, delete_teams=False)
 
     # Fetch all teams
     result = await session.execute(

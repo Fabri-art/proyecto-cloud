@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.models.tournament import TournamentFormat, TournamentStatus
+from app.models.tournament import SportType, TournamentFormat, TournamentStatus
 
 
 # ── Create ─────────────────────────────────────────────────────────────────────
@@ -13,6 +13,7 @@ class TournamentCreate(BaseModel):
     name: str
     slug: str
     season: str
+    sport: SportType = SportType.FOOTBALL
     format: TournamentFormat = TournamentFormat.LEAGUE
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
@@ -24,6 +25,7 @@ class TournamentRead(BaseModel):
     name: str
     slug: str
     season: str
+    sport: SportType
     format: TournamentFormat
     status: TournamentStatus
     start_date: Optional[datetime]
@@ -36,6 +38,7 @@ class TournamentRead(BaseModel):
 # ── Update ─────────────────────────────────────────────────────────────────────
 class TournamentUpdate(BaseModel):
     name: Optional[str] = None
+    sport: Optional[SportType] = None
     status: Optional[TournamentStatus] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None

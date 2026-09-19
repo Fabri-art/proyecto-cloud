@@ -11,7 +11,7 @@
 	 * 6. Envío secuencial: POST /api/v1/teams y luego POST /api/v1/teams/{id}/players.
 	 */
 	import { goto } from '$app/navigation';
-	import { teamsApi } from '$lib/api/client';
+	import { teamsApi, tournamentsApi } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 	import { auth } from '$lib/stores/auth';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
@@ -31,10 +31,12 @@
 
 	/** Lista de equipos ya registrados en el torneo para validar duplicados en vivo */
 	let existingTeams = $state([]);
+	let tournament = $state(null);
 
 	onMount(async () => {
 		try {
-			existingTeams = await teamsApi.list(TOURNAMENT_ID);
+			tournament = await tournamentsApi.get(TOURNAMENT_ID).catch(() => null);
+			existingTeams = await teamsApi.list(TOURNAMENT_ID, true);
 		} catch {
 			// Si falla la consulta previa, el backend validará en el submit
 		}
@@ -81,12 +83,21 @@
 	let isSubmitting = $state(false);
 
 	// Posiciones disponibles con etiquetas amigables
-	const positions = [
+	const footballPositions = [
 		{ value: 'goalkeeper', label: 'Arquero / Portero', icon: '🧤' },
 		{ value: 'defender',   label: 'Defensa',           icon: '🛡️' },
 		{ value: 'midfielder', label: 'Mediocampista',     icon: '⚙️' },
 		{ value: 'forward',    label: 'Delantero',         icon: '⚽' }
 	];
+	const basketballPositions = [
+		{ value: 'point_guard',    label: 'Base',          icon: '🏀' },
+		{ value: 'shooting_guard', label: 'Escolta',       icon: '🎯' },
+		{ value: 'small_forward',  label: 'Alero',         icon: '🏃' },
+		{ value: 'power_forward',  label: 'Ala-Pívot',     icon: '💪' },
+		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
+	];
+	
+	let positions = $derived(tournament?.sport === 'basketball' ? basketballPositions : footballPositions);
 
 	// ── Helpers de validación ─────────────────────────────────────────────────
 
@@ -126,6 +137,15 @@
 		const d = v.trim();
 		if (!d) return 'El DNI es obligatorio.';
 		if (!/^\d{8}$/.test(d)) return 'El DNI debe tener obligatoriamente 8 dígitos numéricos.';
+		
+		// Validar contra jugadores ya registrados en el backend
+		const dniExistsInBackend = existingTeams.some(
+			(team) => team.players && team.players.some((p) => p.dni === d)
+		);
+		if (dniExistsInBackend) {
+			return `El DNI '${d}' ya se encuentra registrado en otro equipo del torneo.`;
+		}
+		
 		return '';
 	}
 
@@ -205,7 +225,7 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = 'midfielder';
+		newPlayer.position = tournament?.sport === 'basketball' ? 'point_guard' : 'midfielder';
 
 		// Limpiar error de mínimo si ya se alcanzó
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';

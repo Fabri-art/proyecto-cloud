@@ -10,7 +10,7 @@
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { fixtureApi, matchesApi, teamsApi } from '$lib/api/client';
+	import { fixtureApi, matchesApi, teamsApi, tournamentsApi } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth';
 	import { toast } from '$lib/stores/toast';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
@@ -40,6 +40,8 @@
 	let playedMatchesCount = $state(0);
 	/** Número total de equipos activos en el torneo */
 	let totalTeamsCount = $state(0);
+	
+	let tournament = $state(null);
 
 	// Partido actualmente seleccionado para arbitrar
 	let activeMatch = $state(null);
@@ -80,6 +82,7 @@
 			for (const t of teamsList) map[t.id] = t;
 			teamsMap = map;
 			totalTeamsCount = teamsList.length;
+			tournament = await tournamentsApi.get(TOURNAMENT_ID).catch(() => null);
 			await loadFixture();
 		} catch (err) {
 			toast.error('Error al cargar datos del torneo.');
@@ -152,7 +155,7 @@
 			playedMatchesCount = 0;
 			activeMatch = null;
 			showResetFixtureModal = false;
-			await loadTournamentInfo();
+			await loadData();
 			toast.success('Torneo reiniciado: fixture y equipos eliminados. Listo para registrar nuevos equipos.');
 		} catch (err) {
 			toast.error(err.message || 'No se pudo eliminar el fixture.');
@@ -172,8 +175,8 @@
 			playedMatchesCount = 0;
 			activeMatch = null;
 			showResetFixtureModal = false;
-			await loadTournamentInfo();
-			toast.success('Torneo reseteado: fixture y equipos eliminados. Listo para registrar nuevos equipos.');
+			await loadFixture();
+			toast.success('Fixture regenerado exitosamente. Los equipos se han mantenido intactos.');
 		} catch (err) {
 			toast.error(err.message || 'No se pudo reiniciar el torneo.');
 		} finally {
@@ -436,7 +439,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							⚽ +1 GOL
+							{tournament?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -458,7 +461,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							⚽ +1 GOL
+							{tournament?.sport === 'basketball' ? '🏀 +1 PUNTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -494,6 +497,32 @@
 					<a href="/equipos/nuevo" class="px-5 py-3 rounded-xl font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center justify-center gap-2 text-sm">
 						➕ Inscribir Nuevos Equipos
 					</a>
+				</div>
+				
+				<div class="mt-8 p-4 border border-slate-800 rounded-xl bg-slate-900/50 flex flex-col items-center gap-3">
+					<p class="text-sm font-semibold text-slate-300">Configuración del Torneo</p>
+					<div class="flex items-center gap-3">
+						<label class="text-xs font-bold text-slate-400">Deporte:</label>
+						<select class="bg-slate-800 text-white rounded-lg px-3 py-1.5 text-sm outline-none border border-slate-700"
+							value={tournament?.sport ?? 'football'}
+							onchange={async (e) => {
+								if(tournament) {
+									const newSport = e.target.value;
+									try {
+										await tournamentsApi.update(TOURNAMENT_ID, { sport: newSport });
+										tournament.sport = newSport;
+										toast.success('Deporte actualizado a ' + newSport);
+									} catch(err) {
+										toast.error('Error al actualizar deporte');
+										e.target.value = tournament.sport;
+									}
+								}
+							}}
+						>
+							<option value="football">⚽ Fútbol</option>
+							<option value="basketball">🏀 Básquetbol</option>
+						</select>
+					</div>
 				</div>
 			</div>
 		{:else}
@@ -634,23 +663,37 @@
 			<div class="text-center">
 				<div class="text-5xl mb-3">⚠️</div>
 				<h3 id="reset-fixture-title" class="text-xl font-black text-white">
-					¿Eliminar Fixture y Equipos?
+					¿Qué deseas hacer con el torneo?
 				</h3>
 				<p class="text-sm text-slate-400 mt-1">
-					Esta acción reiniciará el torneo por completo desde cero.
+					Elige si quieres conservar los equipos o eliminar absolutamente todo.
 				</p>
 			</div>
 
 			<!-- Información del estado actual -->
 			<div class="flex flex-col gap-2.5 p-4 rounded-xl bg-slate-900/70 border border-slate-800">
+				<!-- Opción 1: Regenerar (conservando equipos) -->
+				<div class="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+					<span class="text-xl flex-shrink-0">🔄</span>
+					<div>
+						<p class="text-sm font-bold text-amber-300">
+							Regenerar Fixture (Conservar Equipos)
+						</p>
+						<p class="text-xs text-amber-400/80 mt-0.5">
+							Se borrarán todos los partidos actuales ({playedMatchesCount} jugados) y la tabla de posiciones, pero los <strong class="text-white">{totalTeamsCount} equipos</strong> seguirán inscritos y se generarán nuevos cruces entre ellos.
+						</p>
+					</div>
+				</div>
+
+				<!-- Opción 2: Eliminar Todo -->
 				<div class="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
 					<span class="text-xl flex-shrink-0">🗑️</span>
 					<div>
 						<p class="text-sm font-bold text-red-300">
-							Se eliminarán todos los equipos, jugadores y partidos
+							Eliminar Todo (Fixture y Equipos)
 						</p>
-						<p class="text-xs text-red-400/90 mt-0.5">
-							Se borrarán los <strong class="text-white">{totalTeamsCount} equipos</strong> registrados con sus plantillas, todos los partidos ({playedMatchesCount} jugados) y la tabla de posiciones. El fixture quedará vacío y listo para inscribir nuevos equipos.
+						<p class="text-xs text-red-400/80 mt-0.5">
+							Se borrará absolutamente todo. El fixture quedará vacío y tendrás que volver a inscribir equipos desde cero.
 						</p>
 					</div>
 				</div>
@@ -673,13 +716,26 @@
 					type="button"
 					onclick={handleDeleteOnlyFixture}
 					disabled={deletingFixture || regeneratingFixture}
-					class="flex-1 sm:flex-none px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-500 border border-red-500/40 transition flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-red-950/50"
+					class="flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-500 border border-red-500/40 transition flex items-center justify-center gap-2 disabled:opacity-40"
 				>
 					{#if deletingFixture}
 						<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-						Eliminando torneo...
 					{:else}
-						🗑️ Eliminar Fixture y Equipos
+						🗑️ Eliminar Todo
+					{/if}
+				</button>
+				
+				<!-- Regenerar -->
+				<button
+					type="button"
+					onclick={handleResetAndRegenerate}
+					disabled={deletingFixture || regeneratingFixture}
+					class="flex-1 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 border border-amber-400/50 transition flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-amber-900/20"
+				>
+					{#if regeneratingFixture}
+						<span class="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
+					{:else}
+						🔄 Regenerar Fixture
 					{/if}
 				</button>
 			</div>

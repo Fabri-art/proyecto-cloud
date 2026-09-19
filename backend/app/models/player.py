@@ -9,10 +9,17 @@ from sqlmodel import Field, SQLModel
 
 
 class PlayerPosition(str, Enum):
+    # Football
     GOALKEEPER = "goalkeeper"
     DEFENDER = "defender"
     MIDFIELDER = "midfielder"
     FORWARD = "forward"
+    # Basketball
+    POINT_GUARD = "point_guard"
+    SHOOTING_GUARD = "shooting_guard"
+    SMALL_FORWARD = "small_forward"
+    POWER_FORWARD = "power_forward"
+    CENTER = "center"
 
 
 def _enum_values(enum_cls):
