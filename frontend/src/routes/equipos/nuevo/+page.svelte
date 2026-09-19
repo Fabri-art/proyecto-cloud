@@ -4,9 +4,9 @@
 	 * Incluye modo formulario clásico y modo Cancha Táctica Interactiva para ubicar jugadores.
 	 * Regla: Mínimo 5 jugadores, sin límite máximo de jugadores, pero MÁXIMO 1 ARQUERO por equipo.
 	 */
-	import { onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { teamsApi } from '$lib/api/client';
+	import { teamsApi, tournamentsApi } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 	import { auth } from '$lib/stores/auth';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
@@ -25,7 +25,20 @@
 	});
 	onDestroy(unsub);
 
-	// ── Datos del Club ────────────────────────────────────────────────────────
+	/** Lista de equipos ya registrados en el torneo para validar duplicados en vivo */
+	let existingTeams = $state([]);
+	let tournament = $state(null);
+
+	onMount(async () => {
+		try {
+			tournament = await tournamentsApi.get(TOURNAMENT_ID).catch(() => null);
+			existingTeams = await teamsApi.list(TOURNAMENT_ID, true);
+		} catch {
+			// Si falla la consulta previa, el backend validará en el submit
+		}
+	});
+
+	// ── Estado del Club ────────────────────────────────────────────────────────
 	let teamData = $state({
 		name: '',
 		short_name: '',
@@ -94,12 +107,21 @@
 	}
 
 	// Posiciones disponibles con etiquetas amigables
-	const positions = [
+	const footballPositions = [
 		{ value: 'goalkeeper', label: 'Arquero / Portero', icon: '🧤' },
 		{ value: 'defender',   label: 'Defensa',           icon: '🛡️' },
 		{ value: 'midfielder', label: 'Mediocampista',     icon: '⚙️' },
 		{ value: 'forward',    label: 'Delantero',         icon: '⚽' }
 	];
+	const basketballPositions = [
+		{ value: 'point_guard',    label: 'Base',          icon: '🏀' },
+		{ value: 'shooting_guard', label: 'Escolta',       icon: '🎯' },
+		{ value: 'small_forward',  label: 'Alero',         icon: '🏃' },
+		{ value: 'power_forward',  label: 'Ala-Pívot',     icon: '💪' },
+		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
+	];
+	
+	let positions = $derived(tournament?.sport === 'basketball' ? basketballPositions : footballPositions);
 
 	// ── Helpers de validación ─────────────────────────────────────────────────
 
@@ -119,22 +141,6 @@
 		return '';
 	}
 
-	function validateShortName(sn) {
-		if (!sn || !sn.trim()) return 'La sigla o abreviatura es obligatoria.';
-		const trimmed = sn.trim().toUpperCase();
-		if (trimmed.length < 2) return 'La sigla debe tener al menos 2 caracteres.';
-		if (trimmed.length > 5) return 'La sigla no puede superar los 5 caracteres.';
-		if (!/^[A-Z0-9]+$/i.test(trimmed)) return 'La sigla solo puede contener letras y números.';
-		return '';
-	}
-
-	function validateDni(dni) {
-		if (!dni || !dni.trim()) return 'El DNI es obligatorio.';
-		const cleaned = dni.trim().replace(/\s/g, '');
-		if (!/^\d{8}$/.test(cleaned)) return 'El DNI debe tener exactamente 8 dígitos numéricos.';
-		return '';
-	}
-
 	function validatePlayerName(name, fieldName) {
 		if (!name || !name.trim()) return `El ${fieldName} es obligatorio.`;
 		if (name.trim().length < 2) return `El ${fieldName} debe tener al menos 2 caracteres.`;
@@ -142,10 +148,38 @@
 		return '';
 	}
 
-	// ── Handlers de inputs con validación en tiempo real ───────────────────────
+	function validateShortName(v) {
+		const s = (v || '').trim().toUpperCase();
+		if (!s) return 'La sigla es obligatoria.';
+		if (s.length < 2) return 'La sigla debe tener al menos 2 caracteres.';
+		if (s.length > 5) return 'La sigla no puede superar 5 caracteres.';
+		if (!/^[A-Z0-9]+$/.test(s)) return 'Solo letras mayúsculas y números.';
+		if (existingTeams.some((t) => t.short_name?.trim().toUpperCase() === s)) {
+			return `La sigla "${s}" ya está asignada a otro equipo en este torneo.`;
+		}
+		return '';
+	}
 
-	function handleNameInput() {
-		if (errors.name) errors.name = validateTeamName(teamData.name);
+	function validateDni(v) {
+		const d = (v || '').trim();
+		if (!d) return 'El DNI es obligatorio.';
+		if (!/^\d{8}$/.test(d)) return 'El DNI debe tener obligatoriamente 8 dígitos numéricos.';
+		
+		// Validar contra jugadores ya registrados en el backend
+		const dniExistsInBackend = existingTeams.some(
+			(team) => team.players && team.players.some((p) => p.dni === d)
+		);
+		if (dniExistsInBackend) {
+			return `El DNI '${d}' ya se encuentra registrado en otro equipo del torneo.`;
+		}
+		
+		return '';
+	}
+
+	// ── Auto-uppercase y validaciones en tiempo real para club ───────────────
+	function handleNameInput(e) {
+		teamData.name = e ? e.target.value : teamData.name;
+		errors.name = validateTeamName(teamData.name);
 		if (!teamData.short_name || teamData.short_name.length <= 3) {
 			const words = teamData.name.trim().split(/\s+/).filter(Boolean);
 			if (words.length >= 3) {
@@ -229,7 +263,7 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = position === 'goalkeeper' ? 'forward' : position;
+		newPlayer.position = tournament?.sport === 'basketball' ? 'point_guard' : (position === 'goalkeeper' ? 'forward' : position);
 
 		// Limpiar error de mínimo si ya se alcanzó
 		if (players.length >= MIN_PLAYERS) errors.players_count = '';

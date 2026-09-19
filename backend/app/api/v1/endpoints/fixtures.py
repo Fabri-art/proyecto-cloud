@@ -69,9 +69,10 @@ async def generate_fixture(
 async def delete_fixture(
     tournament_id: int,
     force: bool = Query(default=False, description="Forzar eliminación aunque haya partidos jugados"),
+    delete_teams: bool = Query(default=True, description="Si es True, elimina también todos los equipos"),
     session: AsyncSession = Depends(get_session),
 ) -> FixtureDeleteInfo:
-    return await fixture_service.delete_fixture(tournament_id, session, force=force)
+    return await fixture_service.delete_fixture(tournament_id, session, force=force, delete_teams=delete_teams)
 
 
 # ── Fixture read ──────────────────────────────────────────────────────────────

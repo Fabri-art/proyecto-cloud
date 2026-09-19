@@ -79,6 +79,12 @@ export const api = {
 
 // ── Helpers específicos por dominio ─────────────────────────────────────────
 
+/** Torneos */
+export const tournamentsApi = {
+	get: (tournamentId) => api.get(`/tournaments/${tournamentId}`),
+	update: (tournamentId, body) => api.patch(`/tournaments/${tournamentId}`, body)
+};
+
 /** Equipos */
 export const teamsApi = {
 	list: (tournamentId, includePlayers = false) => {

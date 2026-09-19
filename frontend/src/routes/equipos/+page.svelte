@@ -4,7 +4,7 @@
 	 * Rediseñada con escudos únicos por equipo y modal mejorado.
 	 */
 	import { onMount } from 'svelte';
-	import { teamsApi } from '$lib/api/client';
+	import { teamsApi, tournamentsApi } from '$lib/api/client';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import { toast } from '$lib/stores/toast';
 
@@ -14,6 +14,8 @@
 	let selectedTeam = $state(null);
 	let loadingRoster = $state(false);
 	let rosterViewMode = $state('list'); // 'list' | 'pitch'
+	let tournament = $state(null);
+	const TOURNAMENT_ID = 1;
 
 	const positionLabels = {
 		goalkeeper: { label: 'Arquero',       icon: '🧤', color: '#f59e0b' },
@@ -39,7 +41,13 @@
 		loading = true; error = null;
 		try {
 			// Pre-cargar la lista de equipos junto con su plantilla de jugadores en 1 sola consulta
-			teams = await teamsApi.list(null, true);
+			// y cargar la info del torneo para saber el deporte
+			const [teamsRes, tourRes] = await Promise.all([
+				teamsApi.list(TOURNAMENT_ID, true),
+				tournamentsApi.get(TOURNAMENT_ID).catch(() => null)
+			]);
+			teams = teamsRes;
+			tournament = tourRes;
 		} catch (e) {
 			error = e.message;
 			toast.error('No se pudieron cargar los equipos.');
@@ -141,7 +149,7 @@
 {:else if teams.length === 0}
 	<div class="glass-card p-16 text-center animate-fade-in-up">
 		<div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-4xl">
-			⚽
+			{tournament?.sport === 'basketball' ? '🏀' : '⚽'}
 		</div>
 		<h2 class="text-xl font-bold text-white mb-2">Sin clubes registrados</h2>
 		<p class="text-slate-500 text-sm max-w-sm mx-auto mb-7">

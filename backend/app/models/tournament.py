@@ -14,6 +14,11 @@ class TournamentFormat(str, Enum):
     GROUP_KNOCKOUT = "group_knockout"   # groups + knockout phase
 
 
+class SportType(str, Enum):
+    FOOTBALL = "football"
+    BASKETBALL = "basketball"
+
+
 class TournamentStatus(str, Enum):
     UPCOMING = "upcoming"
     ONGOING = "ongoing"
@@ -35,6 +40,18 @@ class Tournament(SQLModel, table=True):
     name: str = Field(index=True, max_length=255)
     slug: str = Field(unique=True, max_length=255, index=True)
     season: str = Field(max_length=20)          # e.g. "2024-25"
+
+    sport: SportType = Field(
+        default=SportType.FOOTBALL,
+        sa_column=sa.Column(
+            sa.Enum(
+                *_enum_values(SportType),
+                name="sporttype",
+                create_type=False,
+            ),
+            nullable=False,
+        ),
+    )
 
     format: TournamentFormat = Field(
         default=TournamentFormat.LEAGUE,

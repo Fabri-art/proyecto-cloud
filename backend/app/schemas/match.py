@@ -109,7 +109,11 @@ class FixtureDeleteInfo(BaseModel):
         had_played_matches: True si alguno de los partidos eliminados tenía resultado
                             (status FINISHED o LIVE).
         tournament_id: ID del torneo cuyo fixture fue eliminado.
+        deleted_teams: Total de equipos eliminados.
+        deleted_players: Total de jugadores eliminados.
     """
     tournament_id: int
     deleted_matches: int
     had_played_matches: bool
+    deleted_teams: int = 0
+    deleted_players: int = 0
