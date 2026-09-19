@@ -6,6 +6,7 @@ from typing import Optional
 from sqlmodel import Field, SQLModel
 
 
+import sqlalchemy as sa
 from app.models.tournament import SportType, _enum_values
 
 class Team(SQLModel, table=True):
