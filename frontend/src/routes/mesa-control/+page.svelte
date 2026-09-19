@@ -17,6 +17,7 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 
 	const TOURNAMENT_ID = 1;
 
@@ -494,7 +495,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -516,7 +517,7 @@
 							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
 						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
 							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : '⚽ +1 GOL'}
+							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
 						</button>
 					</div>
 				</div>
@@ -586,6 +587,13 @@
 			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:text-white'}"
 		>
 			🏐 Vóley
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			♟️ Ajedrez
 		</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -867,6 +875,13 @@
 					interactive={false}
 					teamName={tacticalTeam.name}
 					teamColor="#8b5cf6"
+				/>
+			{:else if (tacticalTeam.sport === 'underwater_chess')}
+				<UnderwaterChessBoard
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#06b6d4"
 				/>
 			{:else}
 				<SoccerPitch

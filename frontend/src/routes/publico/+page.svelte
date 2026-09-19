@@ -8,6 +8,7 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 
 	const TOURNAMENT_ID = 1;
 	const REFRESH_INTERVAL_MS = 30_000;
@@ -259,6 +260,13 @@
 			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 		>
 			🏐 Vóley
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-4 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+		>
+			♟️ Ajedrez
 		</button>
 	</div>
 </div>
@@ -670,6 +678,78 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- TABLA AJEDREZ BAJO EL AGUA -->
+			{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && chessStandings.length > 0}
+				<div class="glass-card overflow-hidden">
+					<div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
+						style="background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(8,145,178,0.04));">
+						<div class="flex items-center gap-3">
+							<span class="text-xl">🌊♟️</span>
+							<div>
+								<h3 class="font-bold text-white text-base">Tabla de Posiciones — Ajedrez bajo el agua</h3>
+								<p class="text-xs text-cyan-300/80">Duelos 1 vs 1</p>
+							</div>
+						</div>
+						<a href="/posiciones" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+							Ver completa →
+						</a>
+					</div>
+					<div class="overflow-x-auto">
+						<table class="w-full text-sm">
+							<thead>
+								<tr class="border-b border-slate-800 text-slate-400 text-xs">
+									<th class="px-4 py-3 text-center w-12 section-label">#</th>
+									<th class="px-4 py-3 text-left section-label">Competidor</th>
+									<th class="px-3 py-3 text-center text-xs section-label">PJ</th>
+									<th class="px-3 py-3 text-center text-xs section-label">PG</th>
+									<th class="px-3 py-3 text-center text-xs section-label">PE</th>
+									<th class="px-3 py-3 text-center text-xs section-label">PP</th>
+									<th class="px-4 py-3 text-center text-xs section-label text-cyan-400">PTS</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each chessStandings.slice(0, 5) as s, i}
+									{@const accentLeft = i === 0 ? '#06b6d4' : i === 1 ? '#38bdf8' : '#64748b'}
+									{@const tColor = teamColor(s.team_id)}
+									<tr class="standings-row border-b border-slate-800/50 transition-colors"
+										style="border-left: 3px solid {accentLeft};">
+										<td class="px-4 py-3 text-center">
+											{#if i === 0}<span class="text-base">🥇</span>
+											{:else if i === 1}<span class="text-base">🥈</span>
+											{:else if i === 2}<span class="text-base">🥉</span>
+											{:else}<span class="text-xs text-slate-500 font-mono">{i + 1}</span>{/if}
+										</td>
+										<td class="px-4 py-3">
+											<div class="flex items-center gap-3">
+												<div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0"
+													style="background: {tColor}20; border: 1px solid {tColor}40; color: {tColor};">
+													{teamInitial(s.team_id)}
+												</div>
+												<div class="flex-1 min-w-0">
+													<p class="font-bold text-white text-sm leading-tight truncate">{teamName(s.team_id)}</p>
+													<span class="text-xs font-mono text-slate-500">{teamShort(s.team_id)}</span>
+												</div>
+												<button type="button" onclick={() => showTeamPitch(s.team_id)} class="text-xs text-slate-500 hover:text-cyan-400 px-2 py-1 rounded bg-slate-800/60 transition hidden sm:inline-flex items-center gap-1 font-semibold">
+													<span>♟️</span> Tablero
+												</button>
+											</div>
+										</td>
+										<td class="px-3 py-3 text-center font-mono text-slate-300">{s.played ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-emerald-400 font-semibold">{s.won ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-slate-400">{s.drawn ?? 0}</td>
+										<td class="px-3 py-3 text-center font-mono text-red-400/80">{s.lost ?? 0}</td>
+										<td class="px-4 py-3 text-center font-score font-bold text-cyan-400 text-base">{s.points ?? 0}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+					<div class="px-4 py-2.5 border-t border-slate-800 text-xs text-slate-500">
+						PJ = Jugados · PG = Victorias · PE = Tablas · PP = Derrotas · PTS = Puntos (Victoria 1, Tablas 0.5)
+					</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 {/if}
@@ -719,6 +799,13 @@
 					interactive={false}
 					teamName={pitchModalTeam.name}
 					teamColor="#8b5cf6"
+				/>
+			{:else if (pitchModalTeam.sport === 'underwater_chess')}
+				<UnderwaterChessBoard
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#06b6d4"
 				/>
 			{:else}
 				<SoccerPitch

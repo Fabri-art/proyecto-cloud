@@ -26,6 +26,8 @@ class PlayerPosition(str, Enum):
     OUTSIDE_HITTER = "outside_hitter"
     OPPOSITE = "opposite"
     MIDDLE_BLOCKER = "middle_blocker"
+    # Chess
+    CHESS_PLAYER = "chess_player"
 
 
 def _enum_values(enum_cls):

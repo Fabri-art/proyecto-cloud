@@ -21,6 +21,7 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 	import { onDestroy, onMount } from 'svelte';
 
 	let isAdmin = $state(false);
@@ -33,7 +34,7 @@
 
 	const TOURNAMENT_ID = 1;
 	/** Mínimo de jugadores exigidos para poder enviar el formulario */
-	const MIN_PLAYERS = 5;
+	let minPlayers = $derived(teamData.sport === 'underwater_chess' ? 1 : 5);
 
 	/** Lista oficial de países de Sudamérica */
 	const southAmericanCountries = [
@@ -139,7 +140,7 @@
 			toast.warning('El equipo ya tiene 1 arquero. Solo se permite un arquero.');
 			return;
 		}
-		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'forward');
+		quickPosition = position || (teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? 'chess_player' : 'forward');
 		newPlayer.position = quickPosition;
 		newPlayer.nationality = teamData.country || 'Perú';
 		playerErrors = { first_name: '', last_name: '', dni: '', shirt_number: '' };
@@ -173,6 +174,9 @@
 		{ value: 'power_forward',  label: 'Ala-Pívot',     icon: '💪' },
 		{ value: 'center',         label: 'Pívot',         icon: '🛡️' }
 	];
+	const chessPositions = [
+		{ value: 'chess_player', label: 'Ajedrecista', icon: '♟️' }
+	];
 	const volleyballPositions = [
 		{ value: 'setter',         label: 'Armador',   icon: '🎯' },
 		{ value: 'libero',         label: 'Líbero',    icon: '🛡️' },
@@ -181,7 +185,7 @@
 		{ value: 'middle_blocker', label: 'Central',   icon: '🧱' }
 	];
 	
-	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : teamData.sport === 'volleyball' ? volleyballPositions : footballPositions);
+	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : teamData.sport === 'volleyball' ? volleyballPositions : teamData.sport === 'underwater_chess' ? chessPositions : footballPositions);
 
 	// ── Helpers de validación y sanitización estricta ────────────────────────────
 
@@ -373,8 +377,8 @@
 		newPlayer.last_name = '';
 		newPlayer.dni = '';
 		newPlayer.shirt_number = '';
-		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : (position === 'goalkeeper' ? 'forward' : position);
-		if (players.length >= MIN_PLAYERS) errors.players_count = '';
+		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? 'chess_player' : (position === 'goalkeeper' ? 'forward' : position);
+		if (players.length >= minPlayers) errors.players_count = '';
 		toast.success(`Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
 		showQuickAddModal = false;
 	}
@@ -445,7 +449,7 @@
 		newPlayer.shirt_number = '';
 		newPlayer.position = teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : 'midfielder';
 
-		if (players.length >= MIN_PLAYERS) errors.players_count = '';
+		if (players.length >= minPlayers) errors.players_count = '';
 		toast.success(`Jugador ${first_name} ${last_name} (${nationality}) agregado.`);
 	}
 
@@ -493,8 +497,8 @@
 			hasError = true;
 		}
 
-		if (players.length < MIN_PLAYERS) {
-			errors.players_count = `Debes agregar al menos ${MIN_PLAYERS} jugadores antes de registrar el club.`;
+		if (players.length < minPlayers) {
+			errors.players_count = `Debes agregar al menos ${minPlayers} jugadores antes de registrar el club.`;
 			hasError = true;
 		}
 
@@ -553,7 +557,7 @@
 		}
 	}
 
-	let canSubmit = $derived(players.length >= MIN_PLAYERS && !isSubmitting);
+	let canSubmit = $derived(players.length >= minPlayers && !isSubmitting);
 </script>
 
 <!-- Modal de PIN si no es admin -->
@@ -637,6 +641,10 @@
 						<label class="flex items-center gap-2 cursor-pointer">
 							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500" />
 							<span class="text-white">🏐 Vóley</span>
+						</label>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" bind:group={teamData.sport} value="underwater_chess" class="accent-cyan-500" />
+							<span class="text-white">♟️ Ajedrez bajo el agua</span>
 						</label>
 					</div>
 				</div>
@@ -766,7 +774,7 @@
 			<!-- Header de sección con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '⚽'}</span>
+					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : '⚽'}</span>
 					<div>
 						<h2 class="text-xl font-bold text-white">Plantilla de Jugadores</h2>
 						<p class="text-xs text-slate-400">
@@ -799,13 +807,13 @@
 
 					<!-- Contador y barra de progreso -->
 					<div class="flex flex-col items-end gap-1">
-						<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= MIN_PLAYERS ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
-							{players.length}/{MIN_PLAYERS} mín.
+						<span class="text-xs px-2.5 py-1 rounded-full font-semibold {players.length >= minPlayers ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-400'}">
+							{players.length}/{minPlayers} mín.
 						</span>
 						<div class="w-20 h-1.5 rounded-full bg-slate-700 overflow-hidden">
 							<div
-								class="h-full rounded-full transition-all duration-300 {players.length >= MIN_PLAYERS ? 'bg-emerald-500' : 'bg-amber-500'}"
-								style="width: {Math.min(100, (players.length / MIN_PLAYERS) * 100)}%"
+								class="h-full rounded-full transition-all duration-300 {players.length >= minPlayers ? 'bg-emerald-500' : 'bg-amber-500'}"
+								style="width: {Math.min(100, (players.length / minPlayers) * 100)}%"
 							></div>
 						</div>
 					</div>
@@ -1082,7 +1090,7 @@
 				<button
 					type="submit"
 					disabled={!canSubmit}
-					title={players.length < MIN_PLAYERS ? `Faltan ${MIN_PLAYERS - players.length} jugador(es) para poder registrar el club` : ''}
+					title={players.length < minPlayers ? `Faltan ${minPlayers - players.length} jugador(es) para poder registrar el club` : ''}
 					class="px-6 py-3 rounded-lg font-bold text-white shadow-lg transition flex items-center gap-2 {!canSubmit
 						? 'bg-slate-700 cursor-not-allowed opacity-60'
 						: 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950 cursor-pointer'}"
@@ -1092,8 +1100,8 @@
 						<span>Guardando club y plantilla...</span>
 					{:else}
 						<span>💾 Registrar Club y Plantilla</span>
-						{#if players.length < MIN_PLAYERS}
-							<span class="text-xs font-normal opacity-70">({players.length}/{MIN_PLAYERS} jug.)</span>
+						{#if players.length < minPlayers}
+							<span class="text-xs font-normal opacity-70">({players.length}/{minPlayers} jug.)</span>
 						{/if}
 					{/if}
 				</button>

@@ -8,6 +8,7 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	let teams = $state([]);
@@ -36,7 +37,9 @@
 		libero:         { label: 'Líbero',    icon: '🛡️', color: '#06b6d4' },
 		outside_hitter: { label: 'Punta',     icon: '⚡', color: '#ec4899' },
 		opposite:       { label: 'Opuesto',   icon: '💥', color: '#f59e0b' },
-		middle_blocker: { label: 'Central',   icon: '🧱', color: '#10b981' }
+		middle_blocker: { label: 'Central',   icon: '🧱', color: '#10b981' },
+		// Ajedrez
+		chess_player:   { label: 'Ajedrecista', icon: '♟️', color: '#06b6d4' }
 	};
 
 	let selectedSportFilter = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
@@ -171,6 +174,15 @@
 		<span>Vóley</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'volleyball').length}</span>
 	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'underwater_chess')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'underwater_chess' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>♟️</span>
+		<span>Ajedrez bajo el agua</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'underwater_chess').length}</span>
+	</button>
 </div>
 
 <!-- ── Loading ──────────────────────────────────────────────────────────────── -->
@@ -211,7 +223,7 @@
 {:else if teams.length === 0}
 	<div class="glass-card p-16 text-center animate-fade-in-up">
 		<div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-4xl">
-			{team.sport === 'basketball' ? '🏀' : team.sport === 'volleyball' ? '🏐' : '⚽'}
+			{team.sport === 'basketball' ? '🏀' : team.sport === 'volleyball' ? '🏐' : team.sport === 'underwater_chess' ? '♟️' : '⚽'}
 		</div>
 		<h2 class="text-xl font-bold text-white mb-2">Sin clubes registrados</h2>
 		<p class="text-slate-500 text-sm max-w-sm mx-auto mb-7">
@@ -393,6 +405,13 @@
 						/>
 					{:else if selectedTeam.sport === 'volleyball'}
 						<VolleyballCourt
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else if selectedTeam.sport === 'underwater_chess'}
+						<UnderwaterChessBoard
 							players={selectedTeam.players}
 							interactive={false}
 							teamName={selectedTeam.name}

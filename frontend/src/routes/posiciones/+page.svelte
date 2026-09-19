@@ -24,6 +24,9 @@
 	let volleyballStandings = $derived(
 		standings.filter((s) => teamsMap[s.team_id]?.sport === 'volleyball')
 	);
+	let chessStandings = $derived(
+		standings.filter((s) => teamsMap[s.team_id]?.sport === 'underwater_chess')
+	);
 
 	onMount(async () => {
 		try {
@@ -109,6 +112,12 @@
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'volleyball' ? 'bg-violet-600 text-white shadow-md shadow-violet-950/40' : 'text-slate-400 hover:text-white'}">
 			<span>Voley</span>
 			<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{volleyballStandings.length}</span>
+		</button>
+		<button type="button" onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}">
+			<span>♟️</span>
+			<span>Ajedrez bajo el agua</span>
+			<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{chessStandings.length}</span>
 		</button>
 	</div>
 
@@ -305,6 +314,60 @@
 			</div>
 			<div class="px-4 py-3 text-xs text-slate-600 border-t" style="border-color: var(--border-color);">
 				Victoria 3-0/3-1 = 3 pts &nbsp;|&nbsp; Victoria 3-2 = 2 pts &nbsp;|&nbsp; Derrota 2-3 = 1 pt &nbsp;|&nbsp; Derrota 0/1-3 = 0 pts
+			</div>
+		</div>
+	{/if}
+
+	<!-- AJEDREZ BAJO EL AGUA -->
+	{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && chessStandings.length > 0}
+		<div class="glass-card overflow-hidden animate-fade-in-up">
+			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(6,182,212,0.08);">
+				<span class="text-xl">🌊♟️</span>
+				<h2 class="font-black text-white text-lg">Ajedrez bajo el agua</h2>
+				<span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 font-semibold ml-auto">{chessStandings.length} competidores</span>
+			</div>
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
+							<th class="px-4 py-3 text-left w-8">#</th>
+							<th class="px-4 py-3 text-left">Ajedrecista / Club</th>
+							<th class="px-3 py-3 text-center">PJ</th>
+							<th class="px-3 py-3 text-center">PG (Victorias)</th>
+							<th class="px-3 py-3 text-center">PE (Tablas)</th>
+							<th class="px-3 py-3 text-center">PP (Derrotas)</th>
+							<th class="px-3 py-3 text-center font-bold">PTS</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each chessStandings as s, i}
+							<tr class="standings-row transition-colors {rowClass(i)}" style="border-bottom: 1px solid var(--border-color); animation: fadeInUp 0.3s {i * 0.05}s both;">
+								<td class="px-4 py-3 text-center">
+									{#if i === 0}<span class="text-base">🥇</span>
+									{:else if i === 1}<span class="text-base">🥈</span>
+									{:else if i === 2}<span class="text-base">🥉</span>
+									{:else}<span class="text-slate-500 font-mono">{i + 1}</span>{/if}
+								</td>
+								<td class="px-4 py-3">
+									<div class="flex items-center gap-3">
+										<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+											{teamsMap[s.team_id]?.name?.[0]?.toUpperCase() ?? '?'}
+										</div>
+										<span class="font-semibold text-white">{teamsMap[s.team_id]?.name ?? `Competidor #${s.team_id}`}</span>
+									</div>
+								</td>
+								<td class="px-3 py-3 text-center text-slate-300">{s.played ?? 0}</td>
+								<td class="px-3 py-3 text-center text-emerald-400 font-medium">{s.won ?? 0}</td>
+								<td class="px-3 py-3 text-center text-slate-400">{s.drawn ?? 0}</td>
+								<td class="px-3 py-3 text-center text-red-400">{s.lost ?? 0}</td>
+								<td class="px-3 py-3 text-center"><span class="font-black text-lg {i === 0 ? 'text-cyan-400' : 'text-white'}">{s.points ?? 0}</span></td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			<div class="px-4 py-3 text-xs text-slate-600 border-t" style="border-color: var(--border-color);">
+				Victoria = 1 pt &nbsp;|&nbsp; Tablas / Empate = 0.5 pts &nbsp;|&nbsp; Derrota = 0 pts
 			</div>
 		</div>
 	{/if}

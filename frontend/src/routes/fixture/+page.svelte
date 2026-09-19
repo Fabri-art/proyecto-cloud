@@ -12,6 +12,7 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
@@ -199,6 +200,14 @@
 			<span>🏐</span>
 			<span>Vóley</span>
 		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'underwater_chess')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>♟️</span>
+			<span>Ajedrez</span>
+		</button>
 	</div>
 
 	<!-- Selector de jornadas -->
@@ -312,6 +321,13 @@
 					interactive={false}
 					teamName={pitchModalTeam.name}
 					teamColor="#8b5cf6"
+				/>
+			{:else if (pitchModalTeam.sport === 'underwater_chess')}
+				<UnderwaterChessBoard
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#06b6d4"
 				/>
 			{:else}
 				<SoccerPitch

@@ -18,6 +18,7 @@ class SportType(str, Enum):
     FOOTBALL = "football"
     BASKETBALL = "basketball"
     VOLLEYBALL = "volleyball"
+    UNDERWATER_CHESS = "underwater_chess"
 
 
 class TournamentStatus(str, Enum):
