@@ -1,7 +1,5 @@
-version: "3.9"
-
 services:
-  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  # ─── PostgreSQL ─────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: nombre_creativo_db
@@ -20,7 +18,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  # ─── FastAPI Backend ───────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -38,10 +36,11 @@ services:
       db:
         condition: service_healthy
     volumes:
-      # Mount source for live-reload in dev (comment out for production)
+      # Mount source for live-reload in dev
       - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app"
 
-  # ── SvelteKit Frontend ───────────────────────────────────────────────────────
+  # ─── SvelteKit Frontend ────────────────────────────────────────────────────
   frontend:
     image: node:20-alpine
     container_name: nombre_creativo_frontend
@@ -50,6 +49,8 @@ services:
     environment:
       # URL pública del backend (accesible desde el navegador)
       PUBLIC_API_BASE_URL: /api/v1
+      # URL interna del backend dentro de la red de Docker para el proxy de Vite
+      BACKEND_URL: http://backend:8000
     ports:
       - "5173:5173"
     volumes:
@@ -63,4 +64,3 @@ services:
 
 volumes:
   postgres_data:
-

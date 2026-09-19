@@ -32,6 +32,13 @@
 	let teamsMap = $state({});
 	let loading = $state(true);
 	let error = $state(null);
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	let footballStandings = $derived(
+		standings.filter((s) => (teamsMap[s.team_id]?.sport || 'football') === 'football')
+	);
+	let basketballStandings = $derived(
+		standings.filter((s) => teamsMap[s.team_id]?.sport === 'basketball')
+	);
 
 	onMount(async () => {
 		try {

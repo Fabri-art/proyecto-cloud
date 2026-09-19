@@ -75,6 +75,7 @@ class TeamReadWithPlayers(TeamRead):
 class TeamUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     short_name: Optional[str] = Field(default=None, min_length=2, max_length=5)
+    sport: Optional[SportType] = None
     delegate_name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     delegate_phone: Optional[str] = None
     city: Optional[str] = None

@@ -15,6 +15,7 @@
 	import { toast } from '$lib/stores/toast';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
+	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 
 	const TOURNAMENT_ID = 1;
 
@@ -60,6 +61,15 @@
 	let showFinishModal = $state(false);
 	let isClosingMatch = $state(false);
 	let tacticalTeam = $state(null);
+	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	function getMatchSport(match) {
+		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
+	}
+	let filteredMatches = $derived(
+		selectedSport === 'all'
+			? currentMatches
+			: currentMatches.filter((m) => getMatchSport(m) === selectedSport)
+	);
 
 	async function showTeamTactical(teamId) {
 		let t = teamsMap[teamId];
@@ -526,6 +536,31 @@
 				
 			</div>
 		{:else}
+			
+			<!-- ── Filtro por Deporte ────────────────────────────────────────── -->
+			<div class="flex items-center gap-2 mb-4 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-fit">
+				<button
+					type="button"
+					onclick={() => (selectedSport = 'all')}
+					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'all' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}"
+				>
+					🌐 Todos
+				</button>
+				<button
+					type="button"
+					onclick={() => (selectedSport = 'football')}
+					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'football' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}"
+				>
+					⚽ Fútbol
+				</button>
+				<button
+					type="button"
+					onclick={() => (selectedSport = 'basketball')}
+					class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'basketball' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'}"
+				>
+					🏀 Básquetbol
+				</button>
+			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
 				<div class="flex items-center gap-2 overflow-x-auto pb-1">
 					{#each rounds as r}
@@ -569,13 +604,30 @@
 
 			<!-- Lista de Partidos -->
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{#each currentMatches as match}
+				{#if filteredMatches.length === 0}
+					<div class="col-span-full glass-card p-8 text-center">
+						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : 'fútbol'} en esta jornada.</p>
+					</div>
+				{/if}
+				{#each filteredMatches as match}
 					{@const homeTeam = teamsMap[match.home_team_id]}
 					{@const awayTeam = teamsMap[match.away_team_id]}
 					{@const status = getStatus(match.status)}
-					<div class="glass-card p-5 flex flex-col justify-between gap-4 transition">
+					{@const mSport = getMatchSport(match)}
+										<div class="glass-card p-5 flex flex-col justify-between gap-4 transition">
 						<div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
-							<span class="text-xs font-mono font-bold text-slate-400">Partido #{match.id}</span>
+							<div class="flex items-center gap-2">
+								<span class="text-xs font-mono font-bold text-slate-400">#{match.id}</span>
+								{#if mSport === 'basketball'}
+									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+										🏀 Básquet
+									</span>
+								{:else}
+									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+										⚽ Fútbol
+									</span>
+								{/if}
+							</div>
 							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
 									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>

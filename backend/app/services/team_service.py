@@ -73,6 +73,7 @@ async def create_team(data: TeamCreate, session: AsyncSession) -> Team:
         tournament_id=data.tournament_id,
         name=clean_name,
         short_name=clean_short,
+        sport=data.sport,
         delegate_name=data.delegate_name.strip(),
         delegate_phone=data.delegate_phone.strip() if data.delegate_phone else None,
         city=data.city.strip() if data.city else None,
