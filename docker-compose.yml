@@ -17,6 +17,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+     profiles: ["local"]
 
   # ─── FastAPI Backend ───────────────────────────────────────────────────────
   backend:
@@ -27,14 +28,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env
-    environment:
-      # Override DATABASE_URL to point to the 'db' service container
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/nombre_creativo_db
     ports:
       - "8001:8000"
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
       # Mount source for live-reload in dev
       - ./backend:/app
