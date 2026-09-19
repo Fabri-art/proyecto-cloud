@@ -5,6 +5,7 @@
 	 */
 	import { onMount } from 'svelte';
 	import { teamsApi, tournamentsApi } from '$lib/api/client';
+	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	let teams = $state([]);
@@ -12,6 +13,7 @@
 	let error = $state(null);
 	let selectedTeam = $state(null);
 	let loadingRoster = $state(false);
+	let rosterViewMode = $state('list'); // 'list' | 'pitch'
 	let tournament = $state(null);
 	const TOURNAMENT_ID = 1;
 
@@ -242,6 +244,22 @@
 					style="background: {pal.bg}; color: {pal.text};">
 					{selectedTeam.name?.[0]?.toUpperCase() ?? '?'}
 				</div>
+				<div class="flex items-center gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-800 shrink-0">
+					<button
+						type="button"
+						onclick={() => (rosterViewMode = 'list')}
+						class="px-2.5 py-1 rounded text-xs font-bold transition {rosterViewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}"
+					>
+						📋 Lista
+					</button>
+					<button
+						type="button"
+						onclick={() => (rosterViewMode = 'pitch')}
+						class="px-2.5 py-1 rounded text-xs font-bold transition {rosterViewMode === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
+					>
+						🏟️ Cancha
+					</button>
+				</div>
 				<div class="flex-1 min-w-0">
 					<h3 class="text-lg font-black text-white truncate flex items-center gap-2">
 						{selectedTeam.name}
@@ -285,6 +303,15 @@
 					<div class="py-12 text-center text-slate-600">
 						<div class="text-3xl mb-3 opacity-40">👥</div>
 						<p class="text-sm">Sin jugadores registrados aún.</p>
+					</div>
+				{:else if rosterViewMode === 'pitch'}
+					<div class="py-2">
+						<SoccerPitch
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
 					</div>
 				{:else}
 					<div class="space-y-2">

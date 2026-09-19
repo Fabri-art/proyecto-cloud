@@ -1,19 +1,19 @@
-﻿<script>
+<script>
 	/**
-	 * SoccerPitch.svelte ÔÇö Diagrama Interactivo y Visual de Cancha de F├║tbol
+	 * SoccerPitch.svelte — Diagrama Interactivo y Visual de Cancha de Fútbol
 	 *
 	 * Modos:
-	 * 1. interactive = true: Permite agregar jugadores haciendo clic en las l├¡neas (+),
+	 * 1. interactive = true: Permite agregar jugadores haciendo clic en las líneas (+),
 	 *    y eliminar o interactuar con cada jugador en el campo.
-	 * 2. interactive = false: Modo de solo lectura / visualizaci├│n para ver alineaciones
-	 *    en detalle de equipos, partidos y p├║blico.
+	 * 2. interactive = false: Modo de solo lectura / visualización para ver alineaciones
+	 *    en detalle de equipos, partidos y público.
 	 *
-	 * Reglas y Distribuci├│n T├íctica:
-	 * - Espaciado proporcional y equilibrado en 4 zonas t├ícticas (Delantera, Mediocampo, Defensa, Porter├¡a).
-	 * - Los delanteros se ubican en zona de ataque fuera del ├írea rival.
-	 * - Mediocampistas y defensas cuentan con amplia separaci├│n respecto a la l├¡nea central.
-	 * - Solo se permite registrar 1 arquero titular (si ya existe, se oculta el bot├│n de agregar arquero).
-	 * - Sin l├¡mite de jugadores totales (m├¡nimo 5).
+	 * Reglas y Distribución Táctica:
+	 * - Espaciado proporcional y equilibrado en 4 zonas tácticas (Delantera, Mediocampo, Defensa, Portería).
+	 * - Los delanteros se ubican en zona de ataque fuera del área rival.
+	 * - Mediocampistas y defensas cuentan con amplia separación respecto a la línea central.
+	 * - Solo se permite registrar 1 arquero titular (si ya existe, se oculta el botón de agregar arquero).
+	 * - Sin límite de jugadores totales (mínimo 5).
 	 */
 
 	let {
@@ -26,13 +26,13 @@
 		onSelectPlayer = null
 	} = $props();
 
-	// Agrupaci├│n de jugadores por l├¡nea t├íctica
+	// Agrupación de jugadores por línea táctica
 	let goalkeepers = $derived(players.filter((p) => (p.position ?? '').toLowerCase() === 'goalkeeper'));
 	let defenders   = $derived(players.filter((p) => (p.position ?? '').toLowerCase() === 'defender'));
 	let midfielders = $derived(players.filter((p) => (p.position ?? '').toLowerCase() === 'midfielder'));
 	let forwards    = $derived(players.filter((p) => (p.position ?? '').toLowerCase() === 'forward'));
 
-	// Suplentes / Banca (si hay jugadores sin posici├│n est├índar o adicionales)
+	// Suplentes / Banca (si hay jugadores sin posición estándar o adicionales)
 	let benchPlayers = $derived(
 		players.filter((p) => {
 			const pos = (p.position ?? '').toLowerCase();
@@ -48,7 +48,7 @@
 </script>
 
 <div class="flex flex-col gap-3 w-full select-none">
-	<!-- ÔöÇÔöÇ HEADER DE LA CANCHA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
+	<!-- ── HEADER DE LA CANCHA ──────────────────────────────────────────────── -->
 	<div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs shadow-md">
 		<div class="flex items-center gap-2">
 			<span class="w-3.5 h-3.5 rounded-full shadow border border-white/30" style="background-color: {teamColor};"></span>
@@ -56,22 +56,22 @@
 			<span class="text-slate-400">({players.length} jugador{players.length !== 1 ? 'es' : ''})</span>
 		</div>
 		<div class="flex items-center gap-1.5 font-mono text-[11px]">
-			<span class="px-2 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-700/50 font-bold" title="M├íximo 1 arquero">
-				­ƒºñ {goalkeepers.length}/1 POR
+			<span class="px-2 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-700/50 font-bold" title="Máximo 1 arquero">
+				🧤 {goalkeepers.length}/1 POR
 			</span>
 			<span class="px-2 py-0.5 rounded bg-blue-950/70 text-blue-300 border border-blue-700/50 font-bold">
-				­ƒøí´©Å {defenders.length} DEF
+				🛡️ {defenders.length} DEF
 			</span>
 			<span class="px-2 py-0.5 rounded bg-amber-950/70 text-amber-300 border border-amber-700/50 font-bold">
-				ÔÜÖ´©Å {midfielders.length} MED
+				⚙️ {midfielders.length} MED
 			</span>
 			<span class="px-2 py-0.5 rounded bg-rose-950/70 text-rose-300 border border-rose-700/50 font-bold">
-				ÔÜ¢ {forwards.length} DEL
+				⚽ {forwards.length} DEL
 			</span>
 		</div>
 	</div>
 
-	<!-- ÔöÇÔöÇ CANCHA DE C├ëSPED T├üCTICA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
+	<!-- ── CANCHA DE CÉSPED TÁCTICA ─────────────────────────────────────────── -->
 	<div
 		class="relative w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-700/90 flex flex-col justify-between"
 		style="
@@ -86,26 +86,26 @@
 			height: 600px;
 		"
 	>
-		<!-- L├¡nea perimetral de Cal Blanca -->
+		<!-- Línea perimetral de Cal Blanca -->
 		<div class="absolute inset-3.5 border-2 border-white/45 rounded-lg pointer-events-none"></div>
 
-		<!-- Porter├¡a y ├ürea Superior (Zona Rival - Delantera) -->
+		<!-- Portería y Área Superior (Zona Rival - Delantera) -->
 		<div class="absolute top-3.5 left-1/2 -translate-x-1/2 w-44 h-14 border-b-2 border-x-2 border-white/40 pointer-events-none rounded-b-md"></div>
 		<div class="absolute top-3.5 left-1/2 -translate-x-1/2 w-20 h-5 border-b-2 border-x-2 border-white/40 pointer-events-none"></div>
 		<div class="absolute top-11 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/50 pointer-events-none"></div>
 
-		<!-- C├¡rculo Central y L├¡nea de Medio Campo -->
+		<!-- Círculo Central y Línea de Medio Campo -->
 		<div class="absolute top-1/2 left-3.5 right-3.5 h-0.5 bg-white/40 -translate-y-1/2 pointer-events-none"></div>
 		<div class="absolute top-1/2 left-1/2 w-28 h-28 border-2 border-white/40 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 		<div class="absolute top-1/2 left-1/2 w-2.5 h-2.5 bg-white/60 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
-		<!-- Porter├¡a y ├ürea Inferior (Nuestra Zona Defensiva y Arquero) -->
+		<!-- Portería y Área Inferior (Nuestra Zona Defensiva y Arquero) -->
 		<div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 w-44 h-14 border-t-2 border-x-2 border-white/40 pointer-events-none rounded-t-md"></div>
 		<div class="absolute bottom-3.5 left-1/2 -translate-x-1/2 w-20 h-5 border-t-2 border-x-2 border-white/40 pointer-events-none"></div>
 		<div class="absolute bottom-11 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-white/50 pointer-events-none"></div>
 
-		<!-- ÔöÇÔöÇ ZONA 1: DELANTEROS (ATAQUE - 0% a 25%) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
-		<!-- Posicionados holgadamente fuera del ├írea rival en zona de ataque -->
+		<!-- ── ZONA 1: DELANTEROS (ATAQUE - 0% a 25%) ────────────────────────── -->
+		<!-- Posicionados holgadamente fuera del área rival en zona de ataque -->
 		<div class="relative z-10 flex-1 flex flex-col items-center justify-end pb-3 pt-4">
 			<div class="flex items-center justify-center flex-wrap gap-4 sm:gap-6 w-full px-4">
 				{#each forwards as p}
@@ -118,7 +118,7 @@
 								onclick={() => onSelectPlayer?.(p)}
 								title="{p.first_name} {p.last_name} (Delantero)"
 							>
-								{p.shirt_number ?? 'ÔÜ¢'}
+								{p.shirt_number ?? '⚽'}
 							</button>
 							{#if interactive && onRemovePlayer}
 								<button
@@ -127,7 +127,7 @@
 									title="Quitar de la cancha"
 									class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 text-white rounded-full text-xs font-black flex items-center justify-center shadow-lg z-20 cursor-pointer"
 								>
-									Ô£ò
+									✕
 								</button>
 							{/if}
 						</div>
@@ -153,8 +153,8 @@
 			</div>
 		</div>
 
-		<!-- ÔöÇÔöÇ ZONA 2: MEDIOCAMPISTAS (MEDIO CAMPO OFENSIVO - 25% a 50%) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
-		<!-- Posicionados con holgura por encima de la l├¡nea central -->
+		<!-- ── ZONA 2: MEDIOCAMPISTAS (MEDIO CAMPO OFENSIVO - 25% a 50%) ──────── -->
+		<!-- Posicionados con holgura por encima de la línea central -->
 		<div class="relative z-10 flex-1 flex flex-col items-center justify-center py-2">
 			<div class="flex items-center justify-center flex-wrap gap-4 sm:gap-6 w-full px-4">
 				{#each midfielders as p}
@@ -167,7 +167,7 @@
 								onclick={() => onSelectPlayer?.(p)}
 								title="{p.first_name} {p.last_name} (Mediocampista)"
 							>
-								{p.shirt_number ?? 'ÔÜÖ´©Å'}
+								{p.shirt_number ?? '⚙️'}
 							</button>
 							{#if interactive && onRemovePlayer}
 								<button
@@ -176,7 +176,7 @@
 									title="Quitar de la cancha"
 									class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 text-white rounded-full text-xs font-black flex items-center justify-center shadow-lg z-20 cursor-pointer"
 								>
-									Ô£ò
+									✕
 								</button>
 							{/if}
 						</div>
@@ -202,8 +202,8 @@
 			</div>
 		</div>
 
-		<!-- ÔöÇÔöÇ ZONA 3: DEFENSAS (ZONA DEFENSIVA - 50% a 75%) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
-		<!-- Posicionados con holgura por debajo de la l├¡nea central y antes del ├írea penal -->
+		<!-- ── ZONA 3: DEFENSAS (ZONA DEFENSIVA - 50% a 75%) ──────────────────── -->
+		<!-- Posicionados con holgura por debajo de la línea central y antes del área penal -->
 		<div class="relative z-10 flex-1 flex flex-col items-center justify-center py-2">
 			<div class="flex items-center justify-center flex-wrap gap-4 sm:gap-6 w-full px-4">
 				{#each defenders as p}
@@ -216,7 +216,7 @@
 								onclick={() => onSelectPlayer?.(p)}
 								title="{p.first_name} {p.last_name} (Defensa)"
 							>
-								{p.shirt_number ?? '­ƒøí´©Å'}
+								{p.shirt_number ?? '🛡️'}
 							</button>
 							{#if interactive && onRemovePlayer}
 								<button
@@ -225,7 +225,7 @@
 									title="Quitar de la cancha"
 									class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 text-white rounded-full text-xs font-black flex items-center justify-center shadow-lg z-20 cursor-pointer"
 								>
-									Ô£ò
+									✕
 								</button>
 							{/if}
 						</div>
@@ -251,8 +251,8 @@
 			</div>
 		</div>
 
-		<!-- ÔöÇÔöÇ ZONA 4: PORTERO / ARQUERO (PORTER├ìA - 75% a 100%) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
-		<!-- Posicionado estrictamente en la porter├¡a; SOLO SE PERMITE 1 ARQUERO -->
+		<!-- ── ZONA 4: PORTERO / ARQUERO (PORTERÍA - 75% a 100%) ──────────────── -->
+		<!-- Posicionado estrictamente en la portería; SOLO SE PERMITE 1 ARQUERO -->
 		<div class="relative z-10 flex-1 flex flex-col items-center justify-center pb-2">
 			<div class="flex items-center justify-center flex-wrap gap-4 sm:gap-6 w-full px-4">
 				{#each goalkeepers as p}
@@ -273,7 +273,7 @@
 									title="Quitar arquero"
 									class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 hover:bg-red-500 text-white rounded-full text-xs font-black flex items-center justify-center shadow-lg z-20 cursor-pointer"
 								>
-									Ô£ò
+									✕
 								</button>
 							{/if}
 						</div>
@@ -283,12 +283,12 @@
 					</div>
 				{/each}
 
-				<!-- SOLO PERMITIR AGREGAR SI NO HAY NING├ÜN ARQUERO REGISTRADO A├ÜN -->
+				<!-- SOLO PERMITIR AGREGAR SI NO HAY NINGÚN ARQUERO REGISTRADO AÚN -->
 				{#if interactive && onAddPlayer && goalkeepers.length === 0}
 					<button
 						type="button"
 						onclick={() => onAddPlayer('goalkeeper')}
-						title="Agregar ├║nico arquero"
+						title="Agregar único arquero"
 						class="w-11 h-11 rounded-full border-2 border-dashed border-emerald-300/80 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-200 flex flex-col items-center justify-center text-xs font-bold transition shadow cursor-pointer"
 					>
 						<span>+</span>
@@ -301,12 +301,12 @@
 		</div>
 	</div>
 
-	<!-- ÔöÇÔöÇ BANCA DE SUPLENTES / RESERVA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ -->
+	<!-- ── BANCA DE SUPLENTES / RESERVA ────────────────────────────────────── -->
 	{#if benchPlayers.length > 0}
 		<div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
 			<div class="flex items-center justify-between mb-2">
 				<span class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-					­ƒ¬æ Reserva / Suplentes ({benchPlayers.length})
+					🪑 Reserva / Suplentes ({benchPlayers.length})
 				</span>
 			</div>
 			<div class="flex items-center gap-2 overflow-x-auto pb-1">
@@ -323,7 +323,7 @@
 								class="text-red-400 hover:text-red-300 ml-1 font-bold cursor-pointer"
 								title="Eliminar de la banca"
 							>
-								Ô£ò
+								✕
 							</button>
 						{/if}
 					</div>

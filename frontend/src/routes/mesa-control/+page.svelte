@@ -14,6 +14,7 @@
 	import { auth } from '$lib/stores/auth';
 	import { toast } from '$lib/stores/toast';
 	import AdminPinModal from '$lib/components/AdminPinModal.svelte';
+	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 
 	const TOURNAMENT_ID = 1;
 
@@ -58,6 +59,20 @@
 	// Modal de confirmación de cierre
 	let showFinishModal = $state(false);
 	let isClosingMatch = $state(false);
+	let tacticalTeam = $state(null);
+
+	async function showTeamTactical(teamId) {
+		let t = teamsMap[teamId];
+		if (!t) return;
+		if (!t.players || t.players.length === 0) {
+			try {
+				const full = await teamsApi.get(teamId);
+				teamsMap[teamId] = full;
+				t = full;
+			} catch (_) {}
+		}
+		tacticalTeam = t;
+	}
 
 	// Configuración visual de badges de estado (claves en minúsculas)
 	const statusConfig = {
@@ -77,7 +92,7 @@
 	async function loadData() {
 		loading = true;
 		try {
-			const teamsList = await teamsApi.list(TOURNAMENT_ID);
+			const teamsList = await teamsApi.list(TOURNAMENT_ID, true);
 			const map = {};
 			for (const t of teamsList) map[t.id] = t;
 			teamsMap = map;
@@ -420,6 +435,16 @@
 				</div>
 			</div>
 
+			<!-- Botones de Cancha Táctica -->
+			<div class="flex items-center justify-center gap-3 py-1">
+				<button type="button" onclick={() => showTeamTactical(activeMatch.home_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 transition flex items-center gap-1.5 shadow-sm">
+					<span>🏟️</span> Formación Cancha ({homeTeam?.short_name ?? 'Local'})
+				</button>
+				<button type="button" onclick={() => showTeamTactical(activeMatch.away_team_id)} class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-950/60 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 transition flex items-center gap-1.5 shadow-sm">
+					<span>🏟️</span> Formación Cancha ({awayTeam?.short_name ?? 'Visita'})
+				</button>
+			</div>
+
 			<!-- MARCADOR TÁCTIL -->
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<!-- LOCAL -->
@@ -737,6 +762,49 @@
 					{:else}
 						🔄 Regenerar Fixture
 					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- MODAL DE CANCHA TÁCTICA PARA MESA DE CONTROL -->
+{#if tacticalTeam}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in"
+		role="dialog"
+		aria-modal="true"
+		onclick={(e) => e.target === e.currentTarget && (tacticalTeam = null)}
+	>
+		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
+			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+				<div>
+					<h3 class="text-base font-bold text-white leading-tight">{tacticalTeam.name}</h3>
+					<p class="text-xs text-slate-400 font-mono">Alineación Táctica en Cancha</p>
+				</div>
+				<button
+					type="button"
+					onclick={() => (tacticalTeam = null)}
+					class="text-slate-400 hover:text-white p-1 rounded-lg text-lg"
+				>
+					✕
+				</button>
+			</div>
+
+			<SoccerPitch
+				players={tacticalTeam.players || []}
+				interactive={false}
+				teamName={tacticalTeam.name}
+				teamColor="#10b981"
+			/>
+
+			<div class="flex justify-end pt-2 border-t border-slate-800">
+				<button
+					type="button"
+					onclick={() => (tacticalTeam = null)}
+					class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:text-white transition"
+				>
+					Cerrar
 				</button>
 			</div>
 		</div>
