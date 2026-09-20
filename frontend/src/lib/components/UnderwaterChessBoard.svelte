@@ -68,8 +68,8 @@
 <div class="flex flex-col gap-4 w-full select-none">
 	<!-- ══ TABLERO DE AJEDREZ SUBMARINO ════════════════════════════════ -->
 	<div
-		class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-cyan-500/40 p-3 sm:p-5 flex flex-col items-center gap-4"
-		style="background: radial-gradient(ellipse at 50% 0%, #0d3b66 0%, #08203e 50%, #030d1a 100%); width: 100%; max-width: 100%; box-sizing: border-box;"
+		class="chess-board tactical-court-scope relative w-full max-w-xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-cyan-500/40 p-3 sm:p-4 flex flex-col items-center gap-3"
+		style="background: radial-gradient(ellipse at 50% 0%, #0d3b66 0%, #08203e 50%, #030d1a 100%); min-height: 480px; box-sizing: border-box;"
 	>
 		<!-- Efecto de burbujas y rayos de luz subacuáticos -->
 		<div class="absolute inset-0 pointer-events-none opacity-30 overflow-hidden" aria-hidden="true">
@@ -79,42 +79,49 @@
 		</div>
 
 		<!-- Cabecera del tablero -->
-		<div class="relative z-10 flex flex-wrap items-center justify-between w-full max-w-md border-b border-cyan-500/30 pb-2.5">
-			<div class="flex items-center gap-2">
-				<span class="text-2xl">🌊♟️</span>
-				<div>
-					<h3 class="text-sm font-black text-white tracking-wide flex items-center gap-1.5">
-						Ajedrez Bajo el Agua
-						<span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-normal border border-cyan-500/30">1 vs 1</span>
-					</h3>
-					<p class="text-[11px] text-cyan-300/70 font-mono">
-						{teamName ? teamName : 'Duelo Submarino'} &bull; Sin posiciones tácticas de campo
-					</p>
+		<div class="court-header-bar relative z-10 flex items-center justify-between w-full px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl border border-cyan-500/40 bg-black/75 backdrop-blur-md mb-2">
+			<div class="flex items-center gap-2.5 min-w-0">
+				<span class="text-2xl shrink-0">♟️</span>
+				<div class="min-w-0">
+					<h4 class="text-xs sm:text-sm font-black text-white uppercase tracking-wider leading-none truncate" style="color: #ffffff !important;">
+						Tablero Táctico — Ajedrez Bajo el Agua
+					</h4>
+					<span class="text-[10px] text-cyan-300 font-mono block truncate mt-0.5" style="color: #67e8f9 !important;">
+						Casillas Sumergidas · 1 Titular + 2 Suplentes
+					</span>
 				</div>
 			</div>
-
-			{#if interactive && onAddPlayer && players.length < 3}
-				<button
-					type="button"
-					onclick={() => onAddPlayer(nextChessRole)}
-					class="px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg transition flex items-center gap-1 cursor-pointer"
-				>
-					<span>+</span> Inscribir {nextChessRole === 'chess_main' ? 'Principal' : 'Suplente'}
-				</button>
-			{/if}
+			<div class="flex items-center gap-2 shrink-0">
+				<div class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 truncate max-w-[130px]" style="color: #67e8f9 !important;">
+					{teamName || 'Duelo Submarino'}
+				</div>
+				{#if interactive && onAddPlayer && players.length < 3}
+					<button
+						type="button"
+						onclick={() => onAddPlayer(nextChessRole)}
+						class="px-3 py-1 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg transition flex items-center gap-1 cursor-pointer"
+						title="Inscribir ajedrecista"
+					>
+						<span>+</span>
+						<span class="hidden sm:inline">Inscribir</span>
+					</button>
+				{/if}
+			</div>
 		</div>
+
+
 
 		<!-- Cuadrícula del tablero 8x8 con coordenadas -->
 		<div class="relative z-10 flex flex-col items-center">
 			<div class="p-2 rounded-xl bg-slate-950/80 border-2 border-cyan-600/60 shadow-[0_0_30px_rgba(6,182,212,0.25)]">
-				<div class="grid grid-cols-8 grid-rows-8 w-[250px] h-[250px] xs:w-[280px] xs:h-[280px] sm:w-80 sm:h-80 md:w-96 md:h-96 max-w-[calc(100vw-4.5rem)] max-h-[calc(100vw-4.5rem)] rounded-lg overflow-hidden border border-cyan-800">
+				<div class="grid grid-cols-8 grid-rows-8 w-[210px] h-[210px] xs:w-[240px] xs:h-[240px] sm:w-[260px] sm:h-[260px] max-w-[calc(100vw-4.5rem)] max-h-[calc(100vw-4.5rem)] rounded-lg overflow-hidden border border-cyan-800">
 					{#each ranks as rank}
 						{#each files as file, fileIdx}
 							{@const coord = file + rank}
 							{@const piece = initialPieces[coord]}
 							{@const isDark = isDarkSquare(fileIdx, rank)}
 							<div
-								class="relative flex items-center justify-center font-serif text-lg sm:text-2xl transition-colors {isDark ? 'bg-cyan-950/80 text-cyan-100' : 'bg-cyan-600/30 text-cyan-200'}"
+								class="relative flex items-center justify-center font-serif text-base sm:text-xl transition-colors {isDark ? 'bg-cyan-950/80 text-cyan-100' : 'bg-cyan-600/30 text-cyan-200'}"
 								title="{coord.toUpperCase()}"
 							>
 								<!-- Coordenadas en los bordes -->
@@ -167,17 +174,17 @@
 				<div class="flex flex-col gap-2">
 					{#each players as p, idx}
 						{@const r = getRoleInfo(p, idx)}
-						<div class="flex items-center justify-between p-2.5 rounded-lg border text-xs {r.isMain ? 'bg-cyan-950/60 border-cyan-500/40' : 'bg-slate-900/70 border-slate-800'}">
+						<div class="court-player-badge flex items-center justify-between p-2.5 rounded-lg border text-xs {r.isMain ? 'border-cyan-500/50' : 'border-slate-700/60'}" style="background: rgba(15, 23, 42, 0.94) !important;">
 							<div class="flex items-center gap-2.5">
 								<span class="text-xl">{r.icon}</span>
 								<div>
 									<div class="font-bold text-white flex items-center gap-2">
-										<span>{p.first_name} {p.last_name}</span>
+										<span style="color: #ffffff !important;">{p.first_name} {p.last_name}</span>
 										<span class="text-[10px] px-2 py-0.5 rounded-full font-mono border {r.isMain ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'}">
 											{r.label}
 										</span>
 									</div>
-									<div class="text-[11px] text-slate-400 font-mono">
+									<div class="text-[11px] text-slate-300 font-mono" style="color: #cbd5e1 !important;">
 										DNI: {p.dni} &bull; {p.nationality || 'Perú'}
 									</div>
 								</div>

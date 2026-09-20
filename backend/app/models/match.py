@@ -12,6 +12,7 @@ class MatchStatus(str, Enum):
     SCHEDULED = "scheduled"
     LIVE = "live"
     FINISHED = "finished"
+    PAUSED = "paused"
     POSTPONED = "postponed"
     CANCELLED = "cancelled"
 
@@ -57,5 +58,6 @@ class Match(SQLModel, table=True):
     away_score_pen: Optional[int] = Field(default=None, ge=0)
 
     venue: Optional[str] = Field(default=None, max_length=255)
+    elapsed_seconds: Optional[int] = Field(default=0)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

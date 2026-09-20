@@ -7,7 +7,35 @@
 	 */
 	import { page } from '$app/stores';
 	import { auth } from '$lib/stores/auth';
-	import { onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+
+	let isLight = $state(false);
+
+	onMount(() => {
+		if (typeof window !== 'undefined') {
+			const saved = localStorage.getItem('torneo_theme');
+			if (saved === 'light') {
+				isLight = true;
+				document.documentElement.classList.add('light');
+			} else {
+				isLight = false;
+				document.documentElement.classList.remove('light');
+			}
+		}
+	});
+
+	function toggleTheme() {
+		isLight = !isLight;
+		if (typeof window !== 'undefined') {
+			if (isLight) {
+				document.documentElement.classList.add('light');
+				localStorage.setItem('torneo_theme', 'light');
+			} else {
+				document.documentElement.classList.remove('light');
+				localStorage.setItem('torneo_theme', 'dark');
+			}
+		}
+	}
 
 	const publicLinks = [
 		{ href: '/',        label: 'Inicio',       icon: 'home' },
@@ -84,12 +112,28 @@
 			{/if}
 		</div>
 
-		<!-- Indicador API + hamburguesa -->
-		<div class="flex items-center gap-3">
-			<div class="hidden md:flex items-center gap-1.5 text-xs text-slate-600">
+		<!-- Indicador API + conmutador de tema + hamburguesa -->
+		<div class="flex items-center gap-2 sm:gap-3">
+			<div class="hidden md:flex items-center gap-1.5 text-xs text-slate-500">
 				<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
 				Live
 			</div>
+
+			<!-- Botón conmutador Modo Claro / Oscuro (Responsivo) -->
+			<button
+				type="button"
+				onclick={toggleTheme}
+				class="theme-toggle-btn w-9 h-9 rounded-xl flex items-center justify-center text-base transition-transform active:scale-95 shadow-sm"
+				title={isLight ? 'Cambiar a Modo Oscuro' : 'Cambiar a Modo Claro'}
+				aria-label="Cambiar tema de color"
+			>
+				{#if isLight}
+					<span class="leading-none">🌙</span>
+				{:else}
+					<span class="leading-none">☀️</span>
+				{/if}
+			</button>
+
 			<button
 				class="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition"
 				onclick={toggleMenu}
@@ -110,7 +154,7 @@
 
 	<!-- Menú móvil -->
 	{#if mobileMenuOpen}
-		<div class="md:hidden border-t border-slate-800 px-4 py-3 flex flex-col gap-1 animate-fade-in"
+		<div class="md:hidden mobile-menu-box border-t border-slate-800 px-4 py-3 flex flex-col gap-1 animate-fade-in"
 			style="background: #0b1120;">
 			{#each publicLinks as link}
 				<a href={link.href}
@@ -145,6 +189,22 @@
 					Acceso Admin
 				</a>
 			{/if}
+
+			<!-- Fila de tema en menú móvil -->
+			<div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between px-2">
+				<span class="text-xs font-semibold text-slate-400">Tema de pantalla:</span>
+				<button
+					type="button"
+					onclick={toggleTheme}
+					class="px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 theme-toggle-btn"
+				>
+					{#if isLight}
+						<span>🌙 Modo Oscuro</span>
+					{:else}
+						<span>☀️ Modo Claro</span>
+					{/if}
+				</button>
+			</div>
 		</div>
 	{/if}
 </header>

@@ -49,31 +49,41 @@
 
 <div class="flex flex-col gap-3 w-full select-none">
 	<!-- ── HEADER DE LA CANCHA ──────────────────────────────────────────────── -->
-	<div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs shadow-md">
-		<div class="flex items-center gap-2">
-			<span class="w-3.5 h-3.5 rounded-full shadow border border-white/30" style="background-color: {teamColor};"></span>
-			<span class="font-black text-white text-sm">{teamName}</span>
-			<span class="text-slate-400">({players.length} jugador{players.length !== 1 ? 'es' : ''})</span>
+	<div class="soccer-header-bar flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 sm:px-4 sm:py-2.5 rounded-xl border text-xs shadow-sm transition-all">
+		<div class="flex items-center gap-2 min-w-0">
+			<span class="text-xl sm:text-2xl shrink-0">⚽</span>
+			<div class="min-w-0">
+				<h4 class="soccer-title text-xs sm:text-sm font-black uppercase tracking-wider leading-tight">
+					Cancha Oficial — Fútbol Táctico
+				</h4>
+				<span class="soccer-subtitle text-[10px] sm:text-[11px] font-mono block leading-none mt-0.5">
+					Esquema 11 vs 11 · {players.length} jugador{players.length !== 1 ? 'es' : ''}
+				</span>
+			</div>
 		</div>
-		<div class="flex items-center gap-1.5 font-mono text-[11px]">
-			<span class="px-2 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-700/50 font-bold" title="Máximo 1 arquero">
+		<div class="flex items-center flex-wrap gap-1.5 font-mono text-[11px] shrink-0">
+			<span class="pos-pill pos-pill-gk px-2 py-0.5 rounded font-bold border transition-colors" title="Máximo 1 arquero">
 				🧤 {goalkeepers.length}/1 POR
 			</span>
-			<span class="px-2 py-0.5 rounded bg-blue-950/70 text-blue-300 border border-blue-700/50 font-bold">
+			<span class="pos-pill pos-pill-def px-2 py-0.5 rounded font-bold border transition-colors">
 				🛡️ {defenders.length} DEF
 			</span>
-			<span class="px-2 py-0.5 rounded bg-amber-950/70 text-amber-300 border border-amber-700/50 font-bold">
+			<span class="pos-pill pos-pill-med px-2 py-0.5 rounded font-bold border transition-colors">
 				⚙️ {midfielders.length} MED
 			</span>
-			<span class="px-2 py-0.5 rounded bg-rose-950/70 text-rose-300 border border-rose-700/50 font-bold">
+			<span class="pos-pill pos-pill-fwd px-2 py-0.5 rounded font-bold border transition-colors">
 				⚽ {forwards.length} DEL
 			</span>
+			<div class="team-pill px-2.5 py-0.5 rounded-full font-bold border truncate max-w-[125px] transition-colors">
+				{teamName}
+			</div>
 		</div>
 	</div>
 
+
 	<!-- ── CANCHA DE CÉSPED TÁCTICA ─────────────────────────────────────────── -->
 	<div
-		class="relative w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-700/90 flex flex-col justify-between"
+		class="soccer-pitch tactical-court-scope relative w-full max-w-xl mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-500/60 flex flex-col justify-between"
 		style="
 			background: repeating-linear-gradient(
 				180deg,
@@ -82,8 +92,8 @@
 				#1e5b2e 50px,
 				#1e5b2e 100px
 			);
-			min-height: 600px;
-			height: 600px;
+			min-height: 480px;
+			height: 480px;
 		"
 	>
 		<!-- Línea perimetral de Cal Blanca -->
@@ -131,7 +141,7 @@
 								</button>
 							{/if}
 						</div>
-						<span class="mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white bg-slate-950/85 border border-white/20 truncate max-w-[90px] text-center shadow">
+						<span class="court-player-badge mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white truncate max-w-[95px] text-center shadow block" style="color: #ffffff !important;">
 							{getShortDisplayName(p)}
 						</span>
 					</div>
@@ -180,7 +190,7 @@
 								</button>
 							{/if}
 						</div>
-						<span class="mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white bg-slate-950/85 border border-white/20 truncate max-w-[90px] text-center shadow">
+						<span class="court-player-badge mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white truncate max-w-[95px] text-center shadow block" style="color: #ffffff !important;">
 							{getShortDisplayName(p)}
 						</span>
 					</div>
@@ -229,7 +239,7 @@
 								</button>
 							{/if}
 						</div>
-						<span class="mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white bg-slate-950/85 border border-white/20 truncate max-w-[90px] text-center shadow">
+						<span class="court-player-badge mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-white truncate max-w-[95px] text-center shadow block" style="color: #ffffff !important;">
 							{getShortDisplayName(p)}
 						</span>
 					</div>
@@ -277,7 +287,7 @@
 								</button>
 							{/if}
 						</div>
-						<span class="mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-amber-300 bg-slate-950/90 border border-amber-400/30 truncate max-w-[90px] text-center shadow">
+						<span class="court-player-badge mt-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-amber-300 truncate max-w-[95px] text-center shadow block" style="color: #fcd34d !important;">
 							{getShortDisplayName(p)}
 						</span>
 					</div>
@@ -303,7 +313,7 @@
 
 	<!-- ── BANCA DE SUPLENTES / RESERVA ────────────────────────────────────── -->
 	{#if benchPlayers.length > 0}
-		<div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800">
+		<div class="soccer-bench-card p-3 rounded-xl border transition-colors">
 			<div class="flex items-center justify-between mb-2">
 				<span class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
 					🪑 Reserva / Suplentes ({benchPlayers.length})
@@ -315,7 +325,7 @@
 						class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-xs shrink-0"
 					>
 						<span class="font-mono font-black text-amber-400">#{p.shirt_number ?? '?'}</span>
-						<span class="text-white font-medium">{getShortDisplayName(p)}</span>
+						<span class="text-white font-medium" style="color: #ffffff !important;">{getShortDisplayName(p)}</span>
 						{#if interactive && onRemovePlayer}
 							<button
 								type="button"
