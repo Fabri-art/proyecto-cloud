@@ -30,12 +30,46 @@
 			? sortedMatches
 			: sortedMatches.filter((m) => getMatchSport(m) === selectedSport)
 	);
-	let footballStandings = $derived(
-		standings.filter((s) => (teamsMap[s.team_id]?.sport || 'football') === 'football')
-	);
-	let basketballStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'basketball')
-	);
+	function getSportStandings(sport) {
+		const sportTeams = Object.values(teamsMap).filter((t) => (t.sport || 'football') === sport);
+		const existingMap = new Map((standings || []).map((s) => [s.team_id, s]));
+
+		const list = sportTeams.map((t) => {
+			const s = existingMap.get(t.id);
+			if (s) return s;
+			return {
+				team_id: t.id,
+				played: 0,
+				won: 0,
+				drawn: 0,
+				lost: 0,
+				goals_for: 0,
+				goals_against: 0,
+				goal_difference: 0,
+				points: 0
+			};
+		});
+
+		for (const s of (standings || [])) {
+			const t = teamsMap[s.team_id];
+			if (t && (t.sport || 'football') === sport && !sportTeams.some((team) => team.id === s.team_id)) {
+				list.push(s);
+			}
+		}
+
+		return list.sort((a, b) => {
+			if ((b.points ?? 0) !== (a.points ?? 0)) return (b.points ?? 0) - (a.points ?? 0);
+			const diffB = (b.goals_for ?? 0) - (b.goals_against ?? 0);
+			const diffA = (a.goals_for ?? 0) - (a.goals_against ?? 0);
+			if (diffB !== diffA) return diffB - diffA;
+			return (b.goals_for ?? 0) - (a.goals_for ?? 0);
+		});
+	}
+
+	let footballStandings = $derived(getSportStandings('football'));
+	let basketballStandings = $derived(getSportStandings('basketball'));
+	let volleyballStandings = $derived(getSportStandings('volleyball'));
+	let chessStandings = $derived(getSportStandings('underwater_chess'));
 
 	async function showTeamPitch(teamId) {
 		let t = teamsMap[teamId];
@@ -120,7 +154,7 @@
 			const [fixtureData, standingsData, teamsList] = await Promise.all([
 				fixtureApi.get(TOURNAMENT_ID).catch(() => ({ rounds: [] })),
 				standingsApi.get(TOURNAMENT_ID).catch(() => []),
-				teamsApi.list(TOURNAMENT_ID, true).catch(() => [])
+				teamsApi.list(TOURNAMENT_ID, false).catch(() => [])
 			]);
 			const map = {};
 			for (const t of teamsList) map[t.id] = t;
@@ -145,13 +179,15 @@
 
 	onMount(() => {
 		fetchAll();
-		refreshTimer = setInterval(async () => {
-			await fetchAll();
-			const interval = hasLiveMatch ? LIVE_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS;
-			clearInterval(refreshTimer);
-			refreshTimer = setInterval(fetchAll, interval);
+		refreshTimer = setInterval(() => {
+			fetchAll();
 		}, hasLiveMatch ? LIVE_REFRESH_INTERVAL_MS : REFRESH_INTERVAL_MS);
-		clockTimer = setInterval(() => { secondsSince++; now = Date.now(); }, 1000);
+		clockTimer = setInterval(() => {
+			secondsSince++;
+			if (hasLiveMatch) {
+				now = Date.now();
+			}
+		}, 1000);
 	});
 
 	onDestroy(() => {
@@ -425,16 +461,16 @@
 
 <!-- ════════ PESTAÑA: POSICIONES ══════════════════════════════════════════════ -->
 {#if activeTab === 'posiciones'}
-	{#if standings.length === 0}
+	{#if footballStandings.length === 0 && basketballStandings.length === 0 && volleyballStandings.length === 0 && chessStandings.length === 0}
 		<div class="glass-card p-16 text-center">
 			<div class="text-5xl mb-4 opacity-30">📊</div>
 			<h2 class="text-lg font-bold text-white mb-2">Sin datos todavía</h2>
-			<p class="text-slate-500 text-sm">La tabla se completa automáticamente al finalizar partidos.</p>
+			<p class="text-slate-500 text-sm">La tabla se completa automáticamente al registrar clubes y finalizar partidos.</p>
 		</div>
 	{:else}
 		<div class="space-y-10">
 			<!-- TABLA DE FÚTBOL -->
-			{#if (selectedSport === 'all' || selectedSport === 'football') && footballStandings.length > 0}
+			{#if (selectedSport === 'all' || selectedSport === 'football') && (footballStandings.length > 0 || selectedSport === 'football')}
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
@@ -519,7 +555,7 @@
 			{/if}
 
 			<!-- TABLA DE BÁSQUETBOL -->
-			{#if (selectedSport === 'all' || selectedSport === 'basketball') && basketballStandings.length > 0}
+			{#if (selectedSport === 'all' || selectedSport === 'basketball') && (basketballStandings.length > 0 || selectedSport === 'basketball')}
 				<div class="space-y-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
@@ -602,7 +638,7 @@
 			{/if}
 
 			<!-- TABLA VÓLEY -->
-			{#if (selectedSport === 'all' || selectedSport === 'volleyball') && volleyballStandings.length > 0}
+			{#if (selectedSport === 'all' || selectedSport === 'volleyball') && (volleyballStandings.length > 0 || selectedSport === 'volleyball')}
 				<div class="glass-card overflow-hidden">
 					<div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
 						style="background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(124,58,237,0.04));">
@@ -613,9 +649,14 @@
 								<p class="text-xs text-violet-300/80">Sets y Puntos en tiempo real</p>
 							</div>
 						</div>
-						<a href="/posiciones" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1">
-							Ver completa →
-						</a>
+						<div class="flex items-center gap-3">
+							<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-violet-500/15 text-violet-300 border border-violet-500/30">
+								{volleyballStandings.length} clubes
+							</span>
+							<a href="/posiciones" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1">
+								Ver completa →
+							</a>
+						</div>
 					</div>
 					<div class="overflow-x-auto -mx-1 sm:mx-0">
 					<table class="w-full text-sm min-w-[520px]">
@@ -633,6 +674,9 @@
 								</tr>
 							</thead>
 							<tbody>
+								{#if volleyballStandings.length === 0}
+									<tr><td colspan="9" class="text-center py-6 text-slate-500 text-xs">No hay clubes registrados en vóley todavía</td></tr>
+								{/if}
 								{#each volleyballStandings as s, i}
 									{@const accentLeft = i === 0 ? '#8b5cf6' : i === 1 ? '#a78bfa' : '#64748b'}
 									{@const tColor = teamColor(s.team_id)}
@@ -680,7 +724,7 @@
 			{/if}
 
 			<!-- TABLA AJEDREZ BAJO EL AGUA -->
-			{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && chessStandings.length > 0}
+			{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && (chessStandings.length > 0 || selectedSport === 'underwater_chess')}
 				<div class="glass-card overflow-hidden">
 					<div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between"
 						style="background: linear-gradient(135deg, rgba(6,182,212,0.12), rgba(8,145,178,0.04));">
@@ -691,9 +735,14 @@
 								<p class="text-xs text-cyan-300/80">Duelos 1 vs 1</p>
 							</div>
 						</div>
-						<a href="/posiciones" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
-							Ver completa →
-						</a>
+						<div class="flex items-center gap-3">
+							<span class="text-xs px-2.5 py-1 rounded-full font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+								{chessStandings.length} competidores
+							</span>
+							<a href="/posiciones" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+								Ver completa →
+							</a>
+						</div>
 					</div>
 					<div class="overflow-x-auto -mx-1 sm:mx-0">
 					<table class="w-full text-sm min-w-[520px]">
@@ -709,7 +758,10 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each chessStandings.slice(0, 5) as s, i}
+								{#if chessStandings.length === 0}
+									<tr><td colspan="7" class="text-center py-6 text-slate-500 text-xs">No hay competidores registrados en ajedrez bajo el agua todavía</td></tr>
+								{/if}
+								{#each chessStandings as s, i}
 									{@const accentLeft = i === 0 ? '#06b6d4' : i === 1 ? '#38bdf8' : '#64748b'}
 									{@const tColor = teamColor(s.team_id)}
 									<tr class="standings-row border-b border-slate-800/50 transition-colors"

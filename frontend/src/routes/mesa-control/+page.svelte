@@ -344,10 +344,18 @@
 		rounds.find((r) => (r.matchday ?? r.round) === selectedRound)?.matches ?? []
 	);
 
+	let hasLiveMatch = $derived(
+		rounds.some((r) =>
+			(r.matches ?? []).some((m) => (m.status ?? '').toLowerCase() === 'live')
+		)
+	);
+
 	onMount(() => {
 		loadData();
 		globalTick = setInterval(() => {
-			now = Date.now();
+			if (hasLiveMatch || timerMatch) {
+				now = Date.now();
+			}
 		}, 1000);
 	});
 	onDestroy(() => {

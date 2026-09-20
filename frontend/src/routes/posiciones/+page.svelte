@@ -15,18 +15,46 @@
 	let error = $state(null);
 	let selectedSport = $state('all');
 
-	let footballStandings = $derived(
-		standings.filter((s) => (teamsMap[s.team_id]?.sport || 'football') === 'football')
-	);
-	let basketballStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'basketball')
-	);
-	let volleyballStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'volleyball')
-	);
-	let chessStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'underwater_chess')
-	);
+	function getSportStandings(sport) {
+		const sportTeams = Object.values(teamsMap).filter((t) => (t.sport || 'football') === sport);
+		const existingMap = new Map((standings || []).map((s) => [s.team_id, s]));
+
+		const list = sportTeams.map((t) => {
+			const s = existingMap.get(t.id);
+			if (s) return s;
+			return {
+				team_id: t.id,
+				played: 0,
+				won: 0,
+				drawn: 0,
+				lost: 0,
+				goals_for: 0,
+				goals_against: 0,
+				goal_difference: 0,
+				points: 0
+			};
+		});
+
+		for (const s of (standings || [])) {
+			const t = teamsMap[s.team_id];
+			if (t && (t.sport || 'football') === sport && !sportTeams.some((team) => team.id === s.team_id)) {
+				list.push(s);
+			}
+		}
+
+		return list.sort((a, b) => {
+			if ((b.points ?? 0) !== (a.points ?? 0)) return (b.points ?? 0) - (a.points ?? 0);
+			const diffB = (b.goals_for ?? 0) - (b.goals_against ?? 0);
+			const diffA = (a.goals_for ?? 0) - (a.goals_against ?? 0);
+			if (diffB !== diffA) return diffB - diffA;
+			return (b.goals_for ?? 0) - (a.goals_for ?? 0);
+		});
+	}
+
+	let footballStandings = $derived(getSportStandings('football'));
+	let basketballStandings = $derived(getSportStandings('basketball'));
+	let volleyballStandings = $derived(getSportStandings('volleyball'));
+	let chessStandings = $derived(getSportStandings('underwater_chess'));
 
 	onMount(async () => {
 		try {
@@ -83,7 +111,7 @@
 		<p class="text-slate-400 text-sm mt-2">{error}</p>
 	</div>
 
-{:else if standings.length === 0}
+{:else if standings.length === 0 && Object.keys(teamsMap).length === 0}
 	<div class="glass-card p-12 text-center animate-fade-in-up">
 		<h2 class="text-xl font-bold text-white mb-2">Sin estadisticas todavia</h2>
 		<p class="text-slate-400 text-sm">
@@ -124,7 +152,7 @@
 	<div class="flex flex-col gap-8">
 
 	<!-- FUTBOL -->
-	{#if (selectedSport === 'all' || selectedSport === 'football') && footballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'football') && (footballStandings.length > 0 || selectedSport === 'football')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(16,185,129,0.08);">
 				<span class="text-xl">&#x26BD;</span>
@@ -189,7 +217,7 @@
 	{/if}
 
 	<!-- BASQUETBOL -->
-	{#if (selectedSport === 'all' || selectedSport === 'basketball') && basketballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'basketball') && (basketballStandings.length > 0 || selectedSport === 'basketball')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(245,158,11,0.08);">
 				<span class="text-xl">&#x1F3C0;</span>
@@ -254,7 +282,7 @@
 	{/if}
 
 	<!-- VOLEY -->
-	{#if (selectedSport === 'all' || selectedSport === 'volleyball') && volleyballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'volleyball') && (volleyballStandings.length > 0 || selectedSport === 'volleyball')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(124,58,237,0.08);">
 				<span class="text-xl">&#x1F3D0;</span>
@@ -319,7 +347,7 @@
 	{/if}
 
 	<!-- AJEDREZ BAJO EL AGUA -->
-	{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && chessStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && (chessStandings.length > 0 || selectedSport === 'underwater_chess')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(6,182,212,0.08);">
 				<span class="text-xl">🌊♟️</span>
