@@ -344,10 +344,18 @@
 		rounds.find((r) => (r.matchday ?? r.round) === selectedRound)?.matches ?? []
 	);
 
+	let hasLiveMatch = $derived(
+		rounds.some((r) =>
+			(r.matches ?? []).some((m) => (m.status ?? '').toLowerCase() === 'live')
+		)
+	);
+
 	onMount(() => {
 		loadData();
 		globalTick = setInterval(() => {
-			now = Date.now();
+			if (hasLiveMatch || timerMatch) {
+				now = Date.now();
+			}
 		}, 1000);
 	});
 	onDestroy(() => {
@@ -559,7 +567,7 @@
 		{:else}
 			
 			<!-- ── Filtro por Deporte ────────────────────────────────────────── -->
-			<div class="flex items-center gap-2 mb-4 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-fit">
+			<div class="flex items-center gap-2 mb-4 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar">
 				<button
 					type="button"
 					onclick={() => (selectedSport = 'all')}

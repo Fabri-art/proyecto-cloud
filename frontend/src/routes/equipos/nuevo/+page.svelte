@@ -687,7 +687,7 @@
 	{:else}
 	<form onsubmit={handleSubmit} class="flex flex-col gap-8">
 		<!-- ── SECCIÓN 1: DATOS DEL CLUB ────────────────────────────────────────── -->
-		<div class="glass-card p-6 md:p-8 flex flex-col gap-5">
+		<div class="glass-card p-4 sm:p-6 md:p-8 flex flex-col gap-5">
 			<div class="flex items-center gap-2 border-b pb-3" style="border-color: var(--border-color);">
 				<span class="text-2xl">🛡️</span>
 				<h2 class="text-xl font-bold text-white">Información del Club</h2>
@@ -699,22 +699,22 @@
 					<h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
 						<span class="text-emerald-400">🏅</span> Disciplina Deportiva
 					</h3>
-					<div class="flex flex-wrap gap-4">
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500" />
-							<span class="text-white">⚽ Fútbol</span>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'football' ? 'bg-emerald-500/15 border-emerald-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500 w-4 h-4" />
+							<span class="font-semibold text-sm">⚽ Fútbol</span>
 						</label>
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500" />
-							<span class="text-white">🏀 Básquet</span>
+						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'basketball' ? 'bg-amber-500/15 border-amber-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500 w-4 h-4" />
+							<span class="font-semibold text-sm">🏀 Básquet</span>
 						</label>
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500" />
-							<span class="text-white">🏐 Vóley</span>
+						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'volleyball' ? 'bg-purple-500/15 border-purple-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500 w-4 h-4" />
+							<span class="font-semibold text-sm">🏐 Vóley</span>
 						</label>
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="radio" bind:group={teamData.sport} value="underwater_chess" class="accent-cyan-500" />
-							<span class="text-white">♟️ Ajedrez bajo el agua</span>
+						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'underwater_chess' ? 'bg-cyan-500/15 border-cyan-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="underwater_chess" class="accent-cyan-500 w-4 h-4" />
+							<span class="font-semibold text-sm">♟️ Ajedrez bajo el agua</span>
 						</label>
 					</div>
 				</div>
@@ -840,7 +840,7 @@
 		</div>
 
 		<!-- ── SECCIÓN 2: CARGA DE PLANTILLA (JUGADORES) ────────────────────────── -->
-		<div class="glass-card p-6 md:p-8 flex flex-col gap-6">
+		<div class="glass-card p-3.5 sm:p-6 md:p-8 flex flex-col gap-6 overflow-hidden">
 			<!-- Header de sección con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
@@ -1211,7 +1211,7 @@
 <!-- ── MODAL QUICK-ADD DESDE LA CANCHA TÁCTICA ─────────────────────────────────── -->
 {#if showQuickAddModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-		<div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-5">
+		<div class="glass-card w-[95vw] sm:max-w-md p-4 sm:p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
 				<div class="flex items-center gap-2">
 					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '🏟️'}</span>

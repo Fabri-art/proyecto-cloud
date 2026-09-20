@@ -15,18 +15,46 @@
 	let error = $state(null);
 	let selectedSport = $state('all');
 
-	let footballStandings = $derived(
-		standings.filter((s) => (teamsMap[s.team_id]?.sport || 'football') === 'football')
-	);
-	let basketballStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'basketball')
-	);
-	let volleyballStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'volleyball')
-	);
-	let chessStandings = $derived(
-		standings.filter((s) => teamsMap[s.team_id]?.sport === 'underwater_chess')
-	);
+	function getSportStandings(sport) {
+		const sportTeams = Object.values(teamsMap).filter((t) => (t.sport || 'football') === sport);
+		const existingMap = new Map((standings || []).map((s) => [s.team_id, s]));
+
+		const list = sportTeams.map((t) => {
+			const s = existingMap.get(t.id);
+			if (s) return s;
+			return {
+				team_id: t.id,
+				played: 0,
+				won: 0,
+				drawn: 0,
+				lost: 0,
+				goals_for: 0,
+				goals_against: 0,
+				goal_difference: 0,
+				points: 0
+			};
+		});
+
+		for (const s of (standings || [])) {
+			const t = teamsMap[s.team_id];
+			if (t && (t.sport || 'football') === sport && !sportTeams.some((team) => team.id === s.team_id)) {
+				list.push(s);
+			}
+		}
+
+		return list.sort((a, b) => {
+			if ((b.points ?? 0) !== (a.points ?? 0)) return (b.points ?? 0) - (a.points ?? 0);
+			const diffB = (b.goals_for ?? 0) - (b.goals_against ?? 0);
+			const diffA = (a.goals_for ?? 0) - (a.goals_against ?? 0);
+			if (diffB !== diffA) return diffB - diffA;
+			return (b.goals_for ?? 0) - (a.goals_for ?? 0);
+		});
+	}
+
+	let footballStandings = $derived(getSportStandings('football'));
+	let basketballStandings = $derived(getSportStandings('basketball'));
+	let volleyballStandings = $derived(getSportStandings('volleyball'));
+	let chessStandings = $derived(getSportStandings('underwater_chess'));
 
 	onMount(async () => {
 		try {
@@ -83,7 +111,7 @@
 		<p class="text-slate-400 text-sm mt-2">{error}</p>
 	</div>
 
-{:else if standings.length === 0}
+{:else if standings.length === 0 && Object.keys(teamsMap).length === 0}
 	<div class="glass-card p-12 text-center animate-fade-in-up">
 		<h2 class="text-xl font-bold text-white mb-2">Sin estadisticas todavia</h2>
 		<p class="text-slate-400 text-sm">
@@ -93,7 +121,7 @@
 
 {:else}
 	<!-- Filtro de disciplina -->
-	<div class="flex flex-wrap items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+	<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm shadow-xl shrink-0">
 		<button type="button" onclick={() => (selectedSport = 'all')}
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}">
 			<span>Todos</span>
@@ -124,7 +152,7 @@
 	<div class="flex flex-col gap-8">
 
 	<!-- FUTBOL -->
-	{#if (selectedSport === 'all' || selectedSport === 'football') && footballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'football') && (footballStandings.length > 0 || selectedSport === 'football')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(16,185,129,0.08);">
 				<span class="text-xl">&#x26BD;</span>
@@ -136,8 +164,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -189,7 +217,7 @@
 	{/if}
 
 	<!-- BASQUETBOL -->
-	{#if (selectedSport === 'all' || selectedSport === 'basketball') && basketballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'basketball') && (basketballStandings.length > 0 || selectedSport === 'basketball')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(245,158,11,0.08);">
 				<span class="text-xl">&#x1F3C0;</span>
@@ -201,8 +229,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -254,7 +282,7 @@
 	{/if}
 
 	<!-- VOLEY -->
-	{#if (selectedSport === 'all' || selectedSport === 'volleyball') && volleyballStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'volleyball') && (volleyballStandings.length > 0 || selectedSport === 'volleyball')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(124,58,237,0.08);">
 				<span class="text-xl">&#x1F3D0;</span>
@@ -266,8 +294,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -319,15 +347,15 @@
 	{/if}
 
 	<!-- AJEDREZ BAJO EL AGUA -->
-	{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && chessStandings.length > 0}
+	{#if (selectedSport === 'all' || selectedSport === 'underwater_chess') && (chessStandings.length > 0 || selectedSport === 'underwater_chess')}
 		<div class="glass-card overflow-hidden animate-fade-in-up">
 			<div class="px-5 py-3 border-b border-slate-800 flex items-center gap-3" style="background: rgba(6,182,212,0.08);">
 				<span class="text-xl">🌊♟️</span>
 				<h2 class="font-black text-white text-lg">Ajedrez bajo el agua</h2>
 				<span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 font-semibold ml-auto">{chessStandings.length} competidores</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>

@@ -112,15 +112,18 @@ async def recalculate_standings(tournament_id: int, session: AsyncSession) -> Li
 
 async def get_standings(tournament_id: int, session: AsyncSession) -> List[Standing]:
     """Retrieve current standings."""
+    teams = (await session.execute(
+        select(Team).where(Team.tournament_id == tournament_id)
+    )).scalars().all()
+
     standings = (await session.execute(
         select(Standing)
         .where(Standing.tournament_id == tournament_id)
         .order_by(Standing.position)
     )).scalars().all()
     
-    # If no standings exist yet, maybe the tournament just started. 
-    # Let's ensure they are created if missing.
-    if not standings:
+    # If no standings exist yet, or new teams were added without a standing record:
+    if not standings or len(standings) < len(teams):
         standings = await recalculate_standings(tournament_id, session)
         
     return standings

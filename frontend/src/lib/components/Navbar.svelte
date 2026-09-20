@@ -40,7 +40,7 @@
 </script>
 
 <header class="navbar-bar sticky top-0 z-40 w-full">
-	<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-15">
+	<nav class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between h-15">
 
 		<!-- Logo -->
 		<a href="/" class="flex items-center gap-2.5 group shrink-0">

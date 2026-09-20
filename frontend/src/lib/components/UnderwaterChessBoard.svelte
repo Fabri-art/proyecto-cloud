@@ -68,8 +68,8 @@
 <div class="flex flex-col gap-4 w-full select-none">
 	<!-- ══ TABLERO DE AJEDREZ SUBMARINO ════════════════════════════════ -->
 	<div
-		class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-cyan-500/40 p-5 flex flex-col items-center gap-4"
-		style="background: radial-gradient(ellipse at 50% 0%, #0d3b66 0%, #08203e 50%, #030d1a 100%);"
+		class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-cyan-500/40 p-3 sm:p-5 flex flex-col items-center gap-4"
+		style="background: radial-gradient(ellipse at 50% 0%, #0d3b66 0%, #08203e 50%, #030d1a 100%); width: 100%; max-width: 100%; box-sizing: border-box;"
 	>
 		<!-- Efecto de burbujas y rayos de luz subacuáticos -->
 		<div class="absolute inset-0 pointer-events-none opacity-30 overflow-hidden" aria-hidden="true">
@@ -107,7 +107,7 @@
 		<!-- Cuadrícula del tablero 8x8 con coordenadas -->
 		<div class="relative z-10 flex flex-col items-center">
 			<div class="p-2 rounded-xl bg-slate-950/80 border-2 border-cyan-600/60 shadow-[0_0_30px_rgba(6,182,212,0.25)]">
-				<div class="grid grid-cols-8 grid-rows-8 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-lg overflow-hidden border border-cyan-800">
+				<div class="grid grid-cols-8 grid-rows-8 w-[250px] h-[250px] xs:w-[280px] xs:h-[280px] sm:w-80 sm:h-80 md:w-96 md:h-96 max-w-[calc(100vw-4.5rem)] max-h-[calc(100vw-4.5rem)] rounded-lg overflow-hidden border border-cyan-800">
 					{#each ranks as rank}
 						{#each files as file, fileIdx}
 							{@const coord = file + rank}

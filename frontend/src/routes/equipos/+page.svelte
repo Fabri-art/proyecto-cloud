@@ -140,7 +140,7 @@
 </div>
 
 <!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
-<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm shadow-xl shrink-0">
 	<button
 		type="button"
 		onclick={() => (selectedSportFilter = 'all')}
@@ -273,6 +273,14 @@
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
 									🏀 Básquet
 								</span>
+							{:else if team.sport === 'volleyball'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+									🏐 Vóley
+								</span>
+							{:else if team.sport === 'underwater_chess'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+									♟️ Ajedrez bajo el agua
+								</span>
 							{:else}
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
 									⚽ Fútbol
@@ -323,7 +331,7 @@
 	{@const pal = teamPalette(selectedTeam.id)}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
-		style="background: rgba(4,8,16,0.85);"
+		style="background: rgba(4,8,16,0.85); padding: 0.5rem;"
 		role="dialog"
 		aria-modal="true"
 		onclick={(e) => e.target === e.currentTarget && closeModal()}
