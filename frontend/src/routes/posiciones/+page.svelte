@@ -93,7 +93,7 @@
 
 {:else}
 	<!-- Filtro de disciplina -->
-	<div class="flex flex-wrap items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+	<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm shadow-xl shrink-0">
 		<button type="button" onclick={() => (selectedSport = 'all')}
 			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'all' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}">
 			<span>Todos</span>
@@ -136,8 +136,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -201,8 +201,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -266,8 +266,8 @@
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-slate-400 inline-block"></span> 2do lugar</span>
 				<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-amber-600 inline-block"></span> 3er lugar</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>
@@ -326,8 +326,8 @@
 				<h2 class="font-black text-white text-lg">Ajedrez bajo el agua</h2>
 				<span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 font-semibold ml-auto">{chessStandings.length} competidores</span>
 			</div>
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="overflow-x-auto -mx-1 sm:mx-0">
+				<table class="w-full text-sm min-w-[540px]">
 					<thead>
 						<tr class="text-xs text-slate-400 uppercase tracking-wider" style="border-bottom: 1px solid var(--border-color); background: rgba(15,23,42,0.5);">
 							<th class="px-4 py-3 text-left w-8">#</th>

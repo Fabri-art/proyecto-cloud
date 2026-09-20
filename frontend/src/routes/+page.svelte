@@ -111,7 +111,7 @@
 	</div>
 
 	<!-- Contenido del hero -->
-	<div class="relative z-10 px-6 py-16 sm:px-10 sm:py-20 text-center animate-fade-in-up">
+	<div class="relative z-10 px-4 py-10 sm:px-10 sm:py-20 text-center animate-fade-in-up">
 		<!-- Badge de estado del servidor -->
 		<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 border"
 			style="background: rgba(8,12,20,0.7); border-color: rgba(148,163,184,0.15);">
@@ -127,7 +127,7 @@
 			{/if}
 		</div>
 
-		<h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-none mb-4 tracking-tight font-display">
+		<h1 class="text-3xl sm:text-5xl lg:text-7xl font-black text-white leading-tight mb-4 tracking-tight font-display">
 			Torneo <span style="color: var(--accent-green); text-shadow: 0 0 40px rgba(16,185,129,0.4);">Hub</span>
 		</h1>
 		<p class="text-slate-400 text-base sm:text-lg max-w-lg mx-auto mb-10 leading-relaxed">
@@ -142,7 +142,7 @@
 					<span class="stat-num">{stats.teams}</span>
 					<span class="stat-label">Equipos</span>
 				</div>
-				<div class="stat-divider"></div>
+				<div class="stat-divider hidden sm:block"></div>
 				<div class="stat-chip">
 					<span class="stat-num">{stats.matches}</span>
 					<span class="stat-label">Partidos jugados</span>

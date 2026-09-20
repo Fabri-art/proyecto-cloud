@@ -450,8 +450,8 @@
 					</div>
 
 					<div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/40 shadow-xl">
-						<div class="overflow-x-auto">
-							<table class="w-full text-sm">
+						<div class="overflow-x-auto -mx-1 sm:mx-0">
+					<table class="w-full text-sm min-w-[520px]">
 								<thead>
 									<tr style="background: #0b1120; border-bottom: 1px solid #1e293b;">
 										<th class="px-4 py-3 text-left text-xs section-label w-10">#</th>
@@ -535,8 +535,8 @@
 					</div>
 
 					<div class="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/40 shadow-xl">
-						<div class="overflow-x-auto">
-							<table class="w-full text-sm">
+						<div class="overflow-x-auto -mx-1 sm:mx-0">
+					<table class="w-full text-sm min-w-[520px]">
 								<thead>
 									<tr style="background: #0b1120; border-bottom: 1px solid #1e293b;">
 										<th class="px-4 py-3 text-left text-xs section-label w-10">#</th>
@@ -617,8 +617,8 @@
 							Ver completa →
 						</a>
 					</div>
-					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+					<div class="overflow-x-auto -mx-1 sm:mx-0">
+					<table class="w-full text-sm min-w-[520px]">
 							<thead>
 								<tr class="border-b border-slate-800 text-slate-400 text-xs">
 									<th class="px-4 py-3 text-center w-12 section-label">#</th>
@@ -695,8 +695,8 @@
 							Ver completa →
 						</a>
 					</div>
-					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+					<div class="overflow-x-auto -mx-1 sm:mx-0">
+					<table class="w-full text-sm min-w-[520px]">
 							<thead>
 								<tr class="border-b border-slate-800 text-slate-400 text-xs">
 									<th class="px-4 py-3 text-center w-12 section-label">#</th>

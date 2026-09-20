@@ -140,7 +140,7 @@
 </div>
 
 <!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
-<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-fit backdrop-blur-sm shadow-xl">
+<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm shadow-xl shrink-0">
 	<button
 		type="button"
 		onclick={() => (selectedSportFilter = 'all')}
@@ -323,7 +323,7 @@
 	{@const pal = teamPalette(selectedTeam.id)}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
-		style="background: rgba(4,8,16,0.85);"
+		style="background: rgba(4,8,16,0.85); padding: 0.5rem;"
 		role="dialog"
 		aria-modal="true"
 		onclick={(e) => e.target === e.currentTarget && closeModal()}

@@ -25,7 +25,7 @@
 <Navbar />
 
 <!-- Contenido de cada página -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 overflow-x-hidden">
 	{@render children()}
 </main>
 
