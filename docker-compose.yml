@@ -1,59 +1,70 @@
 services:
-  # ─── PostgreSQL ─────────────────────────────────────────────────────────────
+  # --- PostgreSQL local ----------------------------------------------
   db:
     profiles: ["local"]
     image: postgres:16-alpine
     container_name: nombre_creativo_db
     restart: unless-stopped
+
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: nombre_creativo_db
+
     ports:
       - "5433:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nombre_creativo_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ─── FastAPI Backend ───────────────────────────────────────────────────────
+  # --- FastAPI Backend -----------------------------------------------
   backend:
     build:
       context: ./backend
-      target: development   # hot-reload via uvicorn --reload
+      target: development
+
     container_name: nombre_creativo_backend
     restart: unless-stopped
+
     env_file:
       - ./backend/.env
+
     ports:
       - "8001:8000"
-    volumes:
-      # Mount source for live-reload in dev
-      - ./backend:/app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
-  # ─── SvelteKit Frontend ────────────────────────────────────────────────────
+    volumes:
+      - ./backend:/app
+
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # --- SvelteKit Frontend --------------------------------------------
   frontend:
     image: node:20-alpine
     container_name: nombre_creativo_frontend
     working_dir: /app
     restart: unless-stopped
+
     environment:
-      # URL pública del backend (accesible desde el navegador)
       PUBLIC_API_BASE_URL: /api/v1
-      # URL interna del backend dentro de la red de Docker para el proxy de Vite
       BACKEND_URL: http://backend:8000
+
     ports:
       - "5173:5173"
+
     volumes:
-      # Monta el código fuente para hot-reload
       - ./frontend:/app
-      # Evita sobrescribir node_modules del contenedor con los del host
       - /app/node_modules
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+    command: >
+      sh -c "npm install && npm run build && npm run preview -- --host 0.0.0.0 --port 5173"
+
     depends_on:
       - backend
 
