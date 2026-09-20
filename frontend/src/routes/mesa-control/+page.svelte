@@ -18,6 +18,10 @@
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
+	import AuraBattleArena from '$lib/components/AuraBattleArena.svelte';
+	import SpermTriathlonTrack from '$lib/components/SpermTriathlonTrack.svelte';
+	import TireRaceTrack from '$lib/components/TireRaceTrack.svelte';
+	import MosquitoRadar from '$lib/components/MosquitoRadar.svelte';
 
 	const TOURNAMENT_ID = 1;
 
@@ -67,7 +71,11 @@
 	let globalTick = null;
 
 	function getMatchTimer(match, _tick) {
-		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		const s = (match.status ?? '').toLowerCase();
+		if (s === 'paused') {
+			return formatTime(match.elapsed_seconds || 0);
+		}
+		if (s !== 'live') return null;
 		if (!match.started_at) return '00:00';
 		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
 		const startedMs = new Date(iso).getTime();
@@ -77,7 +85,29 @@
 	}
 	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball' | 'volleyball'
 	function getMatchSport(match) {
-		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
+		return match.sport || teamsMap[match.home_team_id]?.sport || teamsMap[match.away_team_id]?.sport || 'football';
+	}
+
+	function getSportBadge(sport) {
+		switch (sport) {
+			case 'basketball':
+				return { name: 'Básquetbol', icon: '🏀', bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30' };
+			case 'volleyball':
+				return { name: 'Vóley', icon: '🏐', bg: 'bg-sky-500/15', text: 'text-sky-300', border: 'border-sky-500/30' };
+			case 'underwater_chess':
+				return { name: 'Ajedrez bajo el agua', icon: '♟️', bg: 'bg-cyan-500/15', text: 'text-cyan-300', border: 'border-cyan-500/30' };
+			case 'aura_battle':
+				return { name: 'Batalla de aura', icon: '🕺', bg: 'bg-yellow-500/15', text: 'text-yellow-300', border: 'border-yellow-500/30' };
+			case 'sperm_triathlon':
+				return { name: 'Triatlón espermatozoide', icon: '🧬', bg: 'bg-cyan-500/15', text: 'text-cyan-300', border: 'border-cyan-500/30' };
+			case 'tire_race':
+				return { name: 'Carrera de llantas', icon: '🛞', bg: 'bg-orange-500/15', text: 'text-orange-300', border: 'border-orange-500/30' };
+			case 'mosquito_marathon':
+				return { name: 'Maratón de mosquitos', icon: '🦟', bg: 'bg-lime-500/15', text: 'text-lime-300', border: 'border-lime-500/30' };
+			case 'football':
+			default:
+				return { name: 'Fútbol', icon: '⚽', bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/30' };
+		}
 	}
 	let filteredMatches = $derived(
 		selectedSport === 'all'
@@ -102,6 +132,7 @@
 	const statusConfig = {
 		scheduled: { label: 'Programado',      badgeClass: 'badge-scheduled',   icon: '🕐' },
 		live:      { label: 'EN JUEGO (LIVE)', badgeClass: 'badge-in-progress', icon: '⚽' },
+		paused:    { label: 'Pausado',         badgeClass: 'badge-scheduled text-amber-300 border-amber-500/40 bg-amber-500/15', icon: '⏸️' },
 		finished:  { label: 'Finalizado',      badgeClass: 'badge-finished',    icon: '🏁' },
 		cancelled: { label: 'Cancelado',       badgeClass: 'badge-cancelled',   icon: '❌' },
 		postponed: { label: 'Pospuesto',       badgeClass: 'badge-scheduled',   icon: '⏸️' }
@@ -159,6 +190,12 @@
 		try {
 			await fixtureApi.generate(TOURNAMENT_ID);
 			toast.success('¡Fixture generado exitosamente!');
+			try {
+				const teamsList = await teamsApi.list(TOURNAMENT_ID, true);
+				const map = {};
+				for (const tm of teamsList) map[tm.id] = tm;
+				teamsMap = map;
+			} catch (_) {}
 			await loadFixture();
 		} catch (err) {
 			toast.error(err.message || 'No se pudo generar el fixture. Verifica tener al menos 2 equipos.');
@@ -214,6 +251,12 @@
 			playedMatchesCount = 0;
 			activeMatch = null;
 			showResetFixtureModal = false;
+			try {
+				const teamsList = await teamsApi.list(TOURNAMENT_ID, true);
+				const map = {};
+				for (const tm of teamsList) map[tm.id] = tm;
+				teamsMap = map;
+			} catch (_) {}
 			await loadFixture();
 			toast.success('Fixture regenerado exitosamente. Los equipos se han mantenido intactos.');
 		} catch (err) {
@@ -232,12 +275,14 @@
 		liveHomeScore = match.home_score ?? 0;
 		liveAwayScore = match.away_score ?? 0;
 
-		// Calcular tiempo real transcurrido si el partido está EN VIVO
+		// Calcular tiempo real transcurrido según estado
 		if (normalStatus === 'live' && match.started_at) {
 			const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
 			const startedMs = new Date(iso).getTime();
 			timerSeconds = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
 			startTimer();
+		} else if (normalStatus === 'paused') {
+			timerSeconds = match.elapsed_seconds || 0;
 		} else {
 			timerSeconds = 0;
 		}
@@ -272,24 +317,74 @@
 		return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 	}
 
-	// ── Goles táctiles (se sincronizan al backend) ─────────────────────────────
+	// ── Sincronización en tiempo real y cola de peticiones ─────────────────────
+	let scoreUpdateQueue = Promise.resolve();
+
+	function syncScoreToBackend(matchId, homeScore, awayScore) {
+		scoreUpdateQueue = scoreUpdateQueue
+			.then(async () => {
+				await matchesApi.updateScore(matchId, homeScore, awayScore);
+			})
+			.catch((err) => {
+				console.error('Error al sincronizar marcador en backend:', err);
+				toast.error('Error al sincronizar marcador: ' + (err.message || ''));
+			});
+	}
+
+	function broadcastScoreSync(matchId, homeScore, awayScore, status) {
+		const payload = {
+			matchId,
+			home_score: homeScore,
+			away_score: awayScore,
+			status: status || 'live',
+			timestamp: Date.now()
+		};
+		try {
+			if (typeof window !== 'undefined') {
+				if ('BroadcastChannel' in window) {
+					const channel = new BroadcastChannel('torneo_live_sync');
+					channel.postMessage(payload);
+					channel.close();
+				}
+				localStorage.setItem('torneo_score_sync', JSON.stringify(payload));
+			}
+		} catch (_) {}
+	}
+
+	// ── Goles / Puntos táctiles con actualización instantánea y multitab ───────
 	async function adjustScore(team, delta) {
 		if (!activeMatch || activeMatch.status === 'finished') return;
 
 		if (team === 'home') liveHomeScore = Math.max(0, liveHomeScore + delta);
 		else liveAwayScore = Math.max(0, liveAwayScore + delta);
 
-		// Si el partido estaba programado, pasarlo a LIVE automáticamente
+		// Actualizar objeto activeMatch de inmediato
+		activeMatch.home_score = liveHomeScore;
+		activeMatch.away_score = liveAwayScore;
+
+		// Si el partido estaba programado, pasarlo a LIVE de inmediato
 		if (activeMatch.status === 'scheduled') {
-			await setMatchStatus('live');
+			activeMatch.status = 'live';
+			startTimer();
+			matchesApi.updateStatus(activeMatch.id, 'live').catch(() => {});
 		}
 
-		// Sincronizar al backend inmediatamente
-		try {
-			await matchesApi.updateScore(activeMatch.id, liveHomeScore, liveAwayScore);
-		} catch (err) {
-			toast.error('Error al sincronizar el marcador: ' + (err.message || ''));
+		// Actualizar de inmediato en el array de rondas (para reflejar en la lista sin lag)
+		for (const r of rounds) {
+			const found = (r.matches || []).find((m) => m.id === activeMatch.id);
+			if (found) {
+				found.home_score = liveHomeScore;
+				found.away_score = liveAwayScore;
+				found.status = activeMatch.status;
+			}
 		}
+		rounds = [...rounds];
+
+		// Notificar a todas las vistas y pestañas abiertas
+		broadcastScoreSync(activeMatch.id, liveHomeScore, liveAwayScore, activeMatch.status);
+
+		// Encolar persistencia garantizada en backend
+		syncScoreToBackend(activeMatch.id, liveHomeScore, liveAwayScore);
 	}
 
 	// ── Cambio de Estado de Partido ─────────────────────────────────────────────
@@ -297,21 +392,30 @@
 		if (!activeMatch) return;
 		const norm = status.toLowerCase();
 		try {
-			const updated = await matchesApi.updateStatus(activeMatch.id, norm);
+			const elapsedSec = norm === 'paused' ? timerSeconds : (norm === 'live' && activeMatch.elapsed_seconds ? activeMatch.elapsed_seconds : null);
+			const updated = await matchesApi.updateStatus(activeMatch.id, norm, elapsedSec);
 			activeMatch.status = (updated.status ?? norm).toLowerCase();
+			activeMatch.elapsed_seconds = updated.elapsed_seconds ?? (norm === 'paused' ? timerSeconds : activeMatch.elapsed_seconds);
+			activeMatch.started_at = updated.started_at ?? activeMatch.started_at;
 
 			// Si acaba de ponerse en LIVE, calcular timer desde started_at
 			if (activeMatch.status === 'live') {
 				if (updated.started_at) {
-					const startedMs = new Date(updated.started_at + 'Z').getTime();
+					const iso = updated.started_at.endsWith('Z') ? updated.started_at : updated.started_at + 'Z';
+					const startedMs = new Date(iso).getTime();
 					timerSeconds = Math.max(0, Math.floor((Date.now() - startedMs) / 1000));
 				}
 				startTimer();
 				toast.success('El partido ahora está EN JUEGO (LIVE) ⚽');
+			} else if (activeMatch.status === 'paused') {
+				pauseTimer();
+				timerSeconds = activeMatch.elapsed_seconds || timerSeconds;
+				toast.info('Partido en PAUSA ⏸️');
 			} else {
 				pauseTimer();
 				toast.info(`Estado actualizado a: ${statusConfig[activeMatch.status]?.label ?? status}`);
 			}
+			broadcastScoreSync(activeMatch.id, liveHomeScore, liveAwayScore, activeMatch.status);
 			await loadFixture();
 		} catch (err) {
 			toast.error(err.message || 'Error al cambiar estado del partido.');
@@ -329,6 +433,7 @@
 			});
 			pauseTimer();
 			activeMatch = { ...finished, status: 'finished' };
+			broadcastScoreSync(activeMatch.id, liveHomeScore, liveAwayScore, 'finished');
 			showFinishModal = false;
 			toast.success(`¡Partido finalizado! ${liveHomeScore} - ${liveAwayScore}. Posiciones actualizadas.`);
 			await loadFixture();
@@ -412,6 +517,8 @@
 		{@const homeTeam = teamsMap[activeMatch.home_team_id]}
 		{@const awayTeam = teamsMap[activeMatch.away_team_id]}
 		{@const status = getStatus(activeMatch.status)}
+		{@const mSport = getMatchSport(activeMatch)}
+		{@const sBadge = getSportBadge(mSport)}
 
 		<div class="space-y-6">
 			<!-- Barra de Estado -->
@@ -419,37 +526,29 @@
 				<div class="flex items-center gap-3">
 					<span class="text-xs px-3 py-1.5 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 						{#if activeMatch.status === 'live'}
-							<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+							<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
 						{/if}
 						{status.icon} {status.label}
 					</span>
+					<span class="text-xs font-bold px-2.5 py-1 rounded-full {sBadge.bg} {sBadge.text} border {sBadge.border} flex items-center gap-1">
+						<span>{sBadge.icon}</span>
+						<span>{sBadge.name}</span>
+					</span>
 					<span class="text-sm font-semibold text-slate-400">Jornada {activeMatch.matchday ?? 1}</span>
 				</div>
-
-				<div class="flex flex-wrap items-center gap-2">
-					{#if activeMatch.status !== 'live' && activeMatch.status !== 'finished'}
-						<button onclick={() => setMatchStatus('live')} class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1">
-							▶️ Poner en Juego
-						</button>
-					{/if}
-					{#if activeMatch.status === 'live'}
-						<button onclick={() => setMatchStatus('scheduled')} class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
-							⏸️ Pausar
-						</button>
-					{/if}
-					{#if activeMatch.status !== 'finished'}
-						<button onclick={() => (showFinishModal = true)} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition flex items-center gap-1">
-							🏁 Finalizar Partido
-						</button>
-					{:else}
-						<span class="text-xs font-bold text-emerald-400 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/60">
-							✅ Partido Finalizado Oficialmente
-						</span>
-					{/if}
-				</div>
+				{#if activeMatch.status === 'finished'}
+					<span class="text-xs font-bold text-emerald-400 px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/60 flex items-center gap-1">
+						✅ Partido Finalizado Oficialmente
+					</span>
+				{:else if activeMatch.status === 'live'}
+					<span class="text-xs font-semibold text-emerald-400/90 flex items-center gap-1.5">
+						<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+						Arbitraje En Vivo
+					</span>
+				{/if}
 			</div>
 
-			<!-- CRONÓMETRO DIGITAL -->
+			<!-- CRONÓMETRO DIGITAL Y CONTROLES DE PARTIDO -->
 			<div class="glass-card p-6 text-center flex flex-col items-center gap-3">
 				<p class="text-xs font-bold uppercase tracking-wider text-slate-400">Tiempo de Juego</p>
 				<div class="text-5xl sm:text-6xl font-black font-mono tracking-widest text-emerald-400">
@@ -458,19 +557,41 @@
 				{#if activeMatch.status === 'live'}
 					<p class="text-xs text-slate-500 italic">Cronómetro sincronizado desde el inicio real del partido</p>
 				{/if}
-				<div class="flex items-center gap-2 mt-1">
-					{#if !timerRunning}
-						<button onclick={startTimer} disabled={activeMatch.status === 'finished'} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition disabled:opacity-30">
-							▶️ Iniciar
+
+				<!-- Controles principales de arbitraje -->
+				<div class="flex flex-wrap items-center justify-center gap-3 mt-2">
+					{#if activeMatch.status !== 'live' && activeMatch.status !== 'finished'}
+						<button
+							onclick={() => setMatchStatus('live')}
+							class="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-950/40 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+						>
+							{#if activeMatch.status === 'paused'}
+								▶️ Reanudar Partido
+							{:else}
+								▶️ Poner en Juego
+							{/if}
 						</button>
-					{:else}
-						<button onclick={pauseTimer} class="px-4 py-1.5 rounded-lg text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white transition">
+					{/if}
+					{#if activeMatch.status === 'live'}
+						<button
+							onclick={() => setMatchStatus('paused')}
+							class="px-5 py-2.5 rounded-xl text-sm font-bold bg-amber-600/90 hover:bg-amber-600 text-amber-100 hover:text-white transition-all border border-amber-500/50 shadow-md flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+						>
 							⏸️ Pausar
 						</button>
 					{/if}
-					<button onclick={resetTimer} class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 transition">
-						🔄 00:00
-					</button>
+					{#if activeMatch.status !== 'finished'}
+						<button
+							onclick={() => (showFinishModal = true)}
+							class="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white transition-all shadow-lg shadow-amber-950/40 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+						>
+							🏁 Finalizar Partido
+						</button>
+					{:else}
+						<span class="text-xs font-bold text-emerald-400 px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center gap-1.5">
+							✅ Partido Finalizado Oficialmente
+						</span>
+					{/if}
 				</div>
 			</div>
 
@@ -498,13 +619,98 @@
 						</div>
 					</div>
 					<span class="text-7xl sm:text-8xl font-black font-mono text-emerald-400">{liveHomeScore}</span>
-					<div class="flex items-center gap-3 w-full max-w-xs">
-						<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
-							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
-						<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
-							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
-						</button>
+					<!-- Controles de anotación deportiva específica (LOCAL) -->
+					<div class="flex flex-col gap-2.5 w-full max-w-sm">
+						{#if homeTeam?.sport === 'aura_battle'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('home', -10)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-10</button>
+								<button onclick={() => adjustScore('home', 10)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-black bg-yellow-400 hover:bg-yellow-300 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-950/40">
+									🕺 +10 PA (Pasito)
+								</button>
+								<button onclick={() => adjustScore('home', 50)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-black bg-yellow-500 hover:bg-yellow-400 transition">
+									+50
+								</button>
+							</div>
+							<button onclick={() => adjustScore('home', -50)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-red-300 bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 transition flex items-center justify-center gap-1">
+								⚠️ Tropiezo en pista (-50 PA)
+							</button>
+						{:else if homeTeam?.sport === 'sperm_triathlon'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('home', -50)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-50</button>
+								<button onclick={() => adjustScore('home', 100)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-cyan-600 hover:bg-cyan-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-950/40">
+									🧬 +100 µm
+								</button>
+								<button onclick={() => adjustScore('home', 500)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-cyan-700 hover:bg-cyan-600 transition">
+									+500
+								</button>
+							</div>
+							<button onclick={() => adjustScore('home', -200)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 transition flex items-center justify-center gap-1">
+								🛑 Frenado viscoso (-200 µm)
+							</button>
+						{:else if homeTeam?.sport === 'tire_race'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-amber-600 hover:bg-amber-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-950/40">
+									🛞 +1 VLT
+								</button>
+								<button onclick={() => adjustScore('home', 3)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-amber-700 hover:bg-amber-600 transition">
+									+3
+								</button>
+							</div>
+							<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-red-300 bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 transition flex items-center justify-center gap-1">
+								💥 Pinchazo / Salida carril (-1 VLT)
+							</button>
+						{:else if homeTeam?.sport === 'mosquito_marathon'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-lime-600 hover:bg-lime-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-lime-950/40">
+									🦟 +1 PC
+								</button>
+								<button onclick={() => adjustScore('home', 5)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-lime-700 hover:bg-lime-600 transition">
+									+5
+								</button>
+							</div>
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('home', 2)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 transition">
+									💨 Manotazo esquivado (+2)
+								</button>
+								<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 transition">
+									🧴 Repelente (-1)
+								</button>
+							</div>
+						{:else}
+							<div class="flex items-center gap-3 w-full">
+								<button onclick={() => adjustScore('home', -1)} disabled={activeMatch.status === 'finished' || liveHomeScore <= 0}
+									class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('home', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
+									{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
+								</button>
+								{#if homeTeam?.sport === 'basketball'}
+									<button onclick={() => adjustScore('home', 2)} disabled={activeMatch.status === 'finished'}
+										class="px-3 py-4 rounded-xl font-black text-base text-white bg-amber-600 hover:bg-amber-500 transition">+2</button>
+									<button onclick={() => adjustScore('home', 3)} disabled={activeMatch.status === 'finished'}
+										class="px-3 py-4 rounded-xl font-black text-base text-white bg-amber-700 hover:bg-amber-600 transition">+3</button>
+								{/if}
+							</div>
+						{/if}
 					</div>
 				</div>
 
@@ -520,13 +726,98 @@
 						</div>
 					</div>
 					<span class="text-7xl sm:text-8xl font-black font-mono text-blue-400">{liveAwayScore}</span>
-					<div class="flex items-center gap-3 w-full max-w-xs">
-						<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
-							class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
-						<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
-							class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
-							{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
-						</button>
+					<!-- Controles de anotación deportiva específica (VISITANTE) -->
+					<div class="flex flex-col gap-2.5 w-full max-w-sm">
+						{#if awayTeam?.sport === 'aura_battle' || homeTeam?.sport === 'aura_battle'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('away', -10)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-10</button>
+								<button onclick={() => adjustScore('away', 10)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-black bg-yellow-400 hover:bg-yellow-300 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-yellow-950/40">
+									🕺 +10 PA (Pasito)
+								</button>
+								<button onclick={() => adjustScore('away', 50)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-black bg-yellow-500 hover:bg-yellow-400 transition">
+									+50
+								</button>
+							</div>
+							<button onclick={() => adjustScore('away', -50)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-red-300 bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 transition flex items-center justify-center gap-1">
+								⚠️ Tropiezo en pista (-50 PA)
+							</button>
+						{:else if awayTeam?.sport === 'sperm_triathlon' || homeTeam?.sport === 'sperm_triathlon'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('away', -50)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-50</button>
+								<button onclick={() => adjustScore('away', 100)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-cyan-600 hover:bg-cyan-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-950/40">
+									🧬 +100 µm
+								</button>
+								<button onclick={() => adjustScore('away', 500)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-cyan-700 hover:bg-cyan-600 transition">
+									+500
+								</button>
+							</div>
+							<button onclick={() => adjustScore('away', -200)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 transition flex items-center justify-center gap-1">
+								🛑 Frenado viscoso (-200 µm)
+							</button>
+						{:else if awayTeam?.sport === 'tire_race' || homeTeam?.sport === 'tire_race'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-amber-600 hover:bg-amber-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-950/40">
+									🛞 +1 VLT
+								</button>
+								<button onclick={() => adjustScore('away', 3)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-amber-700 hover:bg-amber-600 transition">
+									+3
+								</button>
+							</div>
+							<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+								class="w-full py-2 px-3 rounded-lg text-xs font-bold text-red-300 bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 transition flex items-center justify-center gap-1">
+								💥 Pinchazo / Salida carril (-1 VLT)
+							</button>
+						{:else if awayTeam?.sport === 'mosquito_marathon' || homeTeam?.sport === 'mosquito_marathon'}
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="px-3 py-3 rounded-xl font-black text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-3 rounded-xl font-black text-base text-white bg-lime-600 hover:bg-lime-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-1.5 shadow-lg shadow-lime-950/40">
+									🦟 +1 PC
+								</button>
+								<button onclick={() => adjustScore('away', 5)} disabled={activeMatch.status === 'finished'}
+									class="px-3.5 py-3 rounded-xl font-black text-sm text-white bg-lime-700 hover:bg-lime-600 transition">
+									+5
+								</button>
+							</div>
+							<div class="flex items-center gap-2 w-full">
+								<button onclick={() => adjustScore('away', 2)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 transition">
+									💨 Manotazo esquivado (+2)
+								</button>
+								<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-amber-300 bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 transition">
+									🧴 Repelente (-1)
+								</button>
+							</div>
+						{:else}
+							<div class="flex items-center gap-3 w-full">
+								<button onclick={() => adjustScore('away', -1)} disabled={activeMatch.status === 'finished' || liveAwayScore <= 0}
+									class="p-4 rounded-xl font-black text-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 transition">-1</button>
+								<button onclick={() => adjustScore('away', 1)} disabled={activeMatch.status === 'finished'}
+									class="flex-1 py-4 rounded-xl font-black text-lg text-white bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-30 transition flex items-center justify-center gap-2">
+									{homeTeam?.sport === 'basketball' ? '🏀 +1 PTO' : homeTeam?.sport === 'volleyball' ? '🏐 +1 PTO' : homeTeam?.sport === 'underwater_chess' ? '♟️ +1 PTO' : '⚽ +1 GOL'}
+								</button>
+								{#if awayTeam?.sport === 'basketball' || homeTeam?.sport === 'basketball'}
+									<button onclick={() => adjustScore('away', 2)} disabled={activeMatch.status === 'finished'}
+										class="px-3 py-4 rounded-xl font-black text-base text-white bg-blue-700 hover:bg-blue-600 transition">+2</button>
+									<button onclick={() => adjustScore('away', 3)} disabled={activeMatch.status === 'finished'}
+										class="px-3 py-4 rounded-xl font-black text-base text-white bg-blue-800 hover:bg-blue-700 transition">+3</button>
+								{/if}
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -567,7 +858,7 @@
 		{:else}
 			
 			<!-- ── Filtro por Deporte ────────────────────────────────────────── -->
-			<div class="flex items-center gap-2 mb-4 p-1 bg-slate-900/90 rounded-xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar">
+			<div class="flex flex-wrap items-center gap-1.5 mb-4 p-1.5 bg-slate-900/90 rounded-xl border border-slate-800 max-w-full">
 				<button
 					type="button"
 					onclick={() => (selectedSport = 'all')}
@@ -602,6 +893,34 @@
 			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'underwater_chess' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}"
 		>
 			♟️ Ajedrez bajo el agua
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'aura_battle')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'aura_battle' ? 'bg-yellow-500 text-black' : 'text-slate-400 hover:text-white'}"
+		>
+			🕺 Batalla de aura
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'sperm_triathlon')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'sperm_triathlon' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			🧬 Triatlón espermatozoide
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'tire_race')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'tire_race' ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			🛞 Carrera de llantas
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'mosquito_marathon')}
+			class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition {selectedSport === 'mosquito_marathon' ? 'bg-lime-600 text-white' : 'text-slate-400 hover:text-white'}"
+		>
+			🦟 Maratón de mosquitos
 		</button>
 			</div>
 			<div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
@@ -649,7 +968,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				{#if filteredMatches.length === 0}
 					<div class="col-span-full glass-card p-8 text-center">
-						<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en esta jornada.</p>
+						<p class="text-slate-400 text-sm">No hay partidos registrados para esta disciplina en la jornada seleccionada.</p>
 					</div>
 				{/if}
 				{#each filteredMatches as match}
@@ -657,24 +976,22 @@
 					{@const awayTeam = teamsMap[match.away_team_id]}
 					{@const status = getStatus(match.status)}
 					{@const mSport = getMatchSport(match)}
+					{@const sBadge = getSportBadge(mSport)}
 										<div class="glass-card p-5 flex flex-col justify-between gap-4 transition">
 						<div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
 							<div class="flex items-center gap-2">
 								<span class="text-xs font-mono font-bold text-slate-400">#{match.id}</span>
-								{#if mSport === 'basketball'}
-									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-										🏀 Básquet
-									</span>
-								{:else}
-									<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-										⚽ Fútbol
-									</span>
-								{/if}
+								<span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full {sBadge.bg} {sBadge.text} border {sBadge.border} flex items-center gap-1">
+									<span>{sBadge.icon}</span>
+									<span>{sBadge.name}</span>
+								</span>
 							</div>
 							<span class="text-xs px-2.5 py-1 rounded-full font-bold {status.badgeClass} flex items-center gap-1.5">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
 									<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
 									{status.icon} {status.label} · <span class="font-mono font-black text-emerald-300">⏱️ {getMatchTimer(match, now)}</span>
+								{:else if (match.status ?? '').toLowerCase() === 'paused'}
+									{status.icon} {status.label} · <span class="font-mono font-black text-amber-300">⏱️ {getMatchTimer(match, now)}</span>
 								{:else}
 									{status.icon} {status.label}
 								{/if}
@@ -688,6 +1005,10 @@
 							<div class="flex flex-col items-center gap-1 min-w-[80px]">
 								{#if (match.status ?? '').toLowerCase() === 'live'}
 									<span class="text-[11px] font-mono font-black text-emerald-400 bg-emerald-950/90 px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm animate-pulse tracking-wide">
+										⏱️ {getMatchTimer(match, now)}
+									</span>
+								{:else if (match.status ?? '').toLowerCase() === 'paused'}
+									<span class="text-[11px] font-mono font-black text-amber-400 bg-amber-950/90 px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-sm tracking-wide">
 										⏱️ {getMatchTimer(match, now)}
 									</span>
 								{/if}
@@ -705,9 +1026,9 @@
 							</div>
 						</div>
 						<button onclick={() => selectMatch(match)}
-							class="w-full py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 {(match.status ?? '').toLowerCase() === 'live'
-								? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-								: 'bg-slate-800 hover:bg-slate-700 text-slate-200'}">
+							class="match-arbitrate-btn cursor-pointer w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] {(match.status ?? '').toLowerCase() === 'live'
+								? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/40'
+								: 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60'}">
 							🎮 {(match.status ?? '').toLowerCase() === 'finished' ? 'Ver Registro' : 'Arbitrar Partido'}
 						</button>
 					</div>
@@ -855,11 +1176,11 @@
 		aria-modal="true"
 		onclick={(e) => e.target === e.currentTarget && (tacticalTeam = null)}
 	>
-		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
+		<div class="team-detail-modal-box glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{tacticalTeam.name}</h3>
-					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : tacticalTeam.sport === 'underwater_chess' ? 'Tablero — Ajedrez bajo el agua' : 'Alineación — Fútbol'}</p>
+					<p class="text-xs text-slate-400 font-mono">{tacticalTeam.sport === 'basketball' ? 'Alineación — Básquetbol' : tacticalTeam.sport === 'volleyball' ? 'Alineación — Vóley' : tacticalTeam.sport === 'underwater_chess' ? 'Tablero — Ajedrez acuático' : tacticalTeam.sport === 'aura_battle' ? 'Pista Callejera — Batalla de Aura' : tacticalTeam.sport === 'sperm_triathlon' ? 'Circuito — Triatlón de Espermatozoide' : tacticalTeam.sport === 'tire_race' ? 'Pista Olímpica — Carrera de Llantas' : tacticalTeam.sport === 'mosquito_marathon' ? 'Pista de Vuelo — Maratón de Mosquitos' : 'Alineación — Fútbol'}</p>
 				</div>
 				<button
 					type="button"
@@ -890,6 +1211,34 @@
 					interactive={false}
 					teamName={tacticalTeam.name}
 					teamColor="#06b6d4"
+				/>
+			{:else if (tacticalTeam.sport === 'aura_battle')}
+				<AuraBattleArena
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#a855f7"
+				/>
+			{:else if (tacticalTeam.sport === 'sperm_triathlon')}
+				<SpermTriathlonTrack
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#06b6d4"
+				/>
+			{:else if (tacticalTeam.sport === 'tire_race')}
+				<TireRaceTrack
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#f97316"
+				/>
+			{:else if (tacticalTeam.sport === 'mosquito_marathon')}
+				<MosquitoRadar
+					players={tacticalTeam.players || []}
+					interactive={false}
+					teamName={tacticalTeam.name}
+					teamColor="#84cc16"
 				/>
 			{:else}
 				<SoccerPitch

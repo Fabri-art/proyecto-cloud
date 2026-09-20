@@ -9,6 +9,10 @@
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
+	import AuraBattleArena from '$lib/components/AuraBattleArena.svelte';
+	import SpermTriathlonTrack from '$lib/components/SpermTriathlonTrack.svelte';
+	import TireRaceTrack from '$lib/components/TireRaceTrack.svelte';
+	import MosquitoRadar from '$lib/components/MosquitoRadar.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	let teams = $state([]);
@@ -140,7 +144,7 @@
 </div>
 
 <!-- ── Filtro por Deporte ────────────────────────────────────────────────── -->
-<div class="flex items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 w-full sm:w-fit overflow-x-auto no-scrollbar backdrop-blur-sm shadow-xl shrink-0">
+<div class="flex flex-wrap items-center gap-2 mb-8 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 max-w-full backdrop-blur-sm shadow-xl shrink-0">
 	<button
 		type="button"
 		onclick={() => (selectedSportFilter = 'all')}
@@ -183,8 +187,44 @@
 		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'underwater_chess' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
 	>
 		<span>♟️</span>
-		<span>Ajedrez bajo el agua</span>
+		<span>Ajedrez</span>
 		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'underwater_chess').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'aura_battle')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'aura_battle' ? 'bg-yellow-500 text-black shadow-md shadow-yellow-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🕺</span>
+		<span>Batalla de aura</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'aura_battle').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'sperm_triathlon')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'sperm_triathlon' ? 'bg-cyan-500 text-black shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🧬</span>
+		<span>Triatlón esperm.</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'sperm_triathlon').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'tire_race')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'tire_race' ? 'bg-orange-600 text-white shadow-md shadow-orange-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🛞</span>
+		<span>Carrera llantas</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'tire_race').length}</span>
+	</button>
+	<button
+		type="button"
+		onclick={() => (selectedSportFilter = 'mosquito_marathon')}
+		class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSportFilter === 'mosquito_marathon' ? 'bg-lime-600 text-white shadow-md shadow-lime-950/40' : 'text-slate-400 hover:text-white'}"
+	>
+		<span>🦟</span>
+		<span>Maratón mosquitos</span>
+		<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-black/40 font-mono">{teams.filter(t => t.sport === 'mosquito_marathon').length}</span>
 	</button>
 </div>
 
@@ -226,7 +266,7 @@
 {:else if teams.length === 0}
 	<div class="glass-card p-16 text-center animate-fade-in-up">
 		<div class="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-4xl">
-			{team.sport === 'basketball' ? '🏀' : team.sport === 'volleyball' ? '🏐' : team.sport === 'underwater_chess' ? '♟️' : '⚽'}
+			{team.sport === 'basketball' ? '🏀' : team.sport === 'volleyball' ? '🏐' : team.sport === 'underwater_chess' ? '♟️' : team.sport === 'aura_battle' ? '🔮' : team.sport === 'sperm_triathlon' ? '🧬' : team.sport === 'tire_race' ? '🛞' : team.sport === 'mosquito_marathon' ? '🦟' : '⚽'}
 		</div>
 		<h2 class="text-xl font-bold text-white mb-2">Sin clubes registrados</h2>
 		<p class="text-slate-500 text-sm max-w-sm mx-auto mb-7">
@@ -242,8 +282,8 @@
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 		{#if filteredTeams.length === 0}
 		<div class="col-span-full glass-card p-12 text-center">
-			<div class="text-4xl mb-3">{selectedSportFilter === 'basketball' ? '🏀' : selectedSportFilter === 'volleyball' ? '🏐' : '⚽'}</div>
-			<p class="text-white font-bold">No hay equipos de {selectedSportFilter === 'basketball' ? 'básquetbol' : selectedSportFilter === 'volleyball' ? 'vóley' : 'fútbol'} registrados</p>
+			<div class="text-4xl mb-3">{selectedSportFilter === 'basketball' ? '🏀' : selectedSportFilter === 'volleyball' ? '🏐' : selectedSportFilter === 'underwater_chess' ? '♟️' : selectedSportFilter === 'aura_battle' ? '🕺' : selectedSportFilter === 'sperm_triathlon' ? '🧬' : selectedSportFilter === 'tire_race' ? '🛞' : selectedSportFilter === 'mosquito_marathon' ? '🦟' : '⚽'}</div>
+			<p class="text-white font-bold">No hay equipos de {selectedSportFilter === 'basketball' ? 'básquetbol' : selectedSportFilter === 'volleyball' ? 'vóley' : selectedSportFilter === 'underwater_chess' ? 'ajedrez bajo el agua' : selectedSportFilter === 'aura_battle' ? 'batalla de aura' : selectedSportFilter === 'sperm_triathlon' ? 'triatlón de espermatozoide' : selectedSportFilter === 'tire_race' ? 'carrera de llantas' : selectedSportFilter === 'mosquito_marathon' ? 'maratón de mosquitos' : 'fútbol'} registrados</p>
 			<p class="text-slate-400 text-sm mt-1">Registra nuevos clubes para este deporte.</p>
 		</div>
 	{/if}
@@ -279,7 +319,23 @@
 								</span>
 							{:else if team.sport === 'underwater_chess'}
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
-									♟️ Ajedrez bajo el agua
+									♟️ Ajedrez acuático
+								</span>
+							{:else if team.sport === 'aura_battle'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 flex items-center gap-1">
+									🕺 Batalla de aura
+								</span>
+							{:else if team.sport === 'sperm_triathlon'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+									🧬 Triatlón esperm.
+								</span>
+							{:else if team.sport === 'tire_race'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center gap-1">
+									🛞 Carrera llantas
+								</span>
+							{:else if team.sport === 'mosquito_marathon'}
+								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-lime-500/15 text-lime-300 border border-lime-500/30 flex items-center gap-1">
+									🦟 Maratón mosquitos
 								</span>
 							{:else}
 								<span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
@@ -314,7 +370,7 @@
 				<!-- Botón ver plantilla -->
 				<button
 					onclick={() => viewTeamRoster(team)}
-					class="mt-auto mx-4 mb-4 py-2.5 px-4 rounded-xl text-xs font-bold border border-slate-700/60 bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white transition-colors flex items-center justify-center gap-2"
+					class="view-roster-btn cursor-pointer mt-auto mx-4 mb-4 py-2.5 px-4 rounded-xl text-xs font-bold border border-slate-700/60 bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
 				>
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
 						<path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z"/>
@@ -336,8 +392,7 @@
 		aria-modal="true"
 		onclick={(e) => e.target === e.currentTarget && closeModal()}
 	>
-		<div class="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl animate-fade-in-up border border-slate-700/60"
-			style="background: #0e1420;">
+		<div class="team-detail-modal-box w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl animate-fade-in-up border border-slate-700/60 bg-slate-950">
 
 			<!-- Header del modal -->
 			<div class="p-5 flex items-center gap-4 border-b border-slate-800">
@@ -345,7 +400,7 @@
 					style="background: {pal.bg}; color: {pal.text};">
 					{selectedTeam.name?.[0]?.toUpperCase() ?? '?'}
 				</div>
-				<div class="flex items-center gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-800 shrink-0">
+				<div class="view-toggle-box flex items-center gap-1.5 p-1 bg-slate-900 rounded-lg border border-slate-800 shrink-0">
 					<button
 						type="button"
 						onclick={() => (rosterViewMode = 'list')}
@@ -358,7 +413,8 @@
 						onclick={() => (rosterViewMode = 'pitch')}
 						class="px-2.5 py-1 rounded text-xs font-bold transition {rosterViewMode === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 					>
-						🏟️ Cancha
+						<span>{selectedTeam.sport === 'basketball' ? '🏀' : selectedTeam.sport === 'volleyball' ? '🏐' : selectedTeam.sport === 'underwater_chess' ? '♟️' : selectedTeam.sport === 'aura_battle' ? '🕺' : selectedTeam.sport === 'sperm_triathlon' ? '🧬' : selectedTeam.sport === 'tire_race' ? '🛞' : selectedTeam.sport === 'mosquito_marathon' ? '🦟' : '🏟️'}</span>
+						<span>{selectedTeam.sport === 'basketball' ? 'Pista' : selectedTeam.sport === 'volleyball' ? 'Cancha' : selectedTeam.sport === 'underwater_chess' ? 'Tablero' : selectedTeam.sport === 'aura_battle' ? 'Pista Callejera' : selectedTeam.sport === 'sperm_triathlon' ? 'Carril' : selectedTeam.sport === 'tire_race' ? 'Pista' : selectedTeam.sport === 'mosquito_marathon' ? 'Pista' : 'Cancha'}</span>
 					</button>
 				</div>
 				<div class="flex-1 min-w-0">
@@ -428,6 +484,34 @@
 							teamName={selectedTeam.name}
 							teamColor={pal.text}
 						/>
+					{:else if selectedTeam.sport === 'aura_battle'}
+						<AuraBattleArena
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else if selectedTeam.sport === 'sperm_triathlon'}
+						<SpermTriathlonTrack
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else if selectedTeam.sport === 'tire_race'}
+						<TireRaceTrack
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
+					{:else if selectedTeam.sport === 'mosquito_marathon'}
+						<MosquitoRadar
+							players={selectedTeam.players}
+							interactive={false}
+							teamName={selectedTeam.name}
+							teamColor={pal.text}
+						/>
 					{:else}
 						<SoccerPitch
 							players={selectedTeam.players}
@@ -441,7 +525,7 @@
 					<div class="space-y-2">
 						{#each [...(selectedTeam.players || [])].sort((a,b) => (a.shirt_number??99)-(b.shirt_number??99)) as p}
 							{@const pos = positionLabels[p.position]}
-							<div class="flex items-center gap-3 p-3 rounded-xl border border-slate-800/60 hover:border-slate-700 hover:bg-slate-800/30 transition-colors">
+							<div class="player-roster-row flex items-center gap-3 p-3 rounded-xl border border-slate-800/60 hover:border-slate-700 hover:bg-slate-800/30 transition-colors">
 								<!-- Dorsal -->
 								<div class="w-9 h-9 rounded-lg flex items-center justify-center font-score font-bold text-sm shrink-0"
 									style="background: {pal.text}15; color: {pal.text}; border: 1px solid {pal.text}30;">

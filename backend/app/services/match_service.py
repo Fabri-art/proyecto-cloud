@@ -3,7 +3,7 @@ app/services/match_service.py
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Sequence
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,6 +79,7 @@ async def update_match_status(
     match_id: int,
     new_status: MatchStatus,
     session: AsyncSession,
+    elapsed_seconds: Optional[int] = None,
 ) -> Match:
     match = await get_match(match_id, session)
 
@@ -91,18 +92,27 @@ async def update_match_status(
             session=session,
         )
 
-    match.status = new_status
-    if new_status == MatchStatus.LIVE and not match.started_at:
-        match.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
-    elif new_status == MatchStatus.FINISHED and not match.finished_at:
-        match.finished_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    match.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    if new_status == MatchStatus.PAUSED:
+        if elapsed_seconds is not None and elapsed_seconds >= 0:
+            match.elapsed_seconds = elapsed_seconds
+        elif match.started_at:
+            match.elapsed_seconds = max(0, int((now_utc - match.started_at).total_seconds()))
+    elif new_status == MatchStatus.LIVE:
+        if match.elapsed_seconds and match.elapsed_seconds > 0:
+            match.started_at = now_utc - timedelta(seconds=match.elapsed_seconds)
+        elif not match.started_at:
+            match.started_at = now_utc
+    elif new_status == MatchStatus.FINISHED and not match.finished_at:
+        match.finished_at = now_utc
+
+    match.status = new_status
+    match.updated_at = now_utc
     session.add(match)
     await session.flush()
     await session.refresh(match)
     return match
-
 
 async def update_match_score(
     match_id: int,
@@ -118,6 +128,10 @@ async def update_match_score(
         )
     match.home_score = data.home_score
     match.away_score = data.away_score
+    if match.status == MatchStatus.SCHEDULED:
+        match.status = MatchStatus.LIVE
+        if not match.started_at:
+            match.started_at = datetime.now(timezone.utc).replace(tzinfo=None)
     match.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     session.add(match)
     await session.flush()

@@ -31,6 +31,20 @@ class PlayerPosition(str, Enum):
     CHESS_MAIN = "chess_main"
     CHESS_SUB_1 = "chess_sub_1"
     CHESS_SUB_2 = "chess_sub_2"
+    # Batalla de Aura
+    AURA_FARMER_MAIN = "aura_farmer_main"
+    AURA_FARMER_SUB1 = "aura_farmer_sub1"
+    AURA_FARMER_SUB2 = "aura_farmer_sub2"
+    # Triatlon de espermatozoide
+    SPERM_MAIN = "sperm_main"
+    # Carrera de llantas
+    TIRE_DIR = "tire_dir"
+    TIRE_ROD = "tire_rod"
+    TIRE_FREN = "tire_fren"
+    # Maraton de mosquitos
+    MOSQUITO_PIC = "mosquito_pic"
+    MOSQUITO_ZUM = "mosquito_zum"
+    MOSQUITO_EVAS = "mosquito_evas"
 
 
 def _enum_values(enum_cls):

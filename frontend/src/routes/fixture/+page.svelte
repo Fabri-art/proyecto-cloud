@@ -13,6 +13,10 @@
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
 	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
+	import AuraBattleArena from '$lib/components/AuraBattleArena.svelte';
+	import SpermTriathlonTrack from '$lib/components/SpermTriathlonTrack.svelte';
+	import TireRaceTrack from '$lib/components/TireRaceTrack.svelte';
+	import MosquitoRadar from '$lib/components/MosquitoRadar.svelte';
 	import { toast } from '$lib/stores/toast';
 
 	const TOURNAMENT_ID = 1;
@@ -27,18 +31,39 @@
 	let tickInterval = null;
 
 	function getMatchTimer(match) {
-		if ((match.status ?? '').toLowerCase() !== 'live') return null;
+		const s = (match.status ?? '').toLowerCase();
+		if (s === 'paused') {
+			const totalSec = match.elapsed_seconds || 0;
+			const m = Math.floor(totalSec / 60);
+			const sec = totalSec % 60;
+			return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+		}
+		if (s !== 'live') return null;
 		if (!match.started_at) return '00:00';
 		const iso = match.started_at.endsWith('Z') ? match.started_at : match.started_at + 'Z';
 		const startedMs = new Date(iso).getTime();
 		const totalSec = Math.max(0, Math.floor((now - startedMs) / 1000));
 		const m = Math.floor(totalSec / 60);
-		const s = totalSec % 60;
-		return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+		const sec = totalSec % 60;
+		return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 	}
 	let selectedSport = $state('all'); // 'all' | 'football' | 'basketball'
+	function getSportInfo(sport) {
+		switch (sport) {
+			case 'basketball': return { name: 'Básquetbol', icon: '🏀', color: '#f59e0b' };
+			case 'volleyball': return { name: 'Voleibol', icon: '🏐', color: '#38bdf8' };
+			case 'underwater_chess': return { name: 'Ajedrez acuático', icon: '🌊♟️', color: '#a855f7' };
+			case 'aura_battle': return { name: 'Batalla de aura', icon: '🕺', color: '#eab308' };
+			case 'sperm_triathlon': return { name: 'Triatlón esperm.', icon: '🧬', color: '#06b6d4' };
+			case 'tire_race': return { name: 'Carrera llantas', icon: '🛞', color: '#ea580c' };
+			case 'mosquito_marathon': return { name: 'Maratón mosquitos', icon: '🦟', color: '#84cc16' };
+			case 'football':
+			default: return { name: 'Fútbol', icon: '⚽', color: '#10b981' };
+		}
+	}
+
 	function getMatchSport(match) {
-		return match.sport || teamsMap[match.home_team_id]?.sport || 'football';
+		return match.sport || teamsMap[match.home_team_id]?.sport || teamsMap[match.away_team_id]?.sport || 'football';
 	}
 	let filteredMatches = $derived(
 		selectedSport === 'all'
@@ -94,6 +119,7 @@
 		scheduled:   { label: 'Programado',     badgeClass: 'badge-scheduled',   icon: '🕐' },
 		live:        { label: 'En Juego (LIVE)',badgeClass: 'badge-in-progress', icon: '⚽' },
 		in_progress: { label: 'En Juego',       badgeClass: 'badge-in-progress', icon: '⚽' },
+		paused:      { label: 'Pausado',        badgeClass: 'badge-scheduled text-amber-300 border-amber-500/40 bg-amber-500/15', icon: '⏸️' },
 		finished:    { label: 'Finalizado',     badgeClass: 'badge-finished',    icon: '✅' },
 		cancelled:   { label: 'Cancelado',      badgeClass: 'badge-cancelled',   icon: '❌' },
 		postponed:   { label: 'Pospuesto',      badgeClass: 'badge-scheduled',   icon: '⏸️' }
@@ -208,6 +234,39 @@
 			<span>♟️</span>
 			<span>Ajedrez bajo el agua</span>
 		</button>
+	
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'aura_battle')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'aura_battle' ? 'bg-yellow-500 text-black shadow-md shadow-yellow-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🕺</span>
+			<span>Batalla de aura</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'sperm_triathlon')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'sperm_triathlon' ? 'bg-cyan-600 text-white shadow-md shadow-cyan-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🧬</span>
+			<span>Triatlón espermatozoide</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'tire_race')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'tire_race' ? 'bg-orange-600 text-white shadow-md shadow-orange-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🛞</span>
+			<span>Carrera de llantas</span>
+		</button>
+		<button
+			type="button"
+			onclick={() => (selectedSport = 'mosquito_marathon')}
+			class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {selectedSport === 'mosquito_marathon' ? 'bg-lime-600 text-white shadow-md shadow-lime-950/40' : 'text-slate-400 hover:text-white'}"
+		>
+			<span>🦟</span>
+			<span>Maratón de mosquitos</span>
+		</button>
 	</div>
 
 	<!-- Selector de jornadas -->
@@ -229,12 +288,37 @@
 	<div class="flex flex-col gap-3">
 		{#if filteredMatches.length === 0}
 			<div class="col-span-full glass-card p-10 text-center">
-				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'basketball' ? 'básquetbol' : selectedSport === 'volleyball' ? 'vóley' : 'fútbol'} en la jornada {selectedRound}.</p>
+				<p class="text-slate-400 text-sm">No hay partidos de {selectedSport === 'all' ? 'las disciplinas seleccionadas' : getSportInfo(selectedSport).name.toLowerCase()} en la jornada {selectedRound}.</p>
 			</div>
 		{/if}
 		{#each filteredMatches as match}
 			{@const status = getStatus(match.status)}
-			<div class="glass-card p-5 flex flex-col sm:flex-row items-center gap-4">
+			{@const mSport = getMatchSport(match)}
+			{@const sportInfo = getSportInfo(mSport)}
+			<div class="glass-card p-5 flex flex-col gap-3">
+				<!-- Top Bar de la Disciplina -->
+				<div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+					<div class="flex items-center gap-2">
+						<span class="text-xs font-mono font-bold text-slate-400">#{match.id}</span>
+						<span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1 shadow-sm"
+							style="background: {sportInfo.color}20; color: {sportInfo.color}; border-color: {sportInfo.color}45;">
+							<span>{sportInfo.icon}</span>
+							<span>{sportInfo.name}</span>
+						</span>
+					</div>
+					<span class="text-xs px-2.5 py-0.5 rounded-full font-bold {status.badgeClass} flex items-center gap-1">
+						{#if (match.status ?? '').toLowerCase() === 'live'}
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+							{status.icon} {status.label} · <span class="font-mono font-black text-emerald-300">⏱️ {getMatchTimer(match)}</span>
+						{:else if (match.status ?? '').toLowerCase() === 'paused'}
+							{status.icon} {status.label} · <span class="font-mono font-black text-amber-300">⏱️ {getMatchTimer(match)}</span>
+						{:else}
+							{status.icon} {status.label}
+						{/if}
+					</span>
+				</div>
+
+				<div class="flex flex-col sm:flex-row items-center gap-4">
 				<!-- Equipo local -->
 				<div class="flex-1 text-center sm:text-right">
 					<p class="font-bold text-white text-lg leading-tight">
@@ -281,6 +365,7 @@
 					</button>
 				</div>
 			</div>
+			</div>
 		{/each}
 	</div>
 {/if}
@@ -293,7 +378,7 @@
 		aria-modal="true"
 		onclick={(e) => e.target === e.currentTarget && (pitchModalTeam = null)}
 	>
-		<div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
+		<div class="team-detail-modal-box glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4">
 			<div class="flex items-center justify-between border-b border-slate-800 pb-3">
 				<div>
 					<h3 class="text-base font-bold text-white leading-tight">{pitchModalTeam.name}</h3>
@@ -328,6 +413,34 @@
 					interactive={false}
 					teamName={pitchModalTeam.name}
 					teamColor="#06b6d4"
+				/>
+			{:else if (pitchModalTeam.sport === 'aura_battle')}
+				<AuraBattleArena
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#a855f7"
+				/>
+			{:else if (pitchModalTeam.sport === 'sperm_triathlon')}
+				<SpermTriathlonTrack
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#06b6d4"
+				/>
+			{:else if (pitchModalTeam.sport === 'tire_race')}
+				<TireRaceTrack
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#f97316"
+				/>
+			{:else if (pitchModalTeam.sport === 'mosquito_marathon')}
+				<MosquitoRadar
+					players={pitchModalTeam.players || []}
+					interactive={false}
+					teamName={pitchModalTeam.name}
+					teamColor="#84cc16"
 				/>
 			{:else}
 				<SoccerPitch

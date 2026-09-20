@@ -135,7 +135,13 @@ export const matchesApi = {
 		return api.get(`/matches${qs}`);
 	},
 	get: (matchId) => api.get(`/matches/${matchId}`),
-	updateStatus: (matchId, status) => api.patch(`/matches/${matchId}/status`, { status }),
+	updateStatus: (matchId, status, elapsedSeconds = null) => {
+		const payload = { status };
+		if (elapsedSeconds !== null && elapsedSeconds !== undefined) {
+			payload.elapsed_seconds = elapsedSeconds;
+		}
+		return api.patch(`/matches/${matchId}/status`, payload);
+	},
 	/** Update live score without finishing the match */
 	updateScore: (matchId, homeScore, awayScore) =>
 		api.patch(`/matches/${matchId}/score`, { home_score: homeScore, away_score: awayScore }),

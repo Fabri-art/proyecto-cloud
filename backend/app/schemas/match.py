@@ -35,6 +35,7 @@ class MatchRead(BaseModel):
     home_score: Optional[int]
     away_score: Optional[int]
     venue: Optional[str]
+    elapsed_seconds: Optional[int] = 0
 
     model_config = {"from_attributes": True}
 
@@ -73,6 +74,7 @@ class FixtureRead(BaseModel):
 class MatchStatusUpdate(BaseModel):
     """Payload to update only the match status."""
     status: MatchStatus
+    elapsed_seconds: Optional[int] = None
 
 
 class MatchScoreUpdate(BaseModel):

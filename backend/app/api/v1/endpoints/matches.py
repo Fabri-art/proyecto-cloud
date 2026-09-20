@@ -54,7 +54,7 @@ async def update_match_status(
     body: MatchStatusUpdate,
     session: AsyncSession = Depends(get_session),
 ) -> MatchRead:
-    match = await match_service.update_match_status(match_id, body.status, session)
+    match = await match_service.update_match_status(match_id, body.status, session, elapsed_seconds=body.elapsed_seconds)
     return MatchRead.model_validate(match)
 
 

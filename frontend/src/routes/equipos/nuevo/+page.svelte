@@ -21,6 +21,10 @@
 	import SoccerPitch from '$lib/components/SoccerPitch.svelte';
 	import BasketballCourt from '$lib/components/BasketballCourt.svelte';
 	import VolleyballCourt from '$lib/components/VolleyballCourt.svelte';
+	import AuraBattleArena from '$lib/components/AuraBattleArena.svelte';
+	import SpermTriathlonTrack from '$lib/components/SpermTriathlonTrack.svelte';
+	import TireRaceTrack from '$lib/components/TireRaceTrack.svelte';
+	import MosquitoRadar from '$lib/components/MosquitoRadar.svelte';
 	import UnderwaterChessBoard from '$lib/components/UnderwaterChessBoard.svelte';
 	import { onDestroy, onMount } from 'svelte';
 
@@ -34,7 +38,7 @@
 
 	const TOURNAMENT_ID = 1;
 	/** Mínimo de jugadores exigidos para poder enviar el formulario */
-	let minPlayers = $derived(teamData.sport === 'underwater_chess' ? 1 : 5);
+	let minPlayers = $derived(teamData.sport === 'underwater_chess' || teamData.sport === 'sperm_triathlon' || teamData.sport === 'aura_battle' ? 1 : (teamData.sport === 'tire_race' || teamData.sport === 'mosquito_marathon' ? 3 : 5));
 
 	/** Lista oficial de países de Sudamérica */
 	const southAmericanCountries = [
@@ -137,22 +141,51 @@
 	let hasChessSub1 = $derived(players.some((p) => p.position === 'chess_sub_1'));
 	let hasChessSub2 = $derived(players.some((p) => p.position === 'chess_sub_2'));
 
+	let hasAuraMain = $derived(players.some((p) => p.position === 'aura_farmer_main'));
+	let hasAuraSub1 = $derived(players.some((p) => p.position === 'aura_farmer_sub1'));
+	let hasAuraSub2 = $derived(players.some((p) => p.position === 'aura_farmer_sub2'));
+
+	let hasSpermMain = $derived(players.some((p) => p.position === 'sperm_main'));
+
+	let hasTireDir = $derived(players.some((p) => p.position === 'tire_dir'));
+	let hasTireRod = $derived(players.some((p) => p.position === 'tire_rod'));
+	let hasTireFren = $derived(players.some((p) => p.position === 'tire_fren'));
+
+	let hasMosquitoPic = $derived(players.some((p) => p.position === 'mosquito_pic'));
+	let hasMosquitoZum = $derived(players.some((p) => p.position === 'mosquito_zum'));
+	let hasMosquitoEvas = $derived(players.some((p) => p.position === 'mosquito_evas'));
+
 	// Reactividad de rol según deporte
 	$effect(() => {
-		if (teamData.sport === 'underwater_chess') {
+		const s = teamData.sport;
+		if (s === 'underwater_chess') {
 			if (!newPlayer.position || !newPlayer.position.startsWith('chess_')) {
 				newPlayer.position = !hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2';
 			}
-		} else if (teamData.sport === 'basketball') {
-			if (!newPlayer.position || newPlayer.position.startsWith('chess_') || newPlayer.position === 'goalkeeper') {
+		} else if (s === 'basketball') {
+			if (!newPlayer.position || !basketballPositions.some((p) => p.value === newPlayer.position)) {
 				newPlayer.position = 'point_guard';
 			}
-		} else if (teamData.sport === 'volleyball') {
-			if (!newPlayer.position || newPlayer.position.startsWith('chess_') || newPlayer.position === 'goalkeeper') {
+		} else if (s === 'volleyball') {
+			if (!newPlayer.position || !volleyballPositions.some((p) => p.value === newPlayer.position)) {
 				newPlayer.position = 'setter';
 			}
+		} else if (s === 'aura_battle') {
+			if (!newPlayer.position || !newPlayer.position.startsWith('aura_farmer_')) {
+				newPlayer.position = !hasAuraMain ? 'aura_farmer_main' : !hasAuraSub1 ? 'aura_farmer_sub1' : 'aura_farmer_sub2';
+			}
+		} else if (s === 'sperm_triathlon') {
+			newPlayer.position = 'sperm_main';
+		} else if (s === 'tire_race') {
+			if (!newPlayer.position || !newPlayer.position.startsWith('tire_')) {
+				newPlayer.position = !hasTireDir ? 'tire_dir' : !hasTireRod ? 'tire_rod' : 'tire_fren';
+			}
+		} else if (s === 'mosquito_marathon') {
+			if (!newPlayer.position || !newPlayer.position.startsWith('mosquito_')) {
+				newPlayer.position = !hasMosquitoPic ? 'mosquito_pic' : !hasMosquitoZum ? 'mosquito_zum' : 'mosquito_evas';
+			}
 		} else {
-			if (newPlayer.position && newPlayer.position.startsWith('chess_')) {
+			if (!newPlayer.position || !footballPositions.some((p) => p.value === newPlayer.position)) {
 				newPlayer.position = 'forward';
 			}
 		}
@@ -210,8 +243,26 @@
 		{ value: 'opposite',       label: 'Opuesto',   icon: '💥' },
 		{ value: 'middle_blocker', label: 'Central',   icon: '🧱' }
 	];
+	const auraPositions = [
+		{ value: 'aura_farmer_main', label: 'Farmeador PRINCIPAL', icon: '👑' },
+		{ value: 'aura_farmer_sub1', label: 'Farmeador Suplente 1', icon: '🔮' },
+		{ value: 'aura_farmer_sub2', label: 'Farmeador Suplente 2', icon: '⚡' }
+	];
+	const spermPositions = [
+		{ value: 'sperm_main', label: 'ESPERMATOZOIDE PRINCIPAL', icon: '🧬' }
+	];
+	const tirePositions = [
+		{ value: 'tire_dir',  label: 'DIR (Dirección)', icon: '🎯' },
+		{ value: 'tire_rod',  label: 'ROD (Rodador)',   icon: '⚡' },
+		{ value: 'tire_fren', label: 'FREN (Frenador)', icon: '🛑' }
+	];
+	const mosquitoPositions = [
+		{ value: 'mosquito_pic',  label: 'PIC (Aguijón)',  icon: '🎯' },
+		{ value: 'mosquito_zum',  label: 'ZUM (Zumbador)', icon: '🔊' },
+		{ value: 'mosquito_evas', label: 'EVAS (Evasor)',  icon: '💨' }
+	];
 	
-	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : teamData.sport === 'volleyball' ? volleyballPositions : teamData.sport === 'underwater_chess' ? chessPositions : footballPositions);
+	let positions = $derived(teamData.sport === 'basketball' ? basketballPositions : teamData.sport === 'volleyball' ? volleyballPositions : teamData.sport === 'underwater_chess' ? chessPositions : teamData.sport === 'aura_battle' ? auraPositions : teamData.sport === 'sperm_triathlon' ? spermPositions : teamData.sport === 'tire_race' ? tirePositions : teamData.sport === 'mosquito_marathon' ? mosquitoPositions : footballPositions);
 
 	// ── Helpers de validación y sanitización estricta ────────────────────────────
 
@@ -647,7 +698,7 @@
 	<div class="flex items-center gap-3 mb-6">
 		<a
 			href="/equipos"
-			class="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition"
+			class="btn-back px-3.5 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 transition font-semibold inline-flex items-center gap-1.5 shadow-sm"
 		>
 			← Volver a Equipos
 		</a>
@@ -694,33 +745,49 @@
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<!-- Selector de Deporte -->
-				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
+				<!-- Selector de Deporte (Ancho completo para máxima comodidad) -->
+				<div class="col-span-1 md:col-span-2 form-section-box bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
 					<h3 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
 						<span class="text-emerald-400">🏅</span> Disciplina Deportiva
 					</h3>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'football' ? 'bg-emerald-500/15 border-emerald-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
-							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500 w-4 h-4" />
-							<span class="font-semibold text-sm">⚽ Fútbol</span>
+					<div class="sport-selector-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'football' ? 'bg-emerald-500/15 border-emerald-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="football" class="accent-emerald-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">⚽ Fútbol</span>
 						</label>
-						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'basketball' ? 'bg-amber-500/15 border-amber-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
-							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500 w-4 h-4" />
-							<span class="font-semibold text-sm">🏀 Básquet</span>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'basketball' ? 'bg-amber-500/15 border-amber-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="basketball" class="accent-orange-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🏀 Básquet</span>
 						</label>
-						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'volleyball' ? 'bg-purple-500/15 border-purple-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
-							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500 w-4 h-4" />
-							<span class="font-semibold text-sm">🏐 Vóley</span>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'volleyball' ? 'bg-purple-500/15 border-purple-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="volleyball" class="accent-purple-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🏐 Vóley</span>
 						</label>
-						<label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition select-none {teamData.sport === 'underwater_chess' ? 'bg-cyan-500/15 border-cyan-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
-							<input type="radio" bind:group={teamData.sport} value="underwater_chess" class="accent-cyan-500 w-4 h-4" />
-							<span class="font-semibold text-sm">♟️ Ajedrez bajo el agua</span>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'underwater_chess' ? 'bg-cyan-500/15 border-cyan-500/60 text-white shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="underwater_chess" class="accent-cyan-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">♟️ Ajedrez acuático</span>
+						</label>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'aura_battle' ? 'bg-yellow-500/20 border-yellow-400 text-yellow-200 shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="aura_battle" class="accent-yellow-400 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🕺 Batalla de aura</span>
+						</label>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'sperm_triathlon' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="sperm_triathlon" class="accent-cyan-400 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🧬 Triatlón esperm.</span>
+						</label>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'tire_race' ? 'bg-orange-600/20 border-orange-500 text-orange-200 shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="tire_race" class="accent-orange-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🛞 Carrera llantas</span>
+						</label>
+						<label class="flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition select-none min-w-0 {teamData.sport === 'mosquito_marathon' ? 'bg-lime-500/20 border-lime-400 text-lime-200 shadow-sm' : 'bg-slate-900/60 border-slate-700/60 text-slate-300 hover:border-slate-600'}">
+							<input type="radio" bind:group={teamData.sport} value="mosquito_marathon" class="accent-lime-500 w-4 h-4 shrink-0" />
+							<span class="font-semibold text-xs sm:text-sm truncate">🦟 Maratón mosquitos</span>
 						</label>
 					</div>
 				</div>
 
 				<!-- Nombre del Club (Restricción: Sin números) -->
-				<div class="bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
+				<div class="form-section-box bg-slate-800/40 p-5 rounded-xl border border-slate-700/50 shadow-inner">
 					<label for="team-name" class="block text-sm font-semibold text-slate-300 mb-1.5">
 						Nombre del Club <span class="text-emerald-400">*</span>
 						<span class="text-xs font-normal text-slate-400">(Solo letras, sin números)</span>
@@ -844,33 +911,43 @@
 			<!-- Header de sección con selector de vista y contador -->
 			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4" style="border-color: var(--border-color);">
 				<div class="flex items-center gap-2">
-					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : '⚽'}</span>
+					<span class="text-2xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : teamData.sport === 'aura_battle' ? '🕺' : teamData.sport === 'sperm_triathlon' ? '🧬' : teamData.sport === 'tire_race' ? '🛞' : teamData.sport === 'mosquito_marathon' ? '🦟' : '⚽'}</span>
 					<div>
 						<h2 class="text-xl font-bold text-white">
-							{teamData.sport === 'underwater_chess' ? 'Plantilla de Ajedrecistas' : 'Plantilla de Jugadores'}
+							{teamData.sport === 'underwater_chess' ? 'Plantilla de Ajedrecistas' : teamData.sport === 'aura_battle' ? 'Plantilla de Farmeadores de Aura' : teamData.sport === 'sperm_triathlon' ? 'Inscripción de Nadador Celular' : teamData.sport === 'tire_race' ? 'Equipo de Carrera de Llantas' : teamData.sport === 'mosquito_marathon' ? 'Escuadrón de Mosquitos' : 'Plantilla de Jugadores'}
 						</h2>
 						<p class="text-xs text-slate-400">
-							{teamData.sport === 'basketball'
-								? 'Ubica a tus jugadores en la pista de básquetbol (mín. 5).'
-								: teamData.sport === 'volleyball'
-								? 'Ubica a tus jugadores en las 6 zonas de la cancha de vóley (mín. 5).'
-								: teamData.sport === 'underwater_chess'
-								? 'Inscribe al ajedrecista principal y hasta 2 suplentes para la partida submarina (mín. 1).'
-								: 'Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).'}
+							{#if teamData.sport === 'basketball'}
+								Ubica a tus jugadores en la pista de básquetbol (mín. 5).
+							{:else if teamData.sport === 'volleyball'}
+								Ubica a tus jugadores en las 6 zonas de la cancha de vóley (mín. 5).
+							{:else if teamData.sport === 'underwater_chess'}
+								Inscribe al ajedrecista principal y hasta 2 suplentes en el tablero (mín. 1).
+							{:else if teamData.sport === 'aura_battle'}
+								Ubica a los farmeadores en el cuadrado asfaltado de baile (mín. 1).
+							{:else if teamData.sport === 'sperm_triathlon'}
+								Registra al nadador celular para el circuito de triatlón (1 competidor).
+							{:else if teamData.sport === 'tire_race'}
+								Ubica a tu escudería en los 3 carriles de la pista olímpica naranja (DIR, ROD, FREN).
+							{:else if teamData.sport === 'mosquito_marathon'}
+								Ubica a tu escuadrón en los 3 carriles de vuelo (PIC, ZUM, EVAS).
+							{:else}
+								Ubica a tus jugadores en la cancha táctica (mín. 5, máx. 1 arquero).
+							{/if}
 						</p>
 					</div>
 				</div>
 
 				<div class="flex items-center gap-3">
 					<!-- Switcher de vistas -->
-					<div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+					<div class="view-switcher-bar flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
 						<button
 							type="button"
 							onclick={() => editorView = 'pitch'}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 {editorView === 'pitch' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}"
 						>
-							<span>{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : '🏟️'}</span>
-							{teamData.sport === 'basketball' ? 'Pista' : teamData.sport === 'volleyball' ? 'Cancha Vóley' : teamData.sport === 'underwater_chess' ? 'Tablero' : 'Cancha'}
+							<span>{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : teamData.sport === 'aura_battle' ? '🕺' : teamData.sport === 'sperm_triathlon' ? '🧬' : teamData.sport === 'tire_race' ? '🛞' : teamData.sport === 'mosquito_marathon' ? '🦟' : '🏟️'}</span>
+							{teamData.sport === 'basketball' ? 'Pista' : teamData.sport === 'volleyball' ? 'Cancha Vóley' : teamData.sport === 'underwater_chess' ? 'Tablero' : teamData.sport === 'aura_battle' ? 'Pista Callejera' : teamData.sport === 'sperm_triathlon' ? 'Carril Celular' : teamData.sport === 'tire_race' ? 'Pista Olímpica' : teamData.sport === 'mosquito_marathon' ? 'Pista de Vuelo' : 'Cancha'}
 						</button>
 						<button
 							type="button"
@@ -907,14 +984,23 @@
 						</span>
 						<button
 							type="button"
-							onclick={() => openQuickAdd(teamData.sport === 'basketball' ? 'point_guard' : teamData.sport === 'volleyball' ? 'setter' : teamData.sport === 'underwater_chess' ? (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2') : 'forward')}
+							onclick={() => openQuickAdd(
+								teamData.sport === 'basketball' ? 'point_guard'
+								: teamData.sport === 'volleyball' ? 'setter'
+								: teamData.sport === 'underwater_chess' ? (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2')
+								: teamData.sport === 'aura_battle' ? (!hasAuraMain ? 'aura_farmer_main' : !hasAuraSub1 ? 'aura_farmer_sub1' : 'aura_farmer_sub2')
+								: teamData.sport === 'sperm_triathlon' ? 'sperm_main'
+								: teamData.sport === 'tire_race' ? (!hasTireDir ? 'tire_dir' : !hasTireRod ? 'tire_rod' : 'tire_fren')
+								: teamData.sport === 'mosquito_marathon' ? (!hasMosquitoPic ? 'mosquito_pic' : !hasMosquitoZum ? 'mosquito_zum' : 'mosquito_evas')
+								: 'forward'
+							)}
 							class="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 shadow"
 						>
 							<span>+</span> {teamData.sport === 'underwater_chess' ? 'Inscribir Ajedrecista' : 'Agregar Jugador'}
 						</button>
 					</div>
 
-					<!-- Cancha según deporte -->
+					<!-- Cancha / Pista / Tablero según deporte -->
 					{#if teamData.sport === 'basketball'}
 						<BasketballCourt
 							{players}
@@ -942,6 +1028,42 @@
 							onAddPlayer={(pos) => openQuickAdd(pos || (!hasChessMain ? 'chess_main' : !hasChessSub1 ? 'chess_sub_1' : 'chess_sub_2'))}
 							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
 						/>
+					{:else if teamData.sport === 'aura_battle'}
+						<AuraBattleArena
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Crew Callejero'}
+							teamColor="#facc15"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else if teamData.sport === 'sperm_triathlon'}
+						<SpermTriathlonTrack
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Nadadores Celulares'}
+							teamColor="#06b6d4"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else if teamData.sport === 'tire_race'}
+						<TireRaceTrack
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Escudería de Llantas'}
+							teamColor="#ea580c"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
+					{:else if teamData.sport === 'mosquito_marathon'}
+						<MosquitoRadar
+							{players}
+							interactive={true}
+							teamName={teamData.name || 'Escuadrón Zancudo'}
+							teamColor="#84cc16"
+							onAddPlayer={(pos) => openQuickAdd(pos)}
+							onRemovePlayer={(p) => handleRemovePlayerFromPitch(p)}
+						/>
 					{:else}
 						<SoccerPitch
 							{players}
@@ -955,7 +1077,7 @@
 
 					<!-- Resumen de plantilla debajo de la cancha -->
 					{#if players.length > 0}
-						<div class="mt-1 p-4 rounded-xl bg-slate-900/50 border border-slate-800">
+						<div class="pitch-bench-card mt-1 p-4 rounded-xl bg-slate-900/50 border border-slate-800">
 							<div class="flex items-center justify-between mb-2">
 								<h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
 									Jugadores en Plantilla ({players.length})
@@ -989,7 +1111,7 @@
 				</div>
 			{:else}
 				<!-- VISTA 2: FORMULARIO CLÁSICO -->
-				<div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+				<div class="add-player-card bg-slate-900/60 p-4 rounded-xl border border-slate-800">
 					<h3 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
 						<span>➕</span> Añadir Jugador a la Plantilla
 					</h3>
@@ -1107,14 +1229,14 @@
 
 				<!-- Tabla de jugadores agregados -->
 				{#if players.length === 0}
-					<div class="p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
+					<div class="empty-players-box p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-xl">
 						<p class="text-sm">Aún no has agregado jugadores a la lista.</p>
 						<p class="text-xs text-slate-600 mt-1">Completa los campos arriba y haz clic en "Agregar a la lista".</p>
 					</div>
 				{:else}
 					<div class="overflow-x-auto rounded-xl border border-slate-800">
 						<table class="w-full text-sm">
-							<thead class="bg-slate-900/90 text-xs text-slate-400 uppercase tracking-wider">
+							<thead class="players-table-head bg-slate-900/90 text-xs text-slate-400 uppercase tracking-wider">
 								<tr>
 									{#if teamData.sport !== 'underwater_chess'}<th class="px-4 py-3 text-center w-12">#</th>{/if}
 									<th class="px-4 py-3 text-left">Jugador</th>
@@ -1214,9 +1336,9 @@
 		<div class="glass-card w-[95vw] sm:max-w-md p-4 sm:p-6 rounded-2xl border border-slate-700 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
 			<div class="flex items-center justify-between border-b pb-3 border-slate-800">
 				<div class="flex items-center gap-2">
-					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : '🏟️'}</span>
+					<span class="text-xl">{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : teamData.sport === 'aura_battle' ? '🕺' : teamData.sport === 'sperm_triathlon' ? '🧬' : teamData.sport === 'tire_race' ? '🛞' : teamData.sport === 'mosquito_marathon' ? '🦟' : '⚽'}</span>
 					<h3 class="text-lg font-bold text-white">
-						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en la Cancha de Vóley' : teamData.sport === 'underwater_chess' ? 'Inscribir Ajedrecista' : 'Ubicar en la Cancha'}
+						{teamData.sport === 'basketball' ? 'Ubicar en la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en la Cancha de Vóley' : teamData.sport === 'underwater_chess' ? 'Inscribir Ajedrecista' : teamData.sport === 'aura_battle' ? 'Subir al Cuadrilátero de Asfalto' : teamData.sport === 'sperm_triathlon' ? 'Lanzar al Carril Celular' : teamData.sport === 'tire_race' ? 'Asignar a Carril Olímpico' : teamData.sport === 'mosquito_marathon' ? 'Desplegar en Pista de Vuelo' : 'Ubicar en la Cancha'}
 					</h3>
 				</div>
 				<button
@@ -1244,6 +1366,26 @@
 								<option value="chess_sub_1" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
 							{:else if pos.value === 'chess_sub_2' && hasChessSub2}
 								<option value="chess_sub_2" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'aura_farmer_main' && hasAuraMain}
+								<option value="aura_farmer_main" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'aura_farmer_sub1' && hasAuraSub1}
+								<option value="aura_farmer_sub1" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'aura_farmer_sub2' && hasAuraSub2}
+								<option value="aura_farmer_sub2" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'sperm_main' && hasSpermMain}
+								<option value="sperm_main" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'tire_dir' && hasTireDir}
+								<option value="tire_dir" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'tire_rod' && hasTireRod}
+								<option value="tire_rod" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'tire_fren' && hasTireFren}
+								<option value="tire_fren" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'mosquito_pic' && hasMosquitoPic}
+								<option value="mosquito_pic" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'mosquito_zum' && hasMosquitoZum}
+								<option value="mosquito_zum" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
+							{:else if pos.value === 'mosquito_evas' && hasMosquitoEvas}
+								<option value="mosquito_evas" disabled>{pos.icon} {pos.label} (Ya asignado)</option>
 							{:else}
 								<option value={pos.value}>{pos.icon} {pos.label}</option>
 							{/if}
@@ -1367,8 +1509,8 @@
 					onclick={handleQuickAddSubmit}
 					class="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition flex items-center gap-1.5 cursor-pointer"
 				>
-					<span>{teamData.sport === 'basketball' ? '🏀' : '⚽'}</span>
-					{teamData.sport === 'underwater_chess' ? 'Inscribir en Tablero' : teamData.sport === 'basketball' ? 'Agregar a la Pista' : 'Agregar a la Cancha'}
+					<span>{teamData.sport === 'basketball' ? '🏀' : teamData.sport === 'volleyball' ? '🏐' : teamData.sport === 'underwater_chess' ? '♟️' : teamData.sport === 'aura_battle' ? '🕺' : teamData.sport === 'sperm_triathlon' ? '🧬' : teamData.sport === 'tire_race' ? '🛞' : teamData.sport === 'mosquito_marathon' ? '🦟' : '⚽'}</span>
+					{teamData.sport === 'underwater_chess' ? 'Inscribir en Tablero' : teamData.sport === 'aura_battle' ? 'Subir a la Pista' : teamData.sport === 'sperm_triathlon' ? 'Lanzar al Carril' : teamData.sport === 'tire_race' ? 'Colocar en Pista' : teamData.sport === 'mosquito_marathon' ? 'Desplegar en Vuelo' : teamData.sport === 'basketball' ? 'Agregar a la Pista' : teamData.sport === 'volleyball' ? 'Ubicar en Cancha' : 'Agregar a la Cancha'}
 				</button>
 			</div>
 		</div>

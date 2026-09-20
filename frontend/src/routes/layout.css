@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis[class*="com/css2"]?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import 'tailwindcss';
 
 /* ── Fuente global ─────────────────────────────────────────────────────────── */
@@ -234,4 +234,1186 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+
+/* ── MODO CLARO (THEME SWITCHER) ─────────────────────────────────────────── */
+html.light {
+  --bg-primary:      #f8fafc;
+  --bg-surface:      #ffffff;
+  --bg-card:         #ffffff;
+  --bg-card-hover:   #f8fafc;
+  --accent-green:    #059669;
+  --accent-green-glow: rgba(5, 150, 105, 0.15);
+  --accent-gold:     #d97706;
+  --accent-gold-glow: rgba(217, 119, 6, 0.15);
+  --accent-red:      #dc2626;
+  --accent-blue:     #2563eb;
+  --text-primary:    #0f172a;
+  --text-secondary:  #475569;
+  --border-color:    #e2e8f0;
+  --border-hover:    #cbd5e1;
+}
+
+html.light body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.05) 0%, transparent 60%) !important;
+}
+
+/* ── Navbar en Modo Claro ─────────────────────────────────────────────────── */
+html.light .navbar-bar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+html.light .navbar-bar span.text-white {
+  color: #0f172a !important;
+}
+html.light .nav-link-inactive {
+  color: #475569 !important;
+}
+html.light .nav-link-inactive:hover {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+html.light .nav-link-admin {
+  color: #475569 !important;
+}
+html.light .nav-link-admin:hover {
+  color: #d97706 !important;
+  background: #fffbeb !important;
+}
+html.light .nav-admin-hint {
+  color: #64748b !important;
+}
+html.light .nav-admin-hint:hover {
+  color: #0f172a !important;
+}
+html.light .mobile-menu-box {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+html.light .mobile-link-inactive {
+  color: #475569 !important;
+}
+html.light .mobile-link-inactive:hover {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+
+/* ── Tarjetas Generales ───────────────────────────────────────────────────── */
+html.light .glass-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+html.light .glass-card:hover {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .glass-card-green:hover {
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ── Textos Principales y Encabezados ─────────────────────────────────────── */
+html.light .text-white {
+  color: #0f172a !important;
+}
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+html.light .stat-num {
+  color: #0f172a !important;
+}
+html.light .stat-label {
+  color: #64748b !important;
+}
+html.light .stat-divider {
+  background: #e2e8f0 !important;
+}
+
+/* ── Barra de Filtro de Deportes (Equipos, Público, Mesa de Control) ─────── */
+html.light .bg-slate-900,
+html.light [class*="bg-slate-900/90"],
+html.light .bg-slate-950,
+html.light [class*="bg-slate-950/90"],
+html.light [class*="bg-slate-900/80"] {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .bg-slate-900 button.text-slate-400,
+html.light [class*="bg-slate-900/90"] button.text-slate-400 {
+  color: #475569 !important;
+}
+html.light .bg-slate-900 button.text-slate-400:hover,
+html.light [class*="bg-slate-900/90"] button.text-slate-400:hover {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+html.light .bg-slate-700 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+html.light [class*="bg-black/40"] {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* ── Botones de Acción Secundarios (Ver Plantilla, etc.) ─────────────────── */
+html.light [class*="border-slate-700/60"][class*="bg-slate-800/60"],
+html.light button[class*="border-slate-700/60"] {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+html.light [class*="border-slate-700/60"][class*="bg-slate-800/60"]:hover,
+html.light button[class*="border-slate-700/60"]:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+html.light [class*="border-slate-800/70"],
+html.light [class*="border-slate-800/60"],
+html.light [class*="border-slate-800/80"],
+html.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+/* ── Tarjetas de Partido en Vista Pública (/publico) ─────────────────────── */
+html.light .match-card-new {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .match-card-new:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Encabezado de la disciplina en la tarjeta */
+html.light .match-card-top-bar {
+  background: linear-gradient(90deg, var(--sport-bg-light, #f1f5f9), #ffffff) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+html.light .sport-badge-pill {
+  background: var(--badge-bg-light, #f1f5f9) !important;
+  color: var(--badge-text-light, #0f172a) !important;
+  border: 1px solid var(--badge-border-light, #cbd5e1) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+html.light .match-id-pill {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Píldoras de Estado (LIVE, FINALIZADO, PROGRAMADO) */
+html.light .status-pill.badge-live {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+html.light .status-pill.badge-finished {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  border: 1px solid #c7d2fe !important;
+}
+html.light .status-pill.badge-scheduled {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Marcadores centrales */
+html.light .score-live {
+  background: #ecfdf5 !important;
+  border: 1.5px solid #a7f3d0 !important;
+  color: #047857 !important;
+}
+html.light .score-done {
+  background: #f1f5f9 !important;
+  border: 1.5px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+html.light .score-upcoming {
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+html.light [class*="bg-emerald-950/90"] {
+  background-color: #d1fae5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #065f46 !important;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.1) !important;
+}
+html.light .round-btn-inactive {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+html.light .round-btn-inactive:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+html.light .tab-pill-inactive {
+  color: #64748b !important;
+}
+html.light .tab-pill-inactive:hover {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+
+/* ── Mesa de Control (/mesa-control) ──────────────────────────────────────── */
+html.light .bg-slate-900.border-slate-800 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light .bg-slate-900 .text-emerald-400 {
+  color: #047857 !important;
+}
+html.light .bg-slate-900 .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Botón Arbitrar Partido (Programado) */
+html.light button.bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light button.bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Botones de gestión de fixture en mesa de control */
+html.light button.text-red-400 {
+  background-color: #fff1f2 !important;
+  border: 1px solid #fecdd3 !important;
+  color: #e11d48 !important;
+}
+html.light button.text-red-400:hover {
+  background-color: #ffe4e6 !important;
+  border-color: #fda4af !important;
+}
+html.light button.text-slate-400[class*="border-slate-700/50"] {
+  background-color: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #2563eb !important;
+}
+html.light button.text-slate-400[class*="border-slate-700/50"]:hover {
+  background-color: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+html.light button[class*="bg-slate-800/80"] {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+html.light button[class*="bg-slate-800/80"]:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Marcador táctil en arbitraje */
+html.light .text-7xl.text-emerald-400,
+html.light .text-8xl.text-emerald-400 {
+  color: #059669 !important;
+}
+html.light .text-7xl.text-blue-400,
+html.light .text-8xl.text-blue-400 {
+  color: #2563eb !important;
+}
+html.light .bg-slate-800.text-slate-300 {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+html.light .bg-slate-800.text-slate-300:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Badges de deporte en tarjetas de equipos y mesa de control */
+html.light [class*="bg-amber-500/15"] {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+html.light [class*="bg-purple-500/15"],
+html.light [class*="bg-violet-500/15"] {
+  background-color: #faf5ff !important;
+  color: #7e22ce !important;
+  border-color: #e9d5ff !important;
+}
+html.light [class*="bg-cyan-500/15"],
+html.light [class*="bg-sky-500/15"] {
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+html.light [class*="bg-emerald-500/15"] {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* ── Página de Inicio (/) ─────────────────────────────────────────────────── */
+html.light .hero-bg {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #eff6ff 100%) !important;
+}
+html.light section.border-slate-800 {
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [style*="background: rgba(10, 16, 28, 0.85)"] {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+html.light [style*="background: rgba(10, 16, 28, 0.85)"] span.text-slate-300 {
+  color: #475569 !important;
+}
+html.light [style*="background: rgba(10, 16, 28, 0.85)"] span.text-emerald-400 {
+  color: #047857 !important;
+}
+
+/* ── Tablas de Posiciones (Consistencia visual sin alterar datos) ─────────── */
+html.light .standings-row:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+html.light .standings-row:hover {
+  background: #ecfdf5 !important;
+}
+html.light table th {
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+  background-color: #f8fafc !important;
+}
+html.light table td {
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* ── Botón Conmutador de Tema (Navbar) ────────────────────────────────────── */
+.theme-toggle-btn {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #f1f5f9;
+  cursor: pointer;
+}
+.theme-toggle-btn:hover {
+  background: rgba(148, 163, 184, 0.2);
+  transform: scale(1.05);
+}
+html.light .theme-toggle-btn {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html.light .theme-toggle-btn:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+}
+
+
+/* ── ESTILOS BASE DE TABLAS DE POSICIONES (MODO OSCURO Y MODO CLARO) ─────── */
+.standings-box {
+  background-color: rgba(15, 23, 42, 0.6);
+  border-color: rgba(30, 41, 59, 0.8);
+}
+.standings-head-row {
+  background-color: #0b1120;
+  border-bottom: 1px solid #1e293b;
+}
+.standings-row {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+.standings-row:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+.standings-btn-pitch {
+  background-color: rgba(30, 41, 59, 0.8);
+  color: #94a3b8;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  cursor: pointer;
+}
+.standings-btn-pitch:hover {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+.standings-footer {
+  background-color: rgba(11, 17, 32, 0.5);
+  border-color: rgba(30, 41, 59, 0.8);
+  color: #64748b;
+}
+
+/* ── TABLAS DE POSICIONES EN MODO CLARO ───────────────────────────────────── */
+html.light .standings-box {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+html.light .standings-head-row {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+html.light .standings-head-row th {
+  color: #475569 !important;
+  background-color: #f8fafc !important;
+  font-weight: 800 !important;
+}
+html.light .standings-row {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  cursor: pointer;
+}
+html.light .standings-row:nth-child(even) {
+  background-color: #fbfcfe !important;
+}
+html.light .standings-row:hover {
+  background-color: #ecfdf5 !important;
+}
+html.light .standings-row p.font-bold {
+  color: #0f172a !important;
+}
+html.light .standings-row td,
+html.light .standings-row span.font-mono {
+  color: #334155 !important;
+}
+html.light .standings-row td .font-mono.text-emerald-400,
+html.light .standings-row td .font-score.text-emerald-400 {
+  color: #047857 !important;
+  font-weight: 800 !important;
+}
+html.light .standings-row td .font-score.text-amber-400 {
+  color: #b45309 !important;
+  font-weight: 800 !important;
+}
+html.light .standings-btn-pitch {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: pointer;
+}
+html.light .standings-btn-pitch:hover {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+html.light .standings-footer {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+/* ── HOVER Y FEEDBACK VISUAL GLOBAL EN ELEMENTOS CLICABLES ────────────────── */
+button, a, [role="button"] {
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Elevación y feedback al pasar el cursor */
+button:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Hover en tarjetas de equipos y partidos */
+.glass-card {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease !important;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  cursor: pointer;
+}
+.match-card-new {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease !important;
+}
+.match-card-new:hover {
+  transform: translateY(-2px);
+}
+
+/* Hover en botones de jornada (J1, J2...) */
+.round-btn, [class*="selectedRound"] {
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.round-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Botones de alineación en cancha */
+button[title*="alineación"], button[title*="cancha"] {
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+button[title*="alineación"]:hover, button[title*="cancha"]:hover {
+  transform: translateY(-1px);
+  color: #10b981 !important;
+}
+
+/* ==========================================================================
+   LIGHT MODE & UNIVERSAL HOVER ENHANCEMENTS: FORMS, BUTTONS & SQUAD REGISTRATION
+   ========================================================================== */
+
+/* Universal Pointer & Hover for all Interactive Elements */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+select,
+label[class*="cursor-pointer"],
+.standings-btn-pitch,
+.tab-pill,
+.round-btn {
+	cursor: pointer !important;
+}
+
+button:not(:disabled):hover,
+a.btn-back:hover,
+.standings-btn-pitch:hover {
+	filter: brightness(1.06);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:not(:disabled):active,
+a.btn-back:active,
+.standings-btn-pitch:active {
+	transform: translateY(0px) scale(0.98);
+}
+
+label[class*="cursor-pointer"]:hover {
+	transform: translateY(-1px);
+	transition: all 0.15s ease;
+}
+
+/* Light Mode: Standings Buttons ("Ver posiciones") in all sports */
+html.light .standings-btn-pitch {
+	background-color: #f1f5f9 !important;
+	color: #334155 !important;
+	border: 1px solid #cbd5e1 !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .standings-btn-pitch:hover {
+	background-color: #ecfdf5 !important;
+	border-color: #10b981 !important;
+	color: #047857 !important;
+	box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Light Mode: Navigation Back Button */
+html.light .btn-back,
+html.light a[href="/equipos"].bg-slate-800\/60 {
+	background-color: #f1f5f9 !important;
+	color: #334155 !important;
+	border: 1px solid #cbd5e1 !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .btn-back:hover,
+html.light a[href="/equipos"].bg-slate-800\/60:hover {
+	background-color: #e2e8f0 !important;
+	color: #0f172a !important;
+	border-color: #94a3b8 !important;
+}
+
+/* Light Mode: Form Section Boxes (/equipos/nuevo) */
+html.light .form-section-box,
+html.light [class*="bg-slate-800/40"] {
+	background-color: #f8fafc !important;
+	border: 1px solid #e2e8f0 !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .form-section-box h3 {
+	color: #1e293b !important;
+}
+
+html.light .form-section-box label {
+	color: #334155 !important;
+}
+
+/* Light Mode: Sport Selector Options (/equipos/nuevo) */
+html.light .sport-selector-grid label,
+html.light label[class*="cursor-pointer"] {
+	background-color: #ffffff;
+	border-color: #cbd5e1;
+	color: #334155;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+html.light .sport-selector-grid label:hover,
+html.light label[class*="cursor-pointer"]:hover {
+	border-color: #94a3b8;
+	background-color: #f8fafc;
+}
+
+/* Selected Sport Pills in Light Mode */
+html.light .sport-selector-grid label[class*="bg-emerald-500"],
+html.light label[class*="bg-emerald-500/15"] {
+	background-color: rgba(16, 185, 129, 0.12) !important;
+	border-color: rgba(16, 185, 129, 0.75) !important;
+	color: #065f46 !important;
+	box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-amber-500"],
+html.light label[class*="bg-amber-500/15"] {
+	background-color: rgba(245, 158, 11, 0.12) !important;
+	border-color: rgba(245, 158, 11, 0.75) !important;
+	color: #92400e !important;
+	box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-purple-500"],
+html.light label[class*="bg-purple-500/15"] {
+	background-color: rgba(168, 85, 247, 0.12) !important;
+	border-color: rgba(168, 85, 247, 0.75) !important;
+	color: #6b21a8 !important;
+	box-shadow: 0 2px 8px rgba(168, 85, 247, 0.12) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-cyan-500"],
+html.light label[class*="bg-cyan-500/15"] {
+	background-color: rgba(6, 182, 212, 0.12) !important;
+	border-color: rgba(6, 182, 212, 0.75) !important;
+	color: #0e7490 !important;
+	box-shadow: 0 2px 8px rgba(6, 182, 212, 0.12) !important;
+}
+
+/* Light Mode: All Form Inputs & Selects */
+html.light input[type="text"],
+html.light input[type="number"],
+html.light input[type="tel"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light select,
+html.light textarea,
+html.light input[class*="bg-slate-900"],
+html.light input[class*="bg-slate-950"],
+html.light select[class*="bg-slate-900"],
+html.light select[class*="bg-slate-950"] {
+	background-color: #ffffff !important;
+	color: #0f172a !important;
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+	color: #94a3b8 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+	border-color: #10b981 !important;
+	outline: none !important;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Light Mode: View Switcher ("Cancha / Formulario") */
+html.light .view-switcher-bar,
+html.light div[class*="bg-slate-950"]:has(> button) {
+	background-color: #f1f5f9 !important;
+	border: 1px solid #e2e8f0 !important;
+}
+
+html.light .view-switcher-bar button.text-slate-400,
+html.light div[class*="bg-slate-950"] button.text-slate-400 {
+	color: #64748b !important;
+}
+
+html.light .view-switcher-bar button.text-slate-400:hover,
+html.light div[class*="bg-slate-950"] button.text-slate-400:hover {
+	color: #0f172a !important;
+	background-color: #e2e8f0 !important;
+}
+
+/* Light Mode: Add Player Card & Bench in /equipos/nuevo */
+html.light .add-player-card,
+html.light [class*="bg-slate-900/60"],
+html.light .pitch-bench-card,
+html.light [class*="bg-slate-900/50"] {
+	background-color: #f8fafc !important;
+	border: 1px solid #e2e8f0 !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light .add-player-card h3,
+html.light .pitch-bench-card h4 {
+	color: #1e293b !important;
+}
+
+html.light .add-player-card label {
+	color: #475569 !important;
+}
+
+html.light .pitch-bench-card [class*="bg-slate-800/80"] {
+	background-color: #ffffff !important;
+	border: 1px solid #cbd5e1 !important;
+	color: #0f172a !important;
+}
+
+/* Light Mode: Empty Players Box */
+html.light .empty-players-box,
+html.light [class*="border-dashed"][class*="border-slate-800"] {
+	background-color: #ffffff !important;
+	border: 1px dashed #cbd5e1 !important;
+	color: #64748b !important;
+}
+
+html.light .empty-players-box p.text-slate-600 {
+	color: #94a3b8 !important;
+}
+
+/* Light Mode: Players Table Header & Rows */
+html.light .players-table-head,
+html.light thead[class*="bg-slate-900"] {
+	background-color: #f1f5f9 !important;
+	color: #475569 !important;
+	border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.light .divide-slate-800,
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+	border-color: #e2e8f0 !important;
+}
+
+html.light tbody tr[class*="hover:bg-slate-800"]:hover {
+	background-color: #f8fafc !important;
+}
+
+html.light span.bg-slate-800.text-emerald-400 {
+	background-color: #ecfdf5 !important;
+	color: #047857 !important;
+	border: 1px solid #a7f3d0 !important;
+}
+
+/* Light Mode: Disabled Submit Button */
+/* Light Mode: Disabled Submit Button (ONLY for truly disabled buttons) */
+html.light button:disabled,
+html.light button[disabled] {
+	background-color: #e2e8f0 !important;
+	color: #94a3b8 !important;
+	opacity: 0.6 !important;
+	cursor: not-allowed !important;
+	box-shadow: none !important;
+	transform: none !important;
+	pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   NEW DISCIPLINES: AURA BATTLE, SPERM TRIATHLON, TIRE RACE, MOSQUITO MARATHON
+   ========================================================================== */
+
+/* Selected Sport Radio Cards in Light Mode */
+html.light .sport-selector-grid label[class*="bg-purple-500/20"],
+html.light label[class*="bg-purple-500/20"] {
+	background-color: rgba(168, 85, 247, 0.14) !important;
+	border-color: rgba(168, 85, 247, 0.8) !important;
+	color: #6b21a8 !important;
+	box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-cyan-500/20"],
+html.light label[class*="bg-cyan-500/20"] {
+	background-color: rgba(6, 182, 212, 0.14) !important;
+	border-color: rgba(6, 182, 212, 0.8) !important;
+	color: #0e7490 !important;
+	box-shadow: 0 2px 8px rgba(6, 182, 212, 0.15) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-amber-600/20"],
+html.light label[class*="bg-amber-600/20"] {
+	background-color: rgba(245, 158, 11, 0.14) !important;
+	border-color: rgba(245, 158, 11, 0.8) !important;
+	color: #92400e !important;
+	box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-lime-500/20"],
+html.light label[class*="bg-lime-500/20"] {
+	background-color: rgba(132, 204, 22, 0.14) !important;
+	border-color: rgba(132, 204, 22, 0.8) !important;
+	color: #3f6212 !important;
+	box-shadow: 0 2px 8px rgba(132, 204, 22, 0.15) !important;
+}
+
+/* Light Mode Sport Badges in Match Cards & Standings */
+html.light span[class*="bg-purple-500/15"],
+html.light span[class*="bg-purple-500/20"] {
+	background-color: rgba(168, 85, 247, 0.12) !important;
+	color: #7e22ce !important;
+	border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+html.light span[class*="bg-lime-500/15"],
+html.light span[class*="bg-lime-500/20"] {
+	background-color: rgba(132, 204, 22, 0.12) !important;
+	color: #4d7c0f !important;
+	border-color: rgba(132, 204, 22, 0.4) !important;
+}
+
+/* Standings Row Accent Colors */
+.standings-row td .font-score.text-purple-400 {
+	color: #c084fc;
+}
+html.light .standings-row td .font-score.text-purple-400 {
+	color: #7e22ce !important;
+}
+
+.standings-row td .font-score.text-lime-400 {
+	color: #a3e635;
+}
+html.light .standings-row td .font-score.text-lime-400 {
+	color: #4d7c0f !important;
+}
+
+
+/* Light Mode additions for Aura Battle (Yellow) and Tire Race (Orange) */
+html.light .sport-selector-grid label[class*="bg-yellow-500/20"],
+html.light label[class*="bg-yellow-500/20"] {
+	background-color: rgba(234, 179, 8, 0.18) !important;
+	border-color: rgba(202, 138, 4, 0.8) !important;
+	color: #854d0e !important;
+	box-shadow: 0 2px 8px rgba(234, 179, 8, 0.15) !important;
+}
+
+html.light .sport-selector-grid label[class*="bg-orange-600/20"],
+html.light label[class*="bg-orange-600/20"] {
+	background-color: rgba(234, 88, 12, 0.16) !important;
+	border-color: rgba(234, 88, 12, 0.8) !important;
+	color: #9a3412 !important;
+	box-shadow: 0 2px 8px rgba(234, 88, 12, 0.15) !important;
+}
+
+
+/* ==========================================================================
+   LIGHT MODE: TEAM & TACTICAL DETAIL MODAL (/equipos, /fixture, /mesa-control)
+   ========================================================================== */
+html.light .team-detail-modal-box {
+	background-color: #ffffff !important;
+	border-color: #cbd5e1 !important;
+	box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.22) !important;
+	color: #0f172a;
+}
+
+html.light .team-detail-modal-box h2,
+html.light .team-detail-modal-box h3,
+html.light .team-detail-modal-box > div:first-child h3,
+html.light .team-detail-modal-box > div:first-child .font-black {
+	color: #0f172a !important;
+}
+
+html.light .team-detail-modal-box p.text-slate-400,
+html.light .team-detail-modal-box p.text-slate-500,
+html.light .team-detail-modal-box span.text-slate-400,
+html.light .team-detail-modal-box span.text-slate-500 {
+	color: #64748b !important;
+}
+
+html.light .team-detail-modal-box .border-slate-800,
+html.light .team-detail-modal-box .border-slate-700,
+html.light .team-detail-modal-box div[class*="border-slate-800"] {
+	border-color: #e2e8f0 !important;
+}
+
+html.light .team-detail-modal-box .view-toggle-box,
+html.light .team-detail-modal-box .bg-slate-900 {
+	background-color: #f1f5f9 !important;
+	border-color: #cbd5e1 !important;
+}
+
+html.light .team-detail-modal-box .view-toggle-box button.text-slate-400 {
+	color: #64748b !important;
+}
+
+html.light .team-detail-modal-box .view-toggle-box button.text-slate-400:hover {
+	color: #0f172a !important;
+}
+
+html.light .team-detail-modal-box .view-toggle-box button.bg-slate-700 {
+	background-color: #334155 !important;
+	color: #ffffff !important;
+}
+
+html.light .team-detail-modal-box .player-roster-row {
+	background-color: #f8fafc !important;
+	border-color: #e2e8f0 !important;
+}
+
+html.light .team-detail-modal-box .player-roster-row:hover {
+	background-color: #f1f5f9 !important;
+	border-color: #cbd5e1 !important;
+}
+
+html.light .team-detail-modal-box .player-roster-row p {
+	color: #0f172a !important;
+}
+
+html.light .team-detail-modal-box button[aria-label="Cerrar"]:hover {
+	background-color: #f1f5f9 !important;
+	color: #0f172a !important;
+}
+
+
+/* ==========================================================================
+   INTERACTIVE BUTTONS: ALWAYS POINTER CURSOR
+   ========================================================================== */
+.view-roster-btn,
+.match-arbitrate-btn,
+button.action-btn,
+button:not(:disabled) {
+	cursor: pointer !important;
+}
+
+html.light .view-roster-btn,
+html.light .match-arbitrate-btn {
+	cursor: pointer !important;
+	background-color: #f1f5f9 !important;
+	border-color: #cbd5e1 !important;
+	color: #0f172a !important;
+}
+
+html.light .view-roster-btn:hover,
+html.light .match-arbitrate-btn:hover {
+	cursor: pointer !important;
+	background-color: #e2e8f0 !important;
+	color: #0f172a !important;
+	transform: translateY(-1px);
+}
+
+
+/* ==========================================================================
+   HIGH-CONTRAST TACTICAL COURT SCOPE (IMMUNE TO GLOBAL LIGHT THEME OVERRIDES)
+   ========================================================================== */
+.tactical-court-scope,
+.aura-street-container,
+.sperm-track-container,
+.tire-olympic-container,
+.mosquito-track-container,
+.court-container,
+.volleyball-court,
+.basketball-court,
+.soccer-pitch,
+.chess-board {
+	color: #ffffff;
+}
+
+/* Force high contrast text on court elements in light mode */
+html.light .tactical-court-scope,
+html.light .aura-street-container,
+html.light .sperm-track-container,
+html.light .tire-olympic-container,
+html.light .mosquito-track-container,
+html.light .court-container,
+html.light .volleyball-court,
+html.light .basketball-court,
+html.light .soccer-pitch,
+html.light .chess-board {
+	color: #ffffff;
+}
+
+html.light .tactical-court-scope .text-white,
+html.light .tactical-court-scope [class*="text-white"],
+html.light .aura-street-container .text-white,
+html.light .sperm-track-container .text-white,
+html.light .tire-olympic-container .text-white,
+html.light .mosquito-track-container .text-white,
+html.light .court-container .text-white,
+html.light .volleyball-court .text-white,
+html.light .basketball-court .text-white,
+html.light .soccer-pitch .text-white,
+html.light .chess-board .text-white {
+	color: #ffffff !important;
+}
+
+/* Protected player name badges on all tactical courts */
+.court-player-badge {
+	background: rgba(15, 23, 42, 0.94) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.35) !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65) !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9) !important;
+}
+
+html.light .court-player-badge {
+	background: rgba(15, 23, 42, 0.95) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.45) !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7) !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9) !important;
+}
+
+html.light .court-player-badge span,
+html.light .court-player-badge p,
+html.light .court-player-badge h4,
+html.light .court-player-badge div {
+	color: #ffffff !important;
+}
+
+/* Standardized Court Headers across all themes */
+.court-header-bar {
+	background: rgba(10, 15, 29, 0.88) !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+html.light .court-header-bar {
+	background: rgba(15, 23, 42, 0.92) !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+html.light .court-header-bar h4 {
+	color: #ffffff !important;
+}
+
+
+/* ==========================================================================
+   SOCCER PITCH HEADER & BENCH THEMED (DARK & LIGHT MODE)
+   ========================================================================== */
+.soccer-header-bar {
+	background: rgba(15, 23, 42, 0.88);
+	border: 1px solid rgba(16, 185, 129, 0.35);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(8px);
+}
+
+.soccer-header-bar .soccer-title {
+	color: #ffffff;
+}
+
+.soccer-header-bar .soccer-subtitle {
+	color: #6ee7b7;
+}
+
+.soccer-header-bar .pos-pill-gk {
+	background: rgba(6, 78, 59, 0.85);
+	color: #6ee7b7;
+	border-color: rgba(16, 185, 129, 0.5);
+}
+
+.soccer-header-bar .pos-pill-def {
+	background: rgba(30, 58, 138, 0.85);
+	color: #93c5fd;
+	border-color: rgba(59, 130, 246, 0.5);
+}
+
+.soccer-header-bar .pos-pill-med {
+	background: rgba(120, 53, 15, 0.85);
+	color: #fcd34d;
+	border-color: rgba(245, 158, 11, 0.5);
+}
+
+.soccer-header-bar .pos-pill-fwd {
+	background: rgba(136, 19, 55, 0.85);
+	color: #fda4af;
+	border-color: rgba(244, 63, 94, 0.5);
+}
+
+.soccer-header-bar .team-pill {
+	background: rgba(6, 78, 59, 0.85);
+	color: #6ee7b7;
+	border-color: rgba(16, 185, 129, 0.5);
+}
+
+.soccer-bench-card {
+	background: rgba(15, 23, 42, 0.7);
+	border: 1px solid #334155;
+	color: #ffffff;
+}
+
+/* ── Light Mode for Soccer Header & Bench ── */
+html.light .soccer-header-bar {
+	background: #ffffff !important;
+	border: 1px solid #cbd5e1 !important;
+	box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.08) !important;
+}
+
+html.light .soccer-header-bar .soccer-title {
+	color: #0f172a !important;
+}
+
+html.light .soccer-header-bar .soccer-subtitle {
+	color: #059669 !important;
+}
+
+html.light .soccer-header-bar .pos-pill-gk {
+	background: #ecfdf5 !important;
+	color: #047857 !important;
+	border-color: #a7f3d0 !important;
+}
+
+html.light .soccer-header-bar .pos-pill-def {
+	background: #eff6ff !important;
+	color: #1d4ed8 !important;
+	border-color: #bfdbfe !important;
+}
+
+html.light .soccer-header-bar .pos-pill-med {
+	background: #fffbeb !important;
+	color: #b45309 !important;
+	border-color: #fde68a !important;
+}
+
+html.light .soccer-header-bar .pos-pill-fwd {
+	background: #fff1f2 !important;
+	color: #be123c !important;
+	border-color: #fecdd3 !important;
+}
+
+html.light .soccer-header-bar .team-pill {
+	background: #f1f5f9 !important;
+	color: #0f172a !important;
+	border-color: #cbd5e1 !important;
+}
+
+html.light .soccer-bench-card {
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	color: #0f172a !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .soccer-bench-card span.text-slate-400 {
+	color: #475569 !important;
+}
+
+html.light .soccer-bench-card [class*="bg-slate-800/80"] {
+	background-color: #f8fafc !important;
+	border: 1px solid #cbd5e1 !important;
+	color: #0f172a !important;
+}
+
+html.light .soccer-bench-card [class*="bg-slate-800/80"] .text-white {
+	color: #0f172a !important;
 }
